@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    if (window.location.hostname.includes('github.io')) {
+      const originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        if (typeof input === 'string' && input.startsWith('/api/')) {
+          input = 'https://omnicite-engine-production.up.railway.app' + input;
+        }
+        return originalFetch(input, init);
+      };
+      window.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a[href="/"]').forEach(a => a.href = 'index.html');
+        document.querySelectorAll('a[href="/#scanner"]').forEach(a => a.href = 'index.html#scanner');
+        document.querySelectorAll('a[href="/#precos"]').forEach(a => a.href = 'index.html#precos');
+      });
+    }
+  </script>
+  <title>Dossiê Oficial de Visibilidade em IA (GEO) | OmniCite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            dark: '#07090e',
+            card: '#0d111a',
+            border: '#1a2233',
+            gold: '#f59e0b',
+            accent: '#0ea5e9',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+    }
+    .blueprint-grid {
+      background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+      .print-card { border: 1px solid #ccc !important; background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="blueprint-grid min-h-screen font-sans antialiased pb-24">
+
+  <!-- TOPO DE NAVEGAÇÃO / BRANDING -->
+  <header class="no-print sticky top-0 z-40 bg-[#07090e]/90 backdrop-blur-xl border-b border-border/80 px-4 py-3 sm:px-8">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-sky-500/20">
+          Ω
+        </div>
+        <div>
+          <span class="font-bold text-white text-base tracking-tight">OmniCite</span>
+          <span class="text-[10px] block font-mono text-sky-400 tracking-wider uppercase">GEO Engine • Enterprise</span>
+        </div>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <button onclick="shareOnWhatsApp()" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-emerald-600/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/25 transition text-xs font-semibold">
+          <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+          <span>Compartilhar no WhatsApp</span>
+        </button>
+        <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-border text-slate-300 hover:text-white transition text-xs">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Imprimir PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LOADING STATE -->
+  <div id="loadingView" class="max-w-3xl mx-auto px-4 py-28 text-center">
+    <div class="inline-flex p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20 mb-6 animate-pulse">
+      <i data-lucide="scan" class="w-10 h-10 text-sky-400 animate-spin"></i>
+    </div>
+    <h2 class="text-xl font-bold text-white mb-2">Carregando Dossiê de Inteligência Artificial...</h2>
+    <p class="text-xs text-slate-400 font-mono">Consultando telemetria do Google Search Grounding & Base IndexNow</p>
+  </div>
+
+  <!-- NOT FOUND STATE -->
+  <div id="notFoundView" class="hidden max-w-xl mx-auto px-4 py-24 text-center">
+    <div class="inline-flex p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 mb-6">
+      <i data-lucide="alert-triangle" class="w-10 h-10 text-rose-400"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-white mb-3">Relatório Não Localizado</h2>
+    <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+      Este diagnóstico pode ter expirado ou o endereço está incompleto. Você pode gerar uma nova auditoria gratuita agora mesmo.
+    </p>
+    <a href="/#scanner" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-sky-500/25">
+      <i data-lucide="search" class="w-4 h-4"></i>
+      <span>Executar Nova Auditoria Gratuita</span>
+    </a>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL DO RELATÓRIO -->
+  <main id="reportContent" class="hidden max-w-5xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 space-y-8">
+    
+    <!-- CARD HEADER: DADOS DA EMPRESA & AUTORIDADE -->
+    <div class="relative overflow-hidden rounded-2xl border border-border bg-card/90 backdrop-blur-xl p-6 sm:p-8 shadow-2xl">
+      <div class="absolute -right-16 -top-16 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-gold/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-mono mb-3">
+            <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            DOSSIÊ OFICIAL GEO • CICLO DE EXCELÊNCIA
+          </div>
+          <h1 id="brandTitle" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Carregando Empresa...
+          </h1>
+          <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-400 font-mono">
+            <span id="domainBadge" class="text-sky-400 font-semibold">dominio.com.br</span>
+            <span>•</span>
+            <span id="nicheBadge" class="text-slate-300">Nicho de Mercado</span>
+            <span>•</span>
+            <span id="auditDate">Setembro, 2026</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="shareOnWhatsApp()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-emerald-500/20">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+            <span>Mandar no WhatsApp</span>
+          </button>
+          <a href="#solucao" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-sky-500/20">
+            <i data-lucide="zap" class="w-4 h-4"></i>
+            <span>Plano de Recuperação</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- HERO SCORE & RESUMO EXECUTIVO -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-center">
+        <!-- SCORE GAUGE -->
+        <div class="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-slate-950/60 border border-border text-center">
+          <span class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Score de Autoridade GEO</span>
+          <div class="relative my-3 flex items-center justify-center">
+            <div class="w-32 h-32 rounded-full border-4 border-slate-800 flex items-center justify-center">
+              <div class="text-center">
+                <span id="scoreNumber" class="text-4xl font-extrabold text-amber-400 font-mono">34</span>
+                <span class="text-xs text-slate-500 block">/ 100</span>
+              </div>
+            </div>
+          </div>
+          <span id="scoreBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-500/15 border border-amber-500/30 text-amber-300">
+            Risco Crítico de Invisibilidade
+          </span>
+        </div>
+
+        <!-- RESUMO DE IMPACTO NO NEGÓCIO -->
+        <div class="lg:col-span-8 space-y-4">
+          <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20">
+            <div class="flex items-start gap-3">
+              <i data-lucide="alert-octagon" class="w-5 h-5 text-rose-400 shrink-0 mt-0.5"></i>
+              <div>
+                <h3 class="text-sm font-bold text-rose-200 mb-1">Diagnóstico Comercial Crítico</h3>
+                <p id="riskSummary" class="text-xs text-rose-300/90 leading-relaxed">
+                  Quando um potencial comprador pesquisa recomendações deste nicho no ChatGPT, Perplexity ou Gemini, sua empresa não é citada. Quase 100% da demanda qualificada está sendo capturada pelos seus concorrentes diretos.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-border">
+              <span class="text-[11px] font-mono text-slate-400 block mb-1">Perda Estimada de Tráfego & Leads</span>
+              <span id="lostTraffic" class="text-lg font-bold text-rose-400 font-mono">~72% a 85%</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">Intenções de busca desviadas para terceiros</span>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-border">
+              <span class="text-[11px] font-mono text-slate-400 block mb-1">Presença no Google Meu Negócio / Maps</span>
+              <span id="localScore" class="text-lg font-bold text-sky-400 font-mono">Moderada (6.5 / 10)</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">Falta sinergia com respostas generativas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: SIMULAÇÃO NOS 4 MOTORES DE INTELIGÊNCIA ARTIFICIAL -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="bot" class="w-5 h-5 text-sky-400"></i>
+            <span>Simulação de Respostas nos Motores de IA</span>
+          </h2>
+          <p class="text-xs text-slate-400">O que ChatGPT, Perplexity, Gemini e Claude respondem quando um cliente quer comprar</p>
+        </div>
+        <span class="text-xs font-mono text-slate-500 bg-slate-900 px-2.5 py-1 rounded-md border border-border">4 IAs Auditadas</span>
+      </div>
+
+      <div id="aiEnginesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Injetado dinamicamente via JS -->
+      </div>
+    </div>
+
+    <!-- SEÇÃO: CONCORRENTES DOMINANTES -->
+    <div class="rounded-2xl border border-border bg-card/90 p-6 space-y-4">
+      <div>
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-amber-400"></i>
+          <span>Quem as IAs estão indicando no seu lugar?</span>
+        </h2>
+        <p class="text-xs text-slate-400">Concorrentes identificados com alta dominância e citações prioritárias nas buscas generativas</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="border-b border-border text-slate-400 font-mono text-[11px]">
+              <th class="py-3 px-3">Concorrente Dominante</th>
+              <th class="py-3 px-3">Domínio</th>
+              <th class="py-3 px-3">Taxa de Citação nas IAs</th>
+              <th class="py-3 px-3">Por que a IA Recomenda Ele?</th>
+            </tr>
+          </thead>
+          <tbody id="competitorsTableBody" class="divide-y divide-border/60">
+            <!-- Injetado dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: 3 PAUTAS DE ATAQUE RECOMENDADAS -->
+    <div class="rounded-2xl border border-sky-500/20 bg-sky-500/[0.02] p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="target" class="w-5 h-5 text-sky-400"></i>
+            <span>3 Pautas Estratégicas de Ataque GEO Imediato</span>
+          </h2>
+          <p class="text-xs text-slate-400">Conteúdos calibrados para desbancar a concorrência nas respostas do ChatGPT e Perplexity</p>
+        </div>
+        <span class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold uppercase">Ação Imediata</span>
+      </div>
+
+      <div id="topicsList" class="grid grid-cols-1 gap-3">
+        <!-- Injetado dinamicamente -->
+      </div>
+    </div>
+
+    <!-- SEÇÃO: A SOLUÇÃO DEFINITIVA (CICLO DE EXCELÊNCIA & PLANO DE RESGATE) -->
+    <div id="solucao" class="rounded-2xl border border-border bg-gradient-to-b from-card to-slate-950 p-6 sm:p-8 space-y-6 text-center">
+      <div class="max-w-2xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-mono">
+          <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+          PLANO DE RECUPERAÇÃO DE MERCADO
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          Como Colocar Sua Empresa no Topo das IAs em até 14 Dias
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          O <strong>OmniCite GEO Engine</strong> implementa o ecossistema do <em>Ciclo de Excelência Digital</em>, gerando autoridade semântica com ganho informacional e indexação em minutos via protocolo IndexNow.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left pt-2">
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-border">
+          <div class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs mb-3 font-mono">01</div>
+          <h4 class="text-sm font-bold text-white mb-1">Injeção Semântica GEO</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Produção de artigos ricos com tabelas comparativas, Schema.org e respostas diretas aos prompts de compra dos clientes.
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-border">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs mb-3 font-mono">02</div>
+          <h4 class="text-sm font-bold text-white mb-1">IndexNow Instantâneo</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Notificação direta aos motores de busca da Microsoft (Bing, Copilot) e buscadores de IA em menos de 10 minutos após publicar.
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-border">
+          <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-gold flex items-center justify-center font-bold text-xs mb-3 font-mono">03</div>
+          <h4 class="text-sm font-bold text-white mb-1">Domínio dos 5 Pilares</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Harmonização de Google Maps, site ultra-rápido, agente conversacional de WhatsApp e CRM de vendas em um só fluxo.
+          </p>
+        </div>
+      </div>
+
+      <!-- BOTÕES DE FECHAMENTO COMERCIAL -->
+      <div class="pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button onclick="contactOnWhatsAppClosing()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition shadow-xl shadow-emerald-500/20">
+          <i data-lucide="message-circle" class="w-5 h-5"></i>
+          <span>Falar no WhatsApp com Rubens</span>
+        </button>
+
+        <a href="/#precos" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition shadow-xl shadow-sky-500/20">
+          <i data-lucide="credit-card" class="w-4 h-4"></i>
+          <span>Contratar Plano de Recuperação</span>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BARRA FLUTUANTE INFERIOR NO MOBILE -->
+  <div class="no-print fixed bottom-0 left-0 right-0 z-40 bg-[#07090e]/95 backdrop-blur-xl border-t border-border p-3 sm:hidden flex items-center justify-between gap-2">
+    <button onclick="shareOnWhatsApp()" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-slate-800 border border-border text-xs text-slate-200 font-semibold">
+      <i data-lucide="share-2" class="w-3.5 h-3.5 text-sky-400"></i>
+      <span>Compartilhar</span>
+    </button>
+    <button onclick="contactOnWhatsAppClosing()" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-emerald-500 text-slate-950 text-xs font-bold">
+      <i data-lucide="message-circle" class="w-4 h-4"></i>
+      <span>Falar no WhatsApp</span>
+    </button>
+  </div>
+
+  <script>
+    let reportData = null;
+
+    async function loadReport() {
+      // Obtém o slug ou ID da URL (ex: /relatorio/clinica-sorriso-sp ou ?id=...)
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      let targetId = pathParts[pathParts.length - 1];
+      
+      if (!targetId || targetId === 'relatorio' || targetId === 'report') {
+        const urlParams = new URLSearchParams(window.location.search);
+        targetId = urlParams.get('id') || urlParams.get('slug') || 'clinica-sorriso-sp';
+      }
+
+      try {
+        const res = await fetch(/api/public/scans/);
+        const json = await res.json();
+
+        if (json.success && json.data) {
+          reportData = json.data.scanData || json.data;
+          renderReport(reportData);
+          document.getElementById('loadingView').classList.add('hidden');
+          document.getElementById('reportContent').classList.remove('hidden');
+        } else {
+          showNotFound();
+        }
+      } catch (err) {
+        console.error('Erro ao carregar relatório:', err);
+        showNotFound();
+      }
+    }
+
+    function showNotFound() {
+      document.getElementById('loadingView').classList.add('hidden');
+      document.getElementById('notFoundView').classList.remove('hidden');
+    }
+
+    function renderReport(data) {
+      // Header
+      document.getElementById('brandTitle').textContent = data.brandName || data.domain;
+      document.getElementById('domainBadge').textContent = data.domain;
+      document.getElementById('nicheBadge').textContent = data.niche || 'Geral';
+      document.title = Dossiê GEO Oficial:  | OmniCite;
+
+      // Score
+      const score = data.geoScore || 34;
+      document.getElementById('scoreNumber').textContent = score;
+      const scoreBadge = document.getElementById('scoreBadge');
+      if (score >= 70) {
+        scoreBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-500/15 border border-emerald-500/30 text-emerald-300';
+        scoreBadge.textContent = 'Boa Visibilidade GEO';
+      } else if (score >= 50) {
+        scoreBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-500/15 border border-amber-500/30 text-amber-300';
+        scoreBadge.textContent = 'Visibilidade Parcial / Risco Médio';
+      } else {
+        scoreBadge.className = 'px-3 py-1 rounded-full text-xs font-bold uppercase bg-rose-500/15 border border-rose-500/30 text-rose-300';
+        scoreBadge.textContent = 'Risco Crítico de Invisibilidade';
+      }
+
+      if (data.riskSummary) {
+        document.getElementById('riskSummary').textContent = data.riskSummary;
+      }
+      if (data.estimatedLostTraffic) {
+        document.getElementById('lostTraffic').textContent = data.estimatedLostTraffic;
+      }
+      if (data.googleAudit?.googleHealthScore) {
+        document.getElementById('localScore').textContent = ${data.googleAudit.googleHealthScore} / 100 ();
+      }
+
+      // 4 IAs Grid
+      const grid = document.getElementById('aiEnginesGrid');
+      grid.innerHTML = '';
+      const models = data.models || [
+        { name: 'ChatGPT Search (OpenAI)', engine: 'CHATGPT', statusBadge: 'NÃO CITADO', shareEstimate: '0%', reason: 'Ausência de artigos com respostas estruturadas e Schema.org.' },
+        { name: 'Perplexity AI Pro', engine: 'PERPLEXITY', statusBadge: 'NÃO CITADO', shareEstimate: '0%', reason: 'Concorrentes possuem citações em sites terceiros de alta autoridade.' },
+        { name: 'Google Gemini Pro', engine: 'GEMINI', statusBadge: 'CITAÇÃO PARCIAL', shareEstimate: '15%', reason: 'Aparece apenas em pesquisas exatas da marca, sem relevância por intenção.' },
+        { name: 'Claude 3.5 Sonnet', engine: 'CLAUDE', statusBadge: 'NÃO CITADO', shareEstimate: '0%', reason: 'Domínio não reconhecido no Knowledge Graph do nicho.' }
+      ];
+
+      models.forEach(m => {
+        const isNotCited = m.status === 'NOT_CITED' || m.statusBadge?.includes('NÃO');
+        const badgeColor = isNotCited ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        grid.innerHTML += 
+          <div class="p-4 rounded-xl bg-card border border-border space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-xs sm:text-sm"></span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold border "></span>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed"></p>
+            <div class="text-[10px] font-mono text-slate-500 pt-1 border-t border-border/50 flex justify-between">
+              <span>Share estimado de menções:</span>
+              <strong class="text-white"></strong>
+            </div>
+          </div>
+        ;
+      });
+
+      // Concorrentes
+      const compBody = document.getElementById('competitorsTableBody');
+      compBody.innerHTML = '';
+      const comps = data.competitors || [
+        { name: 'Concorrente Líder A', domain: 'lidernicho.com.br', dominanceRate: '68%', citedReason: 'Artigos comparativos ricos em dados técnicos e FAQ' },
+        { name: 'Concorrente B2B B', domain: 'especialistasaopaulo.com.br', dominanceRate: '54%', citedReason: 'Perfil Google Meu Negócio otimizado com centenas de reviews' }
+      ];
+
+      comps.forEach(c => {
+        compBody.innerHTML += 
+          <tr class="hover:bg-slate-900/40">
+            <td class="py-3 px-3 font-semibold text-white"></td>
+            <td class="py-3 px-3 font-mono text-sky-400"></td>
+            <td class="py-3 px-3 font-mono font-bold text-amber-400"></td>
+            <td class="py-3 px-3 text-slate-300"></td>
+          </tr>
+        ;
+      });
+
+      // Pautas Recomendadas
+      const topicsList = document.getElementById('topicsList');
+      topicsList.innerHTML = '';
+      const topics = data.recommendedTopics || [
+        { title: Qual a melhor empresa de  no Brasil? Comparativo e Preços, primaryKeyword: melhor  custo beneficio, informationGainAngle: 'Tabela de preços transparente e diferenciais auditados' },
+        { title: Guia definitivo de contratação: Como escolher um especialista confiável, primaryKeyword: como contratar  sem erro, informationGainAngle: 'Checklist de segurança e termos de garantia' },
+        { title: ${data.brandName || data.domain} vs Concorrentes: Análise técnica imparcial, primaryKeyword: ${data.brandName || 'empresa'} avaliações confiavel, informationGainAngle: 'Matriz comparativa de funcionalidades e atendimento' }
+      ];
+
+      topics.forEach((t, idx) => {
+        topicsList.innerHTML += 
+          <div class="p-3.5 rounded-xl bg-card border border-border flex items-start gap-3">
+            <span class="w-6 h-6 rounded bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">0</span>
+            <div class="space-y-1">
+              <h4 class="text-xs sm:text-sm font-bold text-white"></h4>
+              <p class="text-[11px] text-slate-400"><strong class="text-sky-400">Ângulo de Ataque:</strong> </p>
+            </div>
+          </div>
+        ;
+      });
+
+      lucide.createIcons();
+    }
+
+    function shareOnWhatsApp() {
+      if (!reportData) return;
+      const url = window.location.href;
+      const brand = reportData.brandName || reportData.domain;
+      const score = reportData.geoScore || 34;
+      const msg = Olá! Acabei de gerar o Diagnóstico Oficial de Visibilidade em Inteligência Artificial (GEO) da **.\n\n📊 *Score GEO:* /100\n🚨 *Status:* Quando os clientes perguntam ao ChatGPT e Perplexity por soluções no seu nicho, a sua empresa não está sendo citada.\n\nConfira o relatório completo e o plano de recuperação aqui:\n👉 ;
+      
+      // Abre o WhatsApp Web ou App
+      window.open(https://api.whatsapp.com/send?text=, '_blank');
+    }
+
+    function contactOnWhatsAppClosing() {
+      const brand = reportData?.brandName || reportData?.domain || 'minha empresa';
+      const url = window.location.href;
+      const msg = Olá Rubens! Vi o diagnóstico de visibilidade em IA da ** no OmniCite () e quero implementar o plano de recuperação GEO para colocar nossa marca nas recomendações do ChatGPT e Perplexity!;
+      window.open(https://api.whatsapp.com/send?phone=5511999998888&text=, '_blank');
+    }
+
+    // Inicia ao carregar
+    window.addEventListener('DOMContentLoaded', () => {
+      loadReport();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
