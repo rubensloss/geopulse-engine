@@ -1,0 +1,146 @@
+import { processContentJob } from './content-processor.js';
+import { db } from '../db/index.js';
+/**
+ * Agendador Autônomo de Conteúdo (Scheduler Engine).
+ * Roda continuamente em background, monitorando pautas agendadas por marca,
+ * controlando concorrência por tenant e disparando a esteira autônoma.
+ */
+export class AutonomousScheduler {
+    isRunning = false;
+    timer = null;
+    activeJobsCount = 0;
+    activeBrandJobs = new Set(); // Controle de concorrência por marca
+    options;
+    constructor(options = {}) {
+        this.options = {
+            concurrency: options.concurrency ?? 2,
+            pollIntervalMs: options.pollIntervalMs ?? 3000,
+            maxRetries: options.maxRetries ?? 3,
+            useRedis: options.useRedis ?? false,
+            redisUrl: options.redisUrl ?? (process.env.REDIS_URL || 'redis://localhost:6379'),
+        };
+    }
+    /**
+     * Inicia o ciclo do agendador
+     */
+    start() {
+        if (this.isRunning) {
+            console.warn('⚠️ [SCHEDULER] O agendador já está em execução.');
+            return;
+        }
+        this.isRunning = true;
+        console.log(`\n⏰ [SCHEDULER] Iniciado com sucesso!`);
+        console.log(`   - Concorrência máxima global: ${this.options.concurrency}`);
+        console.log(`   - Intervalo de checagem: ${this.options.pollIntervalMs}ms`);
+        console.log(`   - Modo: ${this.options.useRedis ? 'Distribuído (BullMQ + Redis)' : 'Autônomo (In-Memory Worker Pool)'}`);
+        // Executa imediatamente o primeiro ciclo
+        this.tick();
+        // Inicia loop periódico
+        this.timer = setInterval(() => {
+            this.tick();
+        }, this.options.pollIntervalMs);
+    }
+    /**
+     * Para o agendador de forma segura
+     */
+    stop() {
+        if (!this.isRunning)
+            return;
+        this.isRunning = false;
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+        console.log('🛑 [SCHEDULER] Agendador pausado com segurança.');
+    }
+    /**
+     * Ciclo de checagem do Scheduler
+     */
+    async tick() {
+        if (!this.isRunning)
+            return;
+        // Se já atingiu o limite de concorrência global, aguarda o próximo ciclo
+        if (this.activeJobsCount >= this.options.concurrency) {
+            return;
+        }
+        // Busca todas as organizações e marcas ativas
+        // Para cada marca, verifica se há pautas pendentes
+        // (Como usamos o EnterpriseRepository, varremos as marcas cadastradas)
+        const pendingTopicsToProcess = this.findNextEligibleTopics();
+        for (const jobData of pendingTopicsToProcess) {
+            if (this.activeJobsCount >= this.options.concurrency) {
+                break;
+            }
+            // Concorrência por marca: se a marca já está gerando um artigo agora, pula para não sobrecarregar
+            if (this.activeBrandJobs.has(jobData.brandId)) {
+                continue;
+            }
+            // Despacha o Job para execução assíncrona
+            this.dispatchJob(jobData);
+        }
+    }
+    /**
+     * Identifica pautas elegíveis para processamento imediato
+     */
+    findNextEligibleTopics() {
+        const eligible = [];
+        const now = new Date();
+        // Como as marcas são registradas no repositório, buscamos tópicos pendentes
+        // No ambiente de banco real (Prisma), seria uma query:
+        // WHERE status IN ('BACKLOG', 'SCHEDULED') AND (scheduledFor IS NULL OR scheduledFor <= now) ORDER BY priority DESC
+        // Aqui usamos os métodos do repositório:
+        const activeBrands = db.listAllActiveBrands();
+        for (const brand of activeBrands) {
+            const pending = db.listPendingTopics(brand.id);
+            for (const topic of pending) {
+                if (!topic.scheduledFor || topic.scheduledFor <= now) {
+                    eligible.push({
+                        brandId: topic.brandId,
+                        topicQueueId: topic.id,
+                        topic: topic.topic,
+                        primaryKeyword: topic.primaryKeyword,
+                        priority: topic.priority,
+                        scheduledFor: topic.scheduledFor,
+                    });
+                    break; // Pega 1 pauta por marca por ciclo para garantir rotatividade justa
+                }
+            }
+        }
+        return eligible;
+    }
+    /**
+     * Dispara a execução assíncrona do Job
+     */
+    async dispatchJob(job) {
+        this.activeJobsCount++;
+        this.activeBrandJobs.add(job.brandId);
+        console.log(`\n🚀 [SCHEDULER DISPATCH] Pauta "${job.topic}" enviada ao worker.`);
+        console.log(`   Slots ocupados: ${this.activeJobsCount}/${this.options.concurrency}`);
+        // Executa em background sem bloquear o tick do scheduler
+        processContentJob(job)
+            .then((result) => {
+            if (result.success) {
+                console.log(`🎉 [SCHEDULER CONCLUÍDO] Job finalizado em ${result.durationMs}ms para a marca ${job.brandId}`);
+            }
+            else {
+                console.warn(`⚠️ [SCHEDULER FALHA] Job falhou: ${result.error}`);
+            }
+        })
+            .catch((err) => {
+            console.error(`💥 [SCHEDULER CRITICAL]:`, err);
+        })
+            .finally(() => {
+            this.activeJobsCount = Math.max(0, this.activeJobsCount - 1);
+            this.activeBrandJobs.delete(job.brandId);
+        });
+    }
+    getStatus() {
+        return {
+            isRunning: this.isRunning,
+            activeJobsCount: this.activeJobsCount,
+            activeBrands: Array.from(this.activeBrandJobs),
+        };
+    }
+}
+// Instância singleton exportada
+export const scheduler = new AutonomousScheduler();

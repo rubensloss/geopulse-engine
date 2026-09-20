@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+enum UserRole {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum CMSPlatform {
+  WORDPRESS
+  WEBFLOW
+  SHOPIFY
+  WEBHOOK
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum SearchIntent {
+  INFORMATIONAL
+  COMMERCIAL
+  TRANSACTIONAL
+}
+
+enum QueueStatus {
+  BACKLOG
+  SCHEDULED
+  RESEARCHING
+  WRITING
+  READY_FOR_REVIEW
+  PUBLISHED
+  FAILED
+}
+
+enum AIEngine {
+  CHATGPT
+  PERPLEXITY
+  GEMINI
+  CLAUDE
+  COPILOT
+  GROK
+  DEEPSEEK
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  NOT_MENTIONED
+}
+
+// -----------------------------------------------------------------------------
+// MULTI-TENANT & ORGANIZAÇÃO (Agência ou Conta SaaS)
+// -----------------------------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users  User[]
+  brands Brand[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String       @unique
+  name           String
+  passwordHash   String?
+  role           UserRole     @default(EDITOR)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+// MARCA / CLIENTE ATENDIDO (Brand Profile & Cérebro da Marca)
+// -----------------------------------------------------------------------------
+
+model Brand {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  name               String   // Ex: "ScaleAI Solutions"
+  websiteUrl         String   // Ex: "https://scaleai.com.br"
+  productDescription String   @db.Text
+  targetAudience     String   @db.Text
+  toneOfVoice        String   @db.Text
+  ctaTargetUrl       String
+  ctaText            String?
+  forbiddenTerms     String[] @default([])
+  targetLanguage     String   @default("pt-BR")
+  
+  // Configurações de Automação
+  autoPublish        Boolean  @default(false) // Se true, publica direto no CMS. Se false, fica em READY_FOR_REVIEW
+  publishingSchedule String?  // Ex: "0 9 * * 1,3,5" (Segunda, Quarta, Sexta às 9h)
+  isActive           Boolean  @default(true)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cmsIntegrations    CMSIntegration[]
+  topicQueues        TopicQueue[]
+  articles           Article[]
+  internalLinks      InternalLinkIndex[]
+  geoMonitors        GEOMonitorRun[]
+
+  @@index([organizationId])
+  @@map("brands")
+}
+
+// -----------------------------------------------------------------------------
+// INTEGRAÇÕES COM CMS (Credenciais Criptografadas com AES-256-GCM)
+// -----------------------------------------------------------------------------
+
+model CMSIntegration {
+  id                   String      @id @default(cuid())
+  brandId              String
+  platform             CMSPlatform
+  siteUrl              String?     // Ex: "https://site-do-cliente.com.br"
+  
+  // Credenciais criptografadas em repouso (IV + AuthTag + Ciphertext)
+  encryptedCredentials String      @db.Text
+  
+  defaultPostStatus    PostStatus  @default(DRAFT)
+  isActive             Boolean     @default(true)
+  lastSyncAt           DateTime?
+
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  brand                Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@map("cms_integrations")
+}
+
+// -----------------------------------------------------------------------------
+// FILA DE PAUTAS E PLANEJAMENTO DE CONTEÚDO (Queue / Scheduler)
+// -----------------------------------------------------------------------------
+
+model TopicQueue {
+  id             String       @id @default(cuid())
+  brandId        String
+  topic          String       @db.Text // Ex: "O que é GEO e como ranquear no ChatGPT"
+  primaryKeyword String
+  searchIntent   SearchIntent @default(INFORMATIONAL)
+  priority       Int          @default(1) // 1 (Normal) a 5 (Urgente)
+  status         QueueStatus  @default(BACKLOG)
+  scheduledFor   DateTime?
+  errorMessage   String?      @db.Text
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  brand          Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  article        Article?
+
+  @@index([brandId, status])
+  @@map("topic_queues")
+}
+
+// -----------------------------------------------------------------------------
+// ARTIGO GERADO & PUBLICADO
+// -----------------------------------------------------------------------------
+
+model Article {
+  id               String       @id @default(cuid())
+  brandId          String
+  topicQueueId     String?      @unique
+  
+  // Conteúdo e Metadados
+  title            String
+  slug             String
+  metaDescription  String       @db.Text
+  contentMarkdown  String       @db.Text
+  contentHtml      String       @db.Text
+  
+  // Dados Semânticos e Schemas
+  schemaJsonLd     Json         // Armazena BlogPosting + FAQPage Schema.org
+  faqItems         Json         // Array de { question, answer }
+  metrics          Json         // { totalWords, readingTimeMinutes, tableCount, directAnswersCount }
+
+  // Status de Publicação e Distribuição
+  status           PostStatus   @default(DRAFT)
+  cmsPlatform      CMSPlatform?
+  remotePostId     String?      // ID retornado pelo WordPress / Webflow
+  publishedUrl     String?      // URL pública do artigo no ar
+  indexNowNotified Boolean      @default(false)
+  publishedAt      DateTime?
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  brand            Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  topicQueue       TopicQueue?  @relation(fields: [topicQueueId], references: [id], onDelete: SetNull)
+  internalLinks    InternalLinkIndex[]
+
+  @@unique([brandId, slug])
+  @@index([brandId, status])
+  @@map("articles")
+}
+
+// -----------------------------------------------------------------------------
+// ÍNDICE DE LINKS INTERNOS (Alimenta a Malha de Autoridade Tópica)
+// -----------------------------------------------------------------------------
+
+model InternalLinkIndex {
+  id        String   @id @default(cuid())
+  brandId   String
+  articleId String
+  title     String
+  url       String
+  keywords  String[] @default([])
+
+  createdAt DateTime @default(now())
+
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([brandId])
+  @@map("internal_link_indices")
+}
+
+// -----------------------------------------------------------------------------
+// MONITOR GEO: SHARE OF MODEL & CITAÇÕES EM IA
+// -----------------------------------------------------------------------------
+
+model GEOMonitorRun {
+  id               String    @id @default(cuid())
+  brandId          String
+  queryPrompt      String    @db.Text // Pergunta simulada, ex: "Quais os melhores CRMs para indústrias?"
+  targetEngine     AIEngine  // ChatGPT, Perplexity, Gemini, etc.
+  
+  // Métricas de Citação
+  isBrandMentioned Boolean   @default(false)
+  mentionRank      Int?      // 1º lugar na resposta, 2º lugar, etc.
+  sentiment        Sentiment @default(NOT_MENTIONED)
+  citedUrls        String[]  @default([])
+  rawAnswerText    String    @db.Text // Texto completo retornado pelo LLM para auditoria
+
+  createdAt        DateTime  @default(now())
+
+  brand            Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([brandId, targetEngine, createdAt])
+  @@map("geo_monitor_runs")
+}

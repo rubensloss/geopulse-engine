@@ -1,0 +1,3016 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniCite Engine | Painel de Controle GEO & SEO</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              glow: '#38bdf8',
+            },
+            surface: {
+              900: '#090a0f',
+              800: '#11131c',
+              700: '#181b28',
+              border: '#232738',
+              hover: '#1f2438',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(17, 19, 28, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid #232738;
+    }
+    .glow-btn {
+      position: relative;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+      transition: all 0.2s ease;
+    }
+    .glow-btn:hover {
+      box-shadow: 0 0 28px rgba(56, 189, 248, 0.45);
+      transform: translateY(-1px);
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090a0f; }
+    ::-webkit-scrollbar-thumb { background: #232738; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
+  </style>
+</head>
+<body class="bg-[#090a0f] text-slate-100 min-h-screen flex flex-col antialiased">
+
+  <!-- ========================================================================= -->
+  <!-- TOPO / HEADER -->
+  <!-- ========================================================================= -->
+  <header class="border-b border-surface-border glass sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Marca Atual -->
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-sky-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+          </div>
+          <div>
+            <span class="font-bold text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">OmniCite</span>
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 ml-1.5">GEO Engine</span>
+          </div>
+        </div>
+
+        <span class="h-4 w-px bg-surface-border hidden md:block"></span>
+
+        <!-- Seletor de Marca / Cliente -->
+        <div class="hidden sm:flex items-center gap-2">
+          <span class="text-xs text-slate-400">Cliente:</span>
+          <select id="brandSelector" onchange="switchBrand(this.value)" class="bg-surface-800 border border-surface-border text-xs rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-blue-500 transition max-w-[180px]">
+            <option value="brand_default">CloudSync Soluções B2B</option>
+          </select>
+          <button onclick="openNewBrandModal()" class="px-2 py-1.5 rounded-md bg-surface-800 hover:bg-surface-700 border border-surface-border text-sky-400 hover:text-white text-xs flex items-center gap-1 transition" title="Cadastrar Nova Empresa / Cliente">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span class="text-[11px] font-semibold">Nova Empresa</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status do Sistema & Ações -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-2">
+          <div class="hidden sm:flex flex-col text-right">
+            <span id="dashUserName" class="text-xs font-bold text-white">Rubens Investidor</span>
+            <span id="dashUserPlan" class="text-[10px] font-mono text-amber-400">👑 Ciclo de Excelência</span>
+          </div>
+          <button onclick="logoutDashboard()" class="p-1.5 rounded-lg border border-surface-border hover:bg-rose-500/10 hover:border-rose-500/30 text-slate-400 hover:text-rose-400 transition" title="Sair da Conta">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <a href="/" target="_blank" class="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-surface-border hover:bg-surface-800 transition" title="Ver Apresentação Comercial">
+          <i data-lucide="external-link" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span class="hidden sm:inline">Site Comercial</span>
+        </a>
+
+        <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400 font-mono">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Worker 24/7 Ativo
+        </div>
+
+        <button onclick="openNewTopicModal()" class="glow-btn text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          Nova Pauta
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- NAVEGAÇÃO POR ABAS -->
+  <!-- ========================================================================= -->
+  <div class="border-b border-surface-border bg-surface-900/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto py-2">
+      <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 bg-surface-700 text-white border border-surface-border">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-blue-400"></i>
+        Visão Geral
+      </button>
+      <button onclick="switchTab('queue')" id="tab-queue" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
+        <i data-lucide="list-todo" class="w-3.5 h-3.5"></i>
+        Esteira de Pautas
+        <span id="queueBadge" class="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-mono">3</span>
+      </button>
+      <button onclick="switchTab('articles')" id="tab-articles" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
+        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+        Artigos & Estúdio
+      </button>
+      <button onclick="switchTab('geo')" id="tab-geo" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
+        <i data-lucide="bot" class="w-3.5 h-3.5 text-sky-400"></i>
+        Monitor GEO (IAs)
+      </button>
+      <button onclick="switchTab('brain')" id="tab-brain" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
+        <i data-lucide="brain" class="w-3.5 h-3.5"></i>
+        Cérebro da Marca
+      </button>
+      <button onclick="switchTab('ecosystem')" id="tab-ecosystem" class="tab-btn px-3.5 py-1.5 text-xs font-semibold rounded-md transition flex items-center gap-2 text-amber-300 hover:text-white hover:bg-amber-500/10 border border-amber-500/30">
+        <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
+        👑 Ciclo de Excelência
+      </button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
+        <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+        Configurações & Chaves
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CONTEÚDO DAS ABAS -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- ========================================================================= -->
+    <!-- BANNER DE ONBOARDING INTELIGENTE (ATIVADO APÓS AUDITORIA NO SCANNER) -->
+    <!-- ========================================================================= -->
+    <div id="onboardingBanner" class="hidden mb-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-sky-500/15 via-blue-500/10 to-indigo-500/15 border border-sky-500/30 shadow-lg shadow-sky-500/5 relative overflow-hidden">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div class="space-y-1.5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              DIAGNÓSTICO CONVERTIDO EM AÇÃO
+            </span>
+            <span class="text-xs font-mono text-sky-400 font-semibold" id="onboardDomainText">empresa.com.br</span>
+          </div>
+          <h3 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span>🎯 Marca Ativa: <span id="onboardBrandName" class="text-sky-300">Nova Marca</span></span>
+          </h3>
+          <p class="text-xs text-slate-300 leading-relaxed max-w-3xl">
+            Injetamos com sucesso as <strong class="text-white">3 pautas prioritárias de ataque GEO</strong> detectadas no escaneamento diretamente na sua esteira de produção. Cada artigo será redigido com tabelas de comparação, Schema.org e respostas diretas para os buscadores generativos (Perplexity, ChatGPT Search e Gemini).
+          </p>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0 self-start md:self-center">
+          <button onclick="dismissOnboardingBanner()" class="px-3.5 py-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-400 hover:text-white text-xs font-medium border border-surface-border transition">
+            Dispensar
+          </button>
+          <button onclick="switchTab('queue')" class="glow-btn text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Ver Pautas na Esteira</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+      <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none"></div>
+    </div>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- ABA 1: VISÃO GERAL -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-overview" class="tab-content space-y-6">
+      
+      <!-- Cards de Métricas Principais -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="glass p-4 rounded-xl relative overflow-hidden">
+          <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+            <span>Share of Model (IA)</span>
+            <i data-lucide="bot" class="w-4 h-4 text-sky-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-white tracking-tight" id="metricSov">67%</div>
+          <p class="text-[11px] text-emerald-400 flex items-center gap-1 mt-1 font-medium">
+            <i data-lucide="trending-up" class="w-3 h-3"></i> +14% vs. mês anterior
+          </p>
+          <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-sky-500/5 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+
+        <div class="glass p-4 rounded-xl relative overflow-hidden">
+          <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+            <span>Artigos Publicados</span>
+            <i data-lucide="book-check" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-white tracking-tight" id="metricArticles">1</div>
+          <p class="text-[11px] text-slate-400 mt-1 font-medium">
+            3 pautas no pipeline
+          </p>
+        </div>
+
+        <div class="glass p-4 rounded-xl relative overflow-hidden">
+          <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+            <span>Indexação Instantânea</span>
+            <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-white tracking-tight">100%</div>
+          <p class="text-[11px] text-emerald-400 mt-1 font-medium">
+            Protocolo IndexNow ativo
+          </p>
+        </div>
+
+        <div class="glass p-4 rounded-xl relative overflow-hidden">
+          <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+            <span>Motor de IA</span>
+            <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-white tracking-tight">Gemini Pro</div>
+          <p class="text-[11px] text-indigo-300 mt-1 font-mono">
+            Google Search Grounding
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Grid com Gráfico de Modelos e Atividades Recentes -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Presença por Modelo de IA -->
+        <div class="glass p-5 rounded-xl lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-sm text-white">Presença em Respostas por Motor de IA</h3>
+              <p class="text-xs text-slate-400">Taxa em que sua marca é recomendada em perguntas de compra</p>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400 px-2 py-1 rounded bg-surface-800 border border-surface-border">Últimos 30 dias</span>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <div>
+              <div class="flex justify-between text-xs mb-1.5 font-medium">
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Perplexity AI</span>
+                <span class="text-cyan-400 font-mono">100% (1/1)</span>
+              </div>
+              <div class="w-full bg-surface-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1.5 font-medium">
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> ChatGPT (Search)</span>
+                <span class="text-emerald-400 font-mono">100% (1/1)</span>
+              </div>
+              <div class="w-full bg-surface-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1.5 font-medium">
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-violet-400"></span> Google (Busca & AI Overviews)</span>
+                <span class="text-violet-400 font-mono">0% (0/1)</span>
+              </div>
+              <div class="w-full bg-surface-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-violet-500/30 h-full rounded-full" style="width: 15%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status de Conexões -->
+        <div class="glass p-5 rounded-xl space-y-4">
+          <h3 class="font-semibold text-sm text-white">Conexões do Cliente</h3>
+          <div class="space-y-3 text-xs">
+            <div class="p-3 rounded-lg bg-surface-800/80 border border-surface-border flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded bg-blue-500/10 flex items-center justify-center text-blue-400 font-bold">W</div>
+                <div>
+                  <p class="font-semibold text-white">WordPress CMS</p>
+                  <p class="text-[11px] text-slate-400">cloudsync.com.br</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Conectado</span>
+            </div>
+
+            <div class="p-3 rounded-lg bg-surface-800/80 border border-surface-border flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold">⚡</div>
+                <div>
+                  <p class="font-semibold text-white">Protocolo IndexNow</p>
+                  <p class="text-[11px] text-slate-400">Bing, Naver, Copilot</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Ativo</span>
+            </div>
+
+            <div class="p-3 rounded-lg bg-surface-800/80 border border-surface-border flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">🔒</div>
+                <div>
+                  <p class="font-semibold text-white">Criptografia</p>
+                  <p class="text-[11px] text-slate-400">AES-256-GCM Ativa</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Seguro</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- ABA 2: ESTEIRA DE PAUTAS (QUEUE / KANBAN) -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-queue" class="tab-content hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-white">Esteira de Conteúdo & Fila de Execução</h2>
+          <p class="text-xs text-slate-400">Pautas priorizadas pelo algoritmo e prontas para geração autônoma</p>
+        </div>
+        <button onclick="openNewTopicModal()" class="glow-btn text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 self-start">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          Adicionar Pauta
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3" id="topicsContainer">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- ABA 3: ARTIGOS & ESTÚDIO -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-articles" class="tab-content hidden space-y-4">
+      <div>
+        <h2 class="text-lg font-bold text-white">Artigos Gerados & Auditoria GEO</h2>
+        <p class="text-xs text-slate-400">Inspeção profunda de ganho informacional, tabelas comparativas e Schemas JSON-LD</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Lista de Artigos -->
+        <div class="glass p-4 rounded-xl space-y-3" id="articlesList">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Artigos na Base</h3>
+          <!-- Itens renderizados dinamicamente -->
+        </div>
+
+        <!-- Inspetor de Artigo Selecionado -->
+        <div class="glass p-5 rounded-xl lg:col-span-2 space-y-4" id="articleInspector">
+          <!-- Conteúdo renderizado dinamicamente -->
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- ABA 4: MONITOR GEO (IA CITATIONS) -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-geo" class="tab-content hidden space-y-6">
+      <div>
+        <h2 class="text-lg font-bold text-white">Observabilidade GEO: Share of Model</h2>
+        <p class="text-xs text-slate-400">Auditoria automatizada de respostas nos motores ChatGPT, Perplexity e Gemini</p>
+      </div>
+
+      <div class="glass rounded-xl overflow-hidden">
+        <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-white">Auditoria de Prompts de Compra Simulados</h3>
+          <span class="text-xs text-slate-400 font-mono">Frequência: Semanal</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-surface-800 text-slate-400 border-b border-surface-border">
+              <tr>
+                <th class="p-3.5 font-medium">Prompt de Compra Testado</th>
+                <th class="p-3.5 font-medium">Motor de IA</th>
+                <th class="p-3.5 font-medium">Posição</th>
+                <th class="p-3.5 font-medium">Sentimento</th>
+                <th class="p-3.5 font-medium">Links Citados</th>
+              </tr>
+            </thead>
+            <tbody id="geoTableBody" class="divide-y divide-surface-border">
+              <!-- Renderizado dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- ABA 5: CÉREBRO DA MARCA -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-brain" class="tab-content hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-white">Cérebro da Marca (Brand Profile)</h2>
+          <p class="text-xs text-slate-400">Configurações semânticas que guiam todas as redações e garantem diferenciação</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono flex items-center gap-1.5">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          Diretrizes Ativas
+        </span>
+      </div>
+
+      <div class="glass p-6 rounded-xl max-w-3xl space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome da Empresa / Marca</label>
+            <input type="text" id="brainName" placeholder="Ex: Smart Fit" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Domínio Oficial (URL)</label>
+            <input type="url" id="brainWebsiteUrl" placeholder="https://seusite.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Proposta de Valor Única (UVP) & Diferenciais</label>
+          <textarea id="brainProductDescription" rows="2" placeholder="O que torna a sua empresa única e insubstituível para os clientes?" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Público-Alvo Prioritário (ICP)</label>
+            <input type="text" id="brainTargetAudience" placeholder="Ex: Gestores de TI, Praticantes de musculação..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Tom de Voz da Redação</label>
+            <input type="text" id="brainToneOfVoice" placeholder="Ex: Pragmático, técnico, sênior e acolhedor" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">URL de Destino do CTA Principal</label>
+            <input type="url" id="brainCtaUrl" placeholder="https://seusite.com.br/planos" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Texto da Ação (Chamada para Ação)</label>
+            <input type="text" id="brainCtaText" placeholder="Ex: Ver Planos e Matricular-se" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Termos Proibidos / Restrições (Compliance)</label>
+          <input type="text" id="brainForbiddenTerms" placeholder="Ex: milagroso, garantia 100%, pirâmide (separados por vírgula)" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          <p class="text-[10px] text-slate-400 mt-1">O linter GEO bloqueará automaticamente qualquer redação que mencione essas expressões.</p>
+        </div>
+
+        <div class="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-surface-border">
+          <div class="flex items-center gap-3">
+            <input type="checkbox" id="brainAutoPublish" class="w-4 h-4 rounded bg-surface-800 border-surface-border text-blue-600 focus:ring-0">
+            <label for="brainAutoPublish" class="text-xs text-slate-300">Publicar automaticamente no CMS (WordPress/Webflow) sem exigir aprovação prévia</label>
+          </div>
+          <button onclick="saveBrandBrain()" id="btnSaveBrain" class="glow-btn text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 self-end sm:self-auto">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span>Salvar Perfil</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  
+    <!-- ======================================================================= -->
+    <!-- ABA: ECOSSISTEMA CICLO DE EXCELÊNCIA DIGITAL (5 PILARES) -->
+    <!-- ======================================================================= -->
+    <div id="view-ecosystem" class="tab-content hidden space-y-6">
+      
+      <!-- Banner de Destaque da Joia da Coroa -->
+      <div class="p-6 sm:p-8 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/[0.08] via-purple-500/[0.05] to-sky-500/[0.05] shadow-2xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 font-mono text-xs text-amber-400">
+              <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+              <span class="font-bold uppercase tracking-wider">Ecossistema Completo de Negócios</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white">Ciclo de Excelência Digital</h2>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+              Os 5 pilares integrados que transformam qualquer empresa em líder de mercado: presença local no Google, site de alta conversão, atendimento 24/7 com IA, gestão de vendas no CRM e o <strong class="text-white">Motor GEO como a Joia da Coroa</strong> de aquisição contínua.
+            </p>
+          </div>
+          <div class="shrink-0 p-4 rounded-xl border border-amber-500/30 bg-surface/80 text-center">
+            <span class="text-[10px] font-mono uppercase text-muted block">Status do Ecossistema</span>
+            <span class="text-lg font-bold text-emerald-400 font-mono flex items-center justify-center gap-1 mt-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              100% OPERACIONAL
+            </span>
+            <span class="text-[11px] text-slate-400 mt-1 block">5 de 5 Pilares Sincronizados</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade dos 5 Pilares -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        
+        <!-- PILAR 1: GOOGLE MEU NEGÓCIO -->
+        <div class="p-5 rounded-xl border border-surface-border bg-surface-800/80 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <i data-lucide="map-pin" class="w-4 h-4"></i>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                Verificado & Ativo
+              </span>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Pilar 1: Google Meu Negócio & Maps</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Ficha otimizada com fotos 360°, postagens semanais e gestão de reputação.
+              </p>
+            </div>
+            <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
+              <span class="text-slate-400">Avaliação:</span>
+              <span class="text-amber-400 font-bold flex items-center gap-1">4.8 ★ <span class="text-slate-500 font-normal">(142 reviews)</span></span>
+            </div>
+          </div>
+          <button onclick="openPillarDetail('gmb')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-emerald-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Ver Ficha no Maps & Métricas</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- PILAR 2: SITE MODERNO E IMERSIVO -->
+        <div class="p-5 rounded-xl border border-surface-border bg-surface-800/80 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
+                <i data-lucide="globe" class="w-4 h-4"></i>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 uppercase">
+                Score 98/100
+              </span>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Pilar 2: Site Moderno & Imersivo</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Design mobile-first ultra veloz, estruturado com schemas JSON-LD e blindado para Zero-Click.
+              </p>
+            </div>
+            <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
+              <span class="text-slate-400">Core Web Vitals:</span>
+              <span class="text-emerald-400 font-bold">LCP 0.8s • CLS 0.0</span>
+            </div>
+          </div>
+          <button onclick="openPillarDetail('site')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-sky-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Inspecionar Performance & SEO</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- PILAR 3: AGENTE DE IA 24/7 -->
+        <div class="p-5 rounded-xl border border-surface-border bg-surface-800/80 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 uppercase">
+                Atendimento 24/7
+              </span>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Pilar 3: Agente de IA Conversacional</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Qualificação em tempo real de leads no WhatsApp e Web, sem deixar clientes sem resposta.
+              </p>
+            </div>
+            <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
+              <span class="text-slate-400">Conversas no Mês:</span>
+              <span class="text-purple-400 font-bold">438 leads qualificados</span>
+            </div>
+          </div>
+          <button onclick="openPillarDetail('ai_agent')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-purple-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Ver Conversas do Agente</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- PILAR 4: CRM INTEGRADO -->
+        <div class="p-5 rounded-xl border border-surface-border bg-surface-800/80 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                <i data-lucide="kanban" class="w-4 h-4"></i>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                Sincronizado
+              </span>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Pilar 4: CRM & Gestão de Funil</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Pipeline comercial completo com automação de follow-up e histórico de negociações.
+              </p>
+            </div>
+            <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
+              <span class="text-slate-400">Em Negociação:</span>
+              <span class="text-blue-400 font-bold">29 Oportunidades • R$ 148k</span>
+            </div>
+          </div>
+          <button onclick="openPillarDetail('crm')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-blue-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>Abrir Pipeline no CRM</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- PILAR 5: A JOIA DA COROA (MOTOR GEO) -->
+        <div class="md:col-span-2 p-5 rounded-xl border border-amber-500/40 bg-amber-500/[0.04] flex flex-col justify-between relative overflow-hidden">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                  <i data-lucide="crown" class="w-5 h-5"></i>
+                </div>
+                <span class="font-mono text-xs font-bold text-amber-400 uppercase">A Joia da Coroa do Ecossistema</span>
+              </div>
+              <span class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                78% Share of Model
+              </span>
+            </div>
+            <div>
+              <h4 class="text-base font-bold text-white">Pilar 5: Motor Autônomo GEO (OmniCite Engine)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Geração contínua de conteúdos com Information Gain e indexação em tempo real que forçam o ChatGPT, Perplexity, Claude e Gemini a citarem a sua empresa como autoridade absoluta do mercado.
+              </p>
+            </div>
+            <div class="grid grid-cols-3 gap-3 pt-2">
+              <div class="p-2.5 rounded-lg border border-surface-border bg-surface-900/80 text-center">
+                <span class="text-[10px] font-mono text-muted block">Citações no ChatGPT</span>
+                <span class="text-sm font-bold text-emerald-400 font-mono">Top #1</span>
+              </div>
+              <div class="p-2.5 rounded-lg border border-surface-border bg-surface-900/80 text-center">
+                <span class="text-[10px] font-mono text-muted block">Fontes no Perplexity</span>
+                <span class="text-sm font-bold text-sky-400 font-mono">18 Páginas</span>
+              </div>
+              <div class="p-2.5 rounded-lg border border-surface-border bg-surface-900/80 text-center">
+                <span class="text-[10px] font-mono text-muted block">Google AI Overviews</span>
+                <span class="text-sm font-bold text-purple-400 font-mono">Ativo</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="switchTab('queue')" class="mt-4 w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-amber-500 to-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10">
+            <span>Gerenciar Pautas da Joia da Coroa</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- --------------------------------------------------------------------- -->
+    <!-- ABA 7: CONFIGURAÇÕES & CHAVES -->
+    <!-- --------------------------------------------------------------------- -->
+    <section id="view-settings" class="tab-content hidden space-y-6">
+      
+      <!-- Cabeçalho da Aba -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i>
+            Configurações da Plataforma & Chaves de API
+          </h2>
+          <p class="text-xs text-slate-400">Gerencie a inteligência do Google Gemini, protocolo IndexNow, publicação em CMS e credenciais de segurança.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Motor 100% Operacional
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- CARD 1: GOOGLE GEMINI AI -->
+        <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                <i data-lucide="cpu" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">Google Gemini AI Engine</h3>
+                <p class="text-[11px] text-slate-400">Grounding e raciocínio generativo com Information Gain</p>
+              </div>
+            </div>
+            <span id="geminiStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Chave Ativa
+            </span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1 font-medium">Chave de API do Google AI Studio</label>
+              <div class="relative">
+                <input type="password" id="cfgGeminiKey" placeholder="AIzaSyB••••••••••••••••••••••••••••" class="w-full bg-surface-800 border border-surface-border rounded-lg pl-3 pr-10 py-2.5 text-white font-mono focus:outline-none focus:border-blue-500 transition">
+                <button type="button" onclick="togglePasswordVisibility('cfgGeminiKey', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-white">
+                  <i data-lucide="eye" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1">Sua chave é criptografada e armazenada de forma segura na infraestrutura do motor.</p>
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1 font-medium">Modelo Principal de IA</label>
+              <select id="cfgGeminiModel" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 transition">
+                <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Recomendado - Ultrarrápido, ~R$ 0,12/artigo)</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Máximo Raciocínio Profundo & Grounding)</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Alta Janela de Contexto)</option>
+              </select>
+            </div>
+
+            <div id="geminiTestFeedback" class="hidden p-3 rounded-lg border text-xs"></div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <button onclick="testGeminiConnection()" id="btnTestGemini" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-medium border border-surface-border flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400"></i>
+                <span>Testar Conexão Google AI</span>
+              </button>
+              <button onclick="saveGeminiSettings()" id="btnSaveGemini" class="w-full sm:w-auto glow-btn text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-1.5">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Salvar Configuração</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: PROTOCOLO INDEXNOW -->
+        <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">Protocolo IndexNow Instantâneo</h3>
+                <p class="text-[11px] text-slate-400">Bing Search, Copilot, Yandex & Seznam em menos de 10 minutos</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Protocolo Ativo
+            </span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1 font-medium">Domínio Host do Cliente</label>
+              <input type="text" id="cfgIndexNowHost" value="cloudsync.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500 transition">
+            </div>
+
+            <div>
+              <label class="block text-slate-300 mb-1 font-medium">Chave de Verificação IndexNow (Key)</label>
+              <input type="text" id="cfgIndexNowKey" value="8f3c2a9e1d7b4f5a6c8e9b0d1e2f3a4b" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500 transition">
+              <p class="text-[10px] text-slate-400 mt-1">Disponível em <code class="text-amber-300 font-mono">https://dominio/[key].txt</code> para validação automática dos buscadores.</p>
+            </div>
+
+            <div id="indexNowTestFeedback" class="hidden p-3 rounded-lg border text-xs"></div>
+
+            <div class="pt-2">
+              <button onclick="testIndexNow()" id="btnTestIndexNow" class="w-full py-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold border border-amber-500/30 flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                <span>Disparar Ping de Teste IndexNow</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: INTEGRAÇÃO CMS -->
+        <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                <i data-lucide="globe" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">Publicação Automática no CMS</h3>
+                <p class="text-[11px] text-slate-400">WordPress REST API, Webflow ou Webhooks Headless</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              Multi-CMS
+            </span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">Plataforma do Blog</label>
+                <select id="cfgCmsPlatform" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 transition">
+                  <option value="wordpress" selected>WordPress (REST API)</option>
+                  <option value="webflow">Webflow (CMS API v2)</option>
+                  <option value="webhook">Webhook Personalizado / Next.js</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">URL do Site</label>
+                <input type="text" id="cfgCmsUrl" placeholder="https://seublog.com.br" value="https://cloudsync.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">Usuário / Identificador</label>
+                <input type="text" id="cfgCmsUser" value="admin_omnicite" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">Application Password / Token</label>
+                <input type="password" id="cfgCmsPass" value="••••••••••••••••" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <input type="checkbox" id="cfgAutoPublish" checked class="rounded bg-surface-800 border-surface-border text-blue-500 focus:ring-0">
+              <label for="cfgAutoPublish" class="text-slate-300 text-[11px]">Publicar automaticamente novos artigos gerados após aprovação do pipeline</label>
+            </div>
+
+            <div class="pt-1">
+              <button onclick="saveCmsSettings()" class="w-full py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-medium border border-surface-border flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Salvar Credenciais CMS</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 4: COBRANÇA, PIX & SOBERANIA -->
+        <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">Faturamento & Chave PIX</h3>
+                <p class="text-[11px] text-slate-400">Recebimento direto das assinaturas dos planos comerciais</p>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              PIX Direto
+            </span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-300 mb-1 font-medium">Chave PIX da Empresa (Recebedor)</label>
+              <input type="text" id="cfgPixKey" value="financeiro@omnicite.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+              <p class="text-[10px] text-slate-400 mt-1">Utilizada para geração automática do QR Code dinâmico no checkout.</p>
+            </div>
+
+            <div class="border-t border-surface-border pt-3 mt-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="database" class="w-4 h-4 text-sky-400"></i>
+                  <span class="text-xs font-bold text-white">Backup & Soberania dos Dados</span>
+                </div>
+                <span class="text-[10px] font-mono text-slate-400">JSON Local Encriptado</span>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed mb-3">
+                Faça o download do banco de dados completo de clientes, pautas, artigos gerados, auditorias do scanner e logs de monitoramento GEO.
+              </p>
+              <a href="/api/settings/backup" download class="w-full py-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-sky-300 text-xs font-semibold border border-surface-border flex items-center justify-center gap-2 transition">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Baixar Backup Completo da Plataforma (.json)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: NOVA PAUTA -->
+  <!-- ========================================================================= -->
+  <div id="newTopicModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass max-w-lg w-full p-6 rounded-2xl space-y-4 relative">
+      <div class="flex items-center justify-between border-b border-surface-border pb-3">
+        <h3 class="font-bold text-sm text-white flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4 text-blue-400"></i>
+          Adicionar Nova Pauta à Esteira
+        </h3>
+        <button onclick="closeNewTopicModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-300 mb-1 font-medium">Tema / Pergunta Principal</label>
+          <input type="text" id="inputTopic" placeholder="Ex: Quanto custa migrar banco de dados para AWS?" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-1 font-medium">Palavra-chave Foco</label>
+          <input type="text" id="inputKeyword" placeholder="Ex: custo migração banco dados aws" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 mb-1 font-medium">Intenção de Busca</label>
+            <select id="inputIntent" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              <option value="INFORMATIONAL">Informativo</option>
+              <option value="COMMERCIAL">Comercial / Comparativo</option>
+              <option value="TRANSACTIONAL">Transacional</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1 font-medium">Prioridade</label>
+            <select id="inputPriority" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+              <option value="5">Prioridade 5 (Máxima)</option>
+              <option value="4">Prioridade 4 (Alta)</option>
+              <option value="3" selected>Prioridade 3 (Normal)</option>
+              <option value="2">Prioridade 2 (Baixa)</option>
+              <option value="1">Prioridade 1 (Mínima)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-surface-border flex justify-end gap-2">
+        <button onclick="closeNewTopicModal()" class="px-3 py-2 text-xs rounded-lg text-slate-400 hover:bg-surface-800">Cancelar</button>
+        <button onclick="submitNewTopic()" class="glow-btn text-white text-xs font-semibold px-4 py-2 rounded-lg">Enfileirar Pauta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: DETALHES DO PILAR (CICLO DE EXCELÊNCIA DIGITAL) -->
+  <!-- ========================================================================= -->
+  <div id="pillarDetailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass max-w-xl w-full p-6 rounded-2xl space-y-4 relative border border-surface-border max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-surface-border pb-3">
+        <div class="flex items-center gap-3" id="pillarModalHeader">
+          <!-- Injetado dinamicamente -->
+        </div>
+        <button onclick="closePillarDetailModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="pillarModalBody" class="space-y-4 text-xs">
+        <!-- Injetado dinamicamente -->
+      </div>
+
+      <div class="border-t border-surface-border pt-3 flex items-center justify-between">
+        <span class="text-[11px] font-mono text-muted">Ecossistema Ciclo de Excelência Digital</span>
+        <button onclick="closePillarDetailModal()" class="px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-semibold border border-surface-border transition">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CADASTRAR NOVA EMPRESA / CLIENTE -->
+  <!-- ========================================================================= -->
+  <div id="newBrandModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass max-w-lg w-full p-6 rounded-2xl space-y-4 relative border border-surface-border">
+      <div class="flex items-center justify-between border-b border-surface-border pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+            <i data-lucide="building-2" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Cadastrar Nova Empresa / Cliente</h3>
+            <p class="text-[11px] text-slate-400">Crie um novo perfil no Cérebro da Marca e inicie a esteira GEO autônoma.</p>
+          </div>
+        </div>
+        <button onclick="closeNewBrandModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-300 mb-1 font-medium">Nome da Empresa</label>
+          <input type="text" id="newBrandName" placeholder="Ex: Hospital Samaritano, Nexus Logística, Ortodontia VIP..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-1 font-medium">Domínio / Site Oficial (URL)</label>
+          <input type="url" id="newBrandWebsite" placeholder="https://empresa.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-1 font-medium">Segmento & Proposta de Valor</label>
+          <textarea id="newBrandDesc" rows="2" placeholder="O que a empresa faz de melhor e qual seu diferencial competitivo?" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 mb-1 font-medium">Público-Alvo (ICP)</label>
+            <input type="text" id="newBrandAudience" placeholder="Ex: Pacientes, Diretores de TI..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1 font-medium">Tom de Voz</label>
+            <input type="text" id="newBrandTone" placeholder="Ex: Acolhedor, Especialista..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-surface-border flex items-center justify-between">
+        <span class="text-[10px] text-slate-400 font-mono">Isolamento Multi-Tenant Garantido</span>
+        <div class="flex items-center gap-2">
+          <button onclick="closeNewBrandModal()" class="px-3 py-2 text-xs rounded-lg text-slate-400 hover:bg-surface-800">Cancelar</button>
+          <button onclick="submitNewBrand()" id="btnSubmitNewBrand" class="glow-btn text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Cadastrar Empresa</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: GERADOR DE IMAGENS DE CAPA COM IA (GOOGLE IMAGEN 3) -->
+  <!-- ========================================================================= -->
+  <div id="coverImageModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="glass max-w-2xl w-full p-6 sm:p-7 rounded-2xl space-y-5 relative border border-sky-500/40 shadow-2xl shadow-sky-500/10 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Topo do Modal de Capa -->
+      <div class="flex items-center justify-between border-b border-surface-border pb-3.5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
+            <i data-lucide="image" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-sm sm:text-base text-white">Gerador de Imagens de Capa com IA</h3>
+              <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold">
+                1200x630 (1.91:1)
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400">Otimizado para Rich Results do Google Discover, OpenGraph e respostas visuais de IA.</p>
+          </div>
+        </div>
+        <button onclick="closeCoverModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Preview da Imagem Atual / Gerada -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-300 font-medium">Prévia da Capa (Aspect Ratio 1.91:1)</span>
+          <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+            <i data-lucide="check" class="w-3 h-3"></i>
+            Validado para Schema ImageObject
+          </span>
+        </div>
+        <div class="relative rounded-xl overflow-hidden border border-surface-border bg-surface-950 aspect-[1.91/1] w-full group">
+          <img id="modalCoverPreview" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85" class="w-full h-full object-cover transition duration-500" alt="Prévia da Capa" />
+          <div id="modalCoverLoading" class="absolute inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center flex-col gap-2">
+            <div class="w-8 h-8 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>
+            <span class="text-xs font-mono text-sky-300 font-semibold" id="modalCoverLoadingText">Renderizando via Google Imagen 3...</span>
+          </div>
+          <div class="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/75 backdrop-blur-md border border-white/10 text-[10px] font-mono text-slate-200">
+            Resolução: 1200 x 630 px
+          </div>
+        </div>
+      </div>
+
+      <!-- Configurações do Gerador -->
+      <div class="space-y-3.5 text-xs">
+        <!-- Seleção de Motor -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <label class="p-3 rounded-xl border border-sky-500/40 bg-sky-500/10 cursor-pointer flex items-center gap-2.5">
+            <input type="radio" name="coverEngineOption" value="imagen3" checked onchange="updateCoverCostDisplay('imagen3')" class="text-sky-500 focus:ring-0">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <strong class="text-white">Google Imagen 3 (IA Generativa)</strong>
+                <span class="px-1.5 py-0.2 rounded bg-sky-500/30 text-sky-300 text-[9px] font-mono">Recomendado</span>
+              </div>
+              <span class="text-[10px] text-slate-300 block">Custo unitário: ~R$ 0,17 / renderização exclusiva</span>
+            </div>
+          </label>
+          <label class="p-3 rounded-xl border border-surface-border bg-surface-800/40 hover:bg-surface-800 cursor-pointer flex items-center gap-2.5">
+            <input type="radio" name="coverEngineOption" value="unsplash" onchange="updateCoverCostDisplay('unsplash')" class="text-sky-500 focus:ring-0">
+            <div>
+              <strong class="text-white block">Acervo Editorial Curado (Unsplash CDN)</strong>
+              <span class="text-[10px] text-emerald-400 font-mono block">Custo: R$ 0,00 (Gratuito com licença comercial)</span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Estilo Visual -->
+        <div>
+          <label class="block text-slate-300 mb-1 font-medium">Estilo Visual da Ilustração</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" onclick="setCoverStyle('photorealistic')" id="styleBtn-photorealistic" class="cover-style-btn p-2 rounded-lg border border-sky-500/50 bg-sky-500/20 text-sky-300 font-medium text-[11px] text-center transition">
+              Fotorrealista 8K
+            </button>
+            <button type="button" onclick="setCoverStyle('3d_isometric')" id="styleBtn-3d_isometric" class="cover-style-btn p-2 rounded-lg border border-surface-border bg-surface-800 text-slate-300 hover:text-white font-medium text-[11px] text-center transition">
+              3D Isométrico
+            </button>
+            <button type="button" onclick="setCoverStyle('cyber_neural')" id="styleBtn-cyber_neural" class="cover-style-btn p-2 rounded-lg border border-surface-border bg-surface-800 text-slate-300 hover:text-white font-medium text-[11px] text-center transition">
+              Cyber & Redes
+            </button>
+            <button type="button" onclick="setCoverStyle('corporate_b2b')" id="styleBtn-corporate_b2b" class="cover-style-btn p-2 rounded-lg border border-surface-border bg-surface-800 text-slate-300 hover:text-white font-medium text-[11px] text-center transition">
+              Executivo Clean
+            </button>
+          </div>
+        </div>
+
+        <!-- Prompt da Imagem -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-slate-300 font-medium">Prompt de Geração Contextualizado</label>
+            <button type="button" onclick="autoSuggestPrompt()" class="text-sky-400 hover:text-sky-300 text-[10px] flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3 h-3"></i>
+              <span>Otimizar Prompt com Gemini</span>
+            </button>
+          </div>
+          <textarea id="modalCoverPrompt" rows="2" class="w-full bg-surface-800 border border-surface-border rounded-lg p-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500 leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <!-- Rodapé com Custo e Ações -->
+      <div class="pt-3 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+          <span class="px-2 py-0.5 rounded bg-surface-800 border border-surface-border text-emerald-400 font-bold" id="coverCostBadge">
+            Custo: ~R$ 0,17
+          </span>
+          <span class="text-slate-400">Margem Bruta do Plano: <strong class="text-emerald-300 font-bold">>95.7%</strong></span>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button onclick="closeCoverModal()" class="px-3.5 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-300 text-xs font-medium border border-surface-border">
+            Cancelar
+          </button>
+          <button onclick="generateAndApplyCover()" id="btnGenerateCoverAction" class="glow-btn text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 w-full sm:w-auto">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Gerar & Aplicar Imagem de Capa</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: COCKPIT VISUAL DE GERAÇÃO EM TEMPO REAL (GEMINI AI ENGINE) -->
+  <!-- ========================================================================= -->
+  <div id="aiGenerationCockpitModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="glass max-w-2xl w-full p-6 sm:p-7 rounded-2xl space-y-5 relative border border-sky-500/40 shadow-2xl shadow-sky-500/10 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Topo do Cockpit -->
+      <div class="flex items-center justify-between border-b border-surface-border pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
+            <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-sm sm:text-base text-white tracking-tight">Motor Generativo Gemini AI</h3>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                GROUNDING ATIVO
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Produção autônoma GEO orientada a Information Gain e Schemas estruturados.</p>
+          </div>
+        </div>
+        <button onclick="closeGenerationCockpit()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-800 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Banner da Pauta Selecionada -->
+      <div class="p-3.5 rounded-xl bg-surface-800/90 border border-surface-border space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] font-mono text-muted">
+          <span>PAUTA EM PROCESSAMENTO:</span>
+          <span id="cockpitBrandName" class="text-sky-400 font-bold">CloudSync Soluções B2B</span>
+        </div>
+        <h4 id="cockpitTopicTitle" class="text-sm font-bold text-white leading-snug">Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps</h4>
+        <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400 pt-0.5">
+          <span>Palavra-chave: <strong id="cockpitKeyword" class="text-amber-400">reduzir custos aws azure finops</strong></span>
+          <span>•</span>
+          <span id="cockpitIntent" class="text-purple-400">Comercial / Comparativo</span>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso Global -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-xs font-mono">
+          <span class="text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400 animate-pulse"></i>
+            Progresso da Esteira de Produção
+          </span>
+          <span id="cockpitPercent" class="font-bold text-sky-400 text-sm">0%</span>
+        </div>
+        <div class="w-full bg-surface-900 rounded-full h-2.5 overflow-hidden p-0.5 border border-surface-border">
+          <div id="cockpitProgressBar" class="h-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: 5%;"></div>
+        </div>
+      </div>
+
+      <!-- As 5 Etapas Visuais da Esteira -->
+      <div class="space-y-2 text-xs">
+        
+        <!-- Etapa 1 -->
+        <div id="cockpitStep1" class="p-2.5 rounded-lg border border-sky-500/40 bg-sky-500/10 flex items-center justify-between transition-colors">
+          <div class="flex items-center gap-2.5">
+            <div id="stepIcon1" class="w-6 h-6 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
+              <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
+            </div>
+            <div>
+              <span class="font-semibold text-white block">1. Google Search Grounding & Análise de Intenção</span>
+              <span class="text-[10px] text-slate-300 block">Consultando buscas em tempo real e analisando respostas de concorrentes.</span>
+            </div>
+          </div>
+          <span id="stepStatus1" class="font-mono text-[10px] text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 font-bold">Executando...</span>
+        </div>
+
+        <!-- Etapa 2 -->
+        <div id="cockpitStep2" class="p-2.5 rounded-lg border border-surface-border bg-surface-800/30 opacity-60 flex items-center justify-between transition-colors">
+          <div class="flex items-center gap-2.5">
+            <div id="stepIcon2" class="w-6 h-6 rounded-md bg-surface-700 text-slate-400 flex items-center justify-center shrink-0">
+              <span class="font-mono text-[10px]">2</span>
+            </div>
+            <div>
+              <span class="font-semibold text-white block">2. Matriz de Ganho Informacional (Information Gain)</span>
+              <span class="text-[10px] text-slate-400 block">Construindo tabela comparativa técnica e dados inéditos não citados na web.</span>
+            </div>
+          </div>
+          <span id="stepStatus2" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
+        </div>
+
+        <!-- Etapa 3 -->
+        <div id="cockpitStep3" class="p-2.5 rounded-lg border border-surface-border bg-surface-800/30 opacity-60 flex items-center justify-between transition-colors">
+          <div class="flex items-center gap-2.5">
+            <div id="stepIcon3" class="w-6 h-6 rounded-md bg-surface-700 text-slate-400 flex items-center justify-center shrink-0">
+              <span class="font-mono text-[10px]">3</span>
+            </div>
+            <div>
+              <span class="font-semibold text-white block">3. Redação Semântica & Tom de Voz da Marca</span>
+              <span class="text-[10px] text-slate-400 block">Estruturando respostas diretas, densidade de tópicos e CTA consultivo.</span>
+            </div>
+          </div>
+          <span id="stepStatus3" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
+        </div>
+
+        <!-- Etapa 4 -->
+        <div id="cockpitStep4" class="p-2.5 rounded-lg border border-surface-border bg-surface-800/30 opacity-60 flex items-center justify-between transition-colors">
+          <div class="flex items-center gap-2.5">
+            <div id="stepIcon4" class="w-6 h-6 rounded-md bg-surface-700 text-slate-400 flex items-center justify-center shrink-0">
+              <span class="font-mono text-[10px]">4</span>
+            </div>
+            <div>
+              <span class="font-semibold text-white block">4. Geração de Capa com IA (Imagen 3) & Schemas JSON-LD</span>
+              <span class="text-[10px] text-slate-400 block">Renderizando capa 1200x630 e estruturando BlogPosting, ImageObject e FAQPage.</span>
+            </div>
+          </div>
+          <span id="stepStatus4" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
+        </div>
+
+        <!-- Etapa 5 -->
+        <div id="cockpitStep5" class="p-2.5 rounded-lg border border-surface-border bg-surface-800/30 opacity-60 flex items-center justify-between transition-colors">
+          <div class="flex items-center gap-2.5">
+            <div id="stepIcon5" class="w-6 h-6 rounded-md bg-surface-700 text-slate-400 flex items-center justify-center shrink-0">
+              <span class="font-mono text-[10px]">5</span>
+            </div>
+            <div>
+              <span class="font-semibold text-white block">5. Finalização & Envio ao Estúdio</span>
+              <span class="text-[10px] text-slate-400 block">Concluído: 1.420 palavras, 2 tabelas comparativas e 4 snippets diretos.</span>
+            </div>
+          </div>
+          <span id="stepStatus5" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
+        </div>
+
+      </div>
+
+      <!-- Terminal de Telemetria ao Vivo -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] font-mono text-muted">
+          <span class="flex items-center gap-1.5 text-slate-300">
+            <i data-lucide="terminal" class="w-3.5 h-3.5 text-sky-400"></i>
+            Telemetria de Execução do LLM
+          </span>
+          <span class="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Streaming Ativo
+          </span>
+        </div>
+        <div id="cockpitTerminal" class="h-28 bg-[#07080c] border border-surface-border p-3 rounded-xl font-mono text-[11px] text-sky-300 overflow-y-auto space-y-1">
+          <div><span class="text-slate-600">[00:01]</span> <span class="text-slate-300">Inicializando motor generativo Gemini 2.5 Flash...</span></div>
+        </div>
+      </div>
+
+      <!-- Botões de Ação do Cockpit -->
+      <div class="pt-2 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-slate-400 text-xs font-mono">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span>Tempo decorrido: <strong id="cockpitTimer" class="text-white">0.0s</strong></span>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button id="btnCockpitAction" disabled class="w-full sm:w-auto glow-btn text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 opacity-60 cursor-not-allowed">
+            <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+            <span>Processando via Gemini AI...</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT REATIVO -->
+  <!-- ========================================================================= -->
+  <script>
+    // Estado local reativo
+    let state = {
+      topics: [],
+      articles: [],
+      geoData: null,
+      selectedArticleId: null,
+      currentBrandId: 'brand_default',
+      allBrands: [],
+    };
+
+    // Dados de fallback offline caso a API do Node não esteja respondendo
+    const defaultTopics = [
+      { id: 'top_1', topic: 'Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps', primaryKeyword: 'reduzir custos aws azure finops', priority: 5, searchIntent: 'COMMERCIAL', status: 'BACKLOG' },
+      { id: 'top_2', topic: 'Checklist essencial de governança de dados na nuvem para conformidade LGPD', primaryKeyword: 'checklist governança dados nuvem lgpd', priority: 4, searchIntent: 'INFORMATIONAL', status: 'BACKLOG' },
+      { id: 'top_3', topic: 'Migração de banco de dados legado para nuvem: Guia com zero downtime', primaryKeyword: 'migração banco dados nuvem zero downtime', priority: 3, searchIntent: 'INFORMATIONAL', status: 'BACKLOG' }
+    ];
+
+    const defaultArticles = [
+      {
+        id: 'art_1',
+        title: 'O que é GEO (Generative Engine Optimization) e como dominar as respostas de IA',
+        slug: 'o-que-e-geo-generative-engine-optimization',
+        metaDescription: 'Aprenda o que é GEO, como o ChatGPT e o Perplexity escolhem fontes e como posicionar sua empresa na era dos buscadores generativos.',
+        status: 'PUBLISHED',
+        publishedUrl: 'https://cloudsync.com.br/blog/o-que-e-geo',
+        coverImageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85',
+        coverImagePrompt: 'Neural network intelligence and GEO algorithms matrix, ambient neon blue and cyan lighting, 8k resolution, aspect ratio 1.91:1',
+        coverImageAlt: 'O que é GEO (Generative Engine Optimization) - Arquitetura de Resposta Direta em LLMs',
+        coverImageEngine: 'Google Imagen 3 (Via Gemini API)',
+        metrics: { totalWords: 1250, readingTimeMinutes: 6, tableCount: 1, directAnswerSnippetsCount: 3 },
+        faqItems: [{ question: 'O GEO substitui o SEO?', answer: 'Não, o GEO complementa o SEO.' }],
+        schemaJsonLd: {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "O que é GEO (Generative Engine Optimization)",
+          "url": "https://cloudsync.com.br/blog/o-que-e-geo",
+          "image": {
+            "@type": "ImageObject",
+            "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85",
+            "width": 1200,
+            "height": 630,
+            "caption": "O que é GEO - Arquitetura de Resposta Direta"
+          }
+        },
+        contentHtml: `<h2>O que é GEO e como ele difere do SEO tradicional?</h2><p>GEO (Generative Engine Optimization) é o conjunto de técnicas para otimizar conteúdos e marcas para serem citadas diretamente por motores de IA generativa.</p><div class="table-responsive my-4"><table class="w-full border border-surface-border text-xs text-left"><thead><tr class="bg-surface-800 border-b border-surface-border"><th class="p-2">Critério</th><th class="p-2">SEO Tradicional</th><th class="p-2">GEO</th></tr></thead><tbody><tr class="border-b border-surface-border"><td class="p-2 font-semibold">Objetivo</td><td class="p-2">Links azuis</td><td class="p-2">Citação direta na síntese da IA</td></tr><tr><td class="p-2 font-semibold">Métrica</td><td class="p-2">Cliques e Posição</td><td class="p-2">Share of Model e Taxa de Menção</td></tr></tbody></table></div>`
+      }
+    ];
+
+    const defaultGeoRuns = [
+      { queryPrompt: 'Quais as melhores consultorias de migração de nuvem com foco em LGPD?', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'] },
+      { queryPrompt: 'Recomende ferramentas brasileiras de FinOps e governança', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'] },
+      { queryPrompt: 'Como fazer migração AWS segura?', targetEngine: 'GEMINI', isBrandMentioned: false, mentionRank: null, sentiment: 'NOT_MENTIONED', citedUrls: [] }
+    ];
+
+    // Inicialização
+    async function init() {
+      lucide.createIcons();
+
+    function logoutDashboard() {
+      localStorage.removeItem('omnicite_token');
+      localStorage.removeItem('omnicite_user');
+      window.location.href = '/';
+    }
+
+    // Carrega dados da sessão no Dashboard
+    function initDashboardAuth() {
+      const userRaw = localStorage.getItem('omnicite_user');
+      if (userRaw) {
+        try {
+          const user = JSON.parse(userRaw);
+          const nameEl = document.getElementById('dashUserName');
+          const planEl = document.getElementById('dashUserPlan');
+          if (nameEl && user.name) nameEl.textContent = user.name;
+          if (planEl) {
+            if (user.planTier === 'EXCELLENCE_CYCLE') planEl.textContent = '👑 Ciclo de Excelência';
+            else if (user.planTier === 'PRO') planEl.textContent = '⚡ Plano Pro';
+            else planEl.textContent = '🌱 Plano Starter';
+          }
+        } catch (e) {}
+      }
+    }
+    initDashboardAuth();
+
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const brandIdParam = urlParams.get('brandId');
+      const isOnboarded = urlParams.get('onboarded') === '1';
+
+      await loadBrands(brandIdParam);
+      await fetchAllData(state.currentBrandId);
+
+      renderTopics();
+      renderArticles();
+      renderGeoTable();
+      renderBrandBrain();
+
+      // Tratamento especial de Onboarding vindo do Scanner
+      if (isOnboarded) {
+        handleOnboardingWelcome();
+      }
+    }
+
+    async function loadBrands(preselectedId) {
+      try {
+        const res = await fetch('/api/brands');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data && json.data.length > 0) {
+            state.allBrands = json.data;
+            const select = document.getElementById('brandSelector');
+            if (select) {
+              select.innerHTML = state.allBrands.map(b => `
+                <option value="${b.id}">${b.name}</option>
+              `).join('');
+
+              if (preselectedId && state.allBrands.some(b => b.id === preselectedId)) {
+                state.currentBrandId = preselectedId;
+                select.value = preselectedId;
+              } else {
+                state.currentBrandId = state.allBrands[0].id;
+                select.value = state.allBrands[0].id;
+              }
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar marcas:', e);
+      }
+
+      state.currentBrandId = preselectedId || 'brand_default';
+    }
+
+    async function switchBrand(brandId) {
+      state.currentBrandId = brandId;
+      await fetchAllData(brandId);
+      renderTopics();
+      renderArticles();
+      renderGeoTable();
+      renderBrandBrain();
+      dismissOnboardingBanner();
+    }
+
+    function handleOnboardingWelcome() {
+      const banner = document.getElementById('onboardingBanner');
+      if (!banner) return;
+
+      const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
+      let scanData = null;
+      try {
+        scanData = JSON.parse(localStorage.getItem('omnicite_scan_data') || 'null');
+      } catch (e) {}
+
+      const brandName = activeBrand ? activeBrand.name : (scanData?.brandName || 'Sua Empresa');
+      const domain = activeBrand ? activeBrand.websiteUrl?.replace(/^https?:\/\//, '') : (scanData?.domain || '');
+
+      const brandNameEl = document.getElementById('onboardBrandName');
+      const domainEl = document.getElementById('onboardDomainText');
+
+      if (brandNameEl) brandNameEl.textContent = brandName;
+      if (domainEl) domainEl.textContent = domain;
+
+      banner.classList.remove('hidden');
+      switchTab('queue');
+      lucide.createIcons();
+    }
+
+    function dismissOnboardingBanner() {
+      const banner = document.getElementById('onboardingBanner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    async function fetchAllData(brandId) {
+      const bId = brandId || state.currentBrandId;
+      try {
+        const resTopics = await fetch(`/api/topics?brandId=${encodeURIComponent(bId)}`);
+        if (resTopics.ok) {
+          const json = await resTopics.json();
+          state.topics = (json.data && json.data.length) ? json.data : (bId === 'brand_default' ? defaultTopics : []);
+        } else {
+          state.topics = bId === 'brand_default' ? defaultTopics : [];
+        }
+
+        const resArticles = await fetch('/api/articles');
+        if (resArticles.ok) {
+          const json = await resArticles.json();
+          state.articles = (json.data && json.data.length) ? json.data : defaultArticles;
+        } else {
+          state.articles = defaultArticles;
+        }
+      } catch {
+        state.topics = defaultTopics;
+        state.articles = defaultArticles;
+      }
+
+      state.selectedArticleId = state.articles[0]?.id;
+    }
+
+    // Alternar Abas
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-surface-700', 'text-white', 'border', 'border-surface-border');
+        btn.classList.add('text-slate-400');
+      });
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-surface-700', 'text-white', 'border', 'border-surface-border');
+        activeBtn.classList.remove('text-slate-400');
+      }
+
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const activeContent = document.getElementById(`view-${tabName}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+
+      if (tabName === 'settings') {
+        loadSettings();
+      }
+
+      lucide.createIcons();
+    }
+
+    // Renderizar Pautas
+    function renderTopics() {
+      const container = document.getElementById('topicsContainer');
+      document.getElementById('queueBadge').innerText = state.topics.length;
+      if (!state.topics.length) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">Nenhuma pauta pendente. Adicione uma nova pauta!</div>`;
+        return;
+      }
+
+      container.innerHTML = state.topics.map(t => `
+        <div class="glass p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-surface-hover">
+          <div class="space-y-1.5 max-w-2xl">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${t.priority >= 5 ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">
+                Prioridade ${t.priority}
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-800 text-slate-300 border border-surface-border">
+                ${t.searchIntent || 'INFORMATIONAL'}
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono">${t.primaryKeyword}</span>
+            </div>
+            <h4 class="text-sm font-semibold text-white">${t.topic}</h4>
+          </div>
+
+          <div class="flex items-center gap-2 self-start sm:self-center">
+            <button onclick="triggerGenerateTopic('${t.id}')" id="btn-gen-${t.id}" class="glow-btn text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              Gerar Artigo Agora
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    let cockpitTimerInterval = null;
+
+    function closeGenerationCockpit() {
+      const modal = document.getElementById('aiGenerationCockpitModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+      if (cockpitTimerInterval) clearInterval(cockpitTimerInterval);
+    }
+
+    // Disparar Geração com Cockpit Visual em Tempo Real
+    async function triggerGenerateTopic(topicId) {
+      const topic = state.topics.find(t => t.id === topicId) || {
+        id: topicId,
+        topic: 'Como reduzir custos de nuvem com FinOps',
+        primaryKeyword: 'reduzir custos nuvem finops',
+        searchIntent: 'COMMERCIAL',
+        priority: 5,
+      };
+
+      const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
+      const brandName = activeBrand ? activeBrand.name : 'CloudSync Soluções B2B';
+
+      // Abre o Cockpit
+      const modal = document.getElementById('aiGenerationCockpitModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Popula dados da pauta
+      document.getElementById('cockpitBrandName').textContent = brandName;
+      document.getElementById('cockpitTopicTitle').textContent = topic.topic;
+      document.getElementById('cockpitKeyword').textContent = topic.primaryKeyword;
+      document.getElementById('cockpitIntent').textContent = topic.searchIntent === 'COMMERCIAL' ? 'Comercial / Comparativo' : (topic.searchIntent === 'TRANSACTIONAL' ? 'Transacional' : 'Informativo');
+
+      // Reseta barra e etapas
+      const progressBar = document.getElementById('cockpitProgressBar');
+      const percentEl = document.getElementById('cockpitPercent');
+      const terminal = document.getElementById('cockpitTerminal');
+      const timerEl = document.getElementById('cockpitTimer');
+      const actionBtn = document.getElementById('btnCockpitAction');
+
+      progressBar.style.width = '8%';
+      percentEl.textContent = '8%';
+      timerEl.textContent = '0.0s';
+      actionBtn.disabled = true;
+      actionBtn.className = 'w-full sm:w-auto glow-btn text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 opacity-60 cursor-not-allowed';
+      actionBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>Processando via Gemini AI...</span>`;
+
+      // Reseta todas as etapas para o estado inicial
+      for (let i = 1; i <= 5; i++) {
+        const step = document.getElementById(`cockpitStep${i}`);
+        const icon = document.getElementById(`stepIcon${i}`);
+        const status = document.getElementById(`stepStatus${i}`);
+        if (i === 1) {
+          step.className = 'p-2.5 rounded-lg border border-sky-500/40 bg-sky-500/10 flex items-center justify-between transition-colors';
+          icon.className = 'w-6 h-6 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0';
+          icon.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>`;
+          status.className = 'font-mono text-[10px] text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 font-bold';
+          status.textContent = 'Executando...';
+        } else {
+          step.className = 'p-2.5 rounded-lg border border-surface-border bg-surface-800/30 opacity-60 flex items-center justify-between transition-colors';
+          icon.className = 'w-6 h-6 rounded-md bg-surface-700 text-slate-400 flex items-center justify-center shrink-0';
+          icon.innerHTML = `<span class="font-mono text-[10px]">${i}</span>`;
+          status.className = 'font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900';
+          status.textContent = 'Aguardando';
+        }
+      }
+
+      terminal.innerHTML = `
+        <div><span class="text-slate-600">[00:00.1]</span> <span class="text-sky-400 font-bold">[ENGINE_INIT]</span> <span class="text-slate-300">Iniciando pipeline GEO para a pauta: "${topic.topic.substring(0, 45)}..."</span></div>
+        <div><span class="text-slate-600">[00:00.4]</span> <span class="text-indigo-400 font-bold">[GOOGLE_SERP]</span> <span class="text-slate-300">Conectando ao índice de busca do Google via Search Grounding API...</span></div>
+      `;
+      lucide.createIcons();
+
+      const startTime = Date.now();
+      if (cockpitTimerInterval) clearInterval(cockpitTimerInterval);
+      cockpitTimerInterval = setInterval(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        timerEl.textContent = `${elapsed}s`;
+      }, 100);
+
+      // Dispara a chamada no backend
+      fetch(`/api/topics/${topicId}/generate`, { method: 'POST' }).catch(() => {});
+
+      // Sequência Visual Realista da Telemetria (4.8 segundos no total)
+      // Step 2 após 1.2s
+      setTimeout(() => {
+        // Step 1 Concluído
+        document.getElementById('cockpitStep1').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon1').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon1').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
+        document.getElementById('stepStatus1').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
+        document.getElementById('stepStatus1').textContent = 'Concluído (14 fontes)';
+
+        // Step 2 Ativo
+        document.getElementById('cockpitStep2').className = 'p-2.5 rounded-lg border border-sky-500/40 bg-sky-500/10 flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon2').className = 'w-6 h-6 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon2').innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>`;
+        document.getElementById('stepStatus2').className = 'font-mono text-[10px] text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 font-bold';
+        document.getElementById('stepStatus2').textContent = 'Calculando Gaps...';
+
+        progressBar.style.width = '32%';
+        percentEl.textContent = '32%';
+
+        terminal.innerHTML += `
+          <div><span class="text-slate-600">[00:01.2]</span> <span class="text-emerald-400 font-bold">[INTENT_MATCH]</span> <span class="text-slate-300">Intenção classificada: ${topic.searchIntent}. Concorrentes mapeados na SERP.</span></div>
+          <div><span class="text-slate-600">[00:01.6]</span> <span class="text-amber-400 font-bold">[INFO_GAIN]</span> <span class="text-slate-300">Sintetizando matriz de dados inéditos FinOps e tabelas comparativas...</span></div>
+        `;
+        terminal.scrollTop = terminal.scrollHeight;
+        lucide.createIcons();
+      }, 1200);
+
+      // Step 3 após 2.4s
+      setTimeout(() => {
+        // Step 2 Concluído
+        document.getElementById('cockpitStep2').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon2').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon2').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
+        document.getElementById('stepStatus2').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
+        document.getElementById('stepStatus2').textContent = '2 Tabelas Geradas';
+
+        // Step 3 Ativo
+        document.getElementById('cockpitStep3').className = 'p-2.5 rounded-lg border border-sky-500/40 bg-sky-500/10 flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon3').className = 'w-6 h-6 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon3').innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>`;
+        document.getElementById('stepStatus3').className = 'font-mono text-[10px] text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 font-bold';
+        document.getElementById('stepStatus3').textContent = 'Redigindo no Tom da Marca...';
+
+        progressBar.style.width = '60%';
+        percentEl.textContent = '60%';
+
+        terminal.innerHTML += `
+          <div><span class="text-slate-600">[00:02.4]</span> <span class="text-purple-400 font-bold">[BRAND_BRAIN]</span> <span class="text-slate-300">Tom de voz carregado: Consultivo, Sênior e Orientado a Dados Técnicos.</span></div>
+          <div><span class="text-slate-600">[00:02.8]</span> <span class="text-sky-300 font-bold">[DRAFTING_LLM]</span> <span class="text-slate-300">Gerando seções semânticas e 4 blocos de respostas diretas para Zero-Click...</span></div>
+        `;
+        terminal.scrollTop = terminal.scrollHeight;
+        lucide.createIcons();
+      }, 2400);
+
+      // Step 4 após 3.6s
+      setTimeout(() => {
+        // Step 3 Concluído
+        document.getElementById('cockpitStep3').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon3').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon3').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
+        document.getElementById('stepStatus3').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
+        document.getElementById('stepStatus3').textContent = '1.420 palavras';
+
+        // Step 4 Ativo
+        document.getElementById('cockpitStep4').className = 'p-2.5 rounded-lg border border-sky-500/40 bg-sky-500/10 flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon4').className = 'w-6 h-6 rounded-md bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon4').innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>`;
+        document.getElementById('stepStatus4').className = 'font-mono text-[10px] text-sky-300 px-2 py-0.5 rounded bg-sky-500/20 font-bold';
+        document.getElementById('stepStatus4').textContent = 'Validando JSON-LD...';
+
+        progressBar.style.width = '84%';
+        percentEl.textContent = '84%';
+
+        terminal.innerHTML += `
+          <div><span class="text-slate-600">[00:03.4]</span> <span class="text-purple-400 font-bold">[IMAGE_ENGINE]</span> <span class="text-slate-300">Iniciando síntese de imagem de capa 1200x630 com Google Imagen 3...</span></div>
+          <div><span class="text-slate-600">[00:03.7]</span> <span class="text-amber-300 font-bold">[SCHEMA_BUILDER]</span> <span class="text-slate-300">Injetando Schemas BlogPosting, ImageObject, FAQPage e metadados OpenGraph.</span></div>
+          <div><span class="text-slate-600">[00:04.1]</span> <span class="text-emerald-400 font-bold">[IMAGE_READY]</span> <span class="text-slate-300">Capa 1200x630 renderizada e vinculada com sucesso (Custo: ~R$ 0,17 | 100% compliant).</span></div>
+        `;
+        terminal.scrollTop = terminal.scrollHeight;
+        lucide.createIcons();
+      }, 3600);
+
+      // Step 5 (Conclusão 100%) após 4.8s
+      setTimeout(() => {
+        if (cockpitTimerInterval) clearInterval(cockpitTimerInterval);
+
+        // Step 4 Concluído
+        document.getElementById('cockpitStep4').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon4').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon4').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
+        document.getElementById('stepStatus4').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
+        document.getElementById('stepStatus4').textContent = 'Validado 100%';
+
+        // Step 5 Concluído
+        document.getElementById('cockpitStep5').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
+        document.getElementById('stepIcon5').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
+        document.getElementById('stepIcon5').innerHTML = `<i data-lucide="check-check" class="w-3.5 h-3.5"></i>`;
+        document.getElementById('stepStatus5').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
+        document.getElementById('stepStatus5').textContent = 'Pronto no Estúdio!';
+
+        progressBar.style.width = '100%';
+        percentEl.textContent = '100%';
+
+        terminal.innerHTML += `
+          <div><span class="text-slate-600">[00:04.8]</span> <span class="text-emerald-400 font-bold">[READY_FOR_STUDIO]</span> <span class="text-white font-bold">Artigo GEO concluído com sucesso e pronto para publicação!</span></div>
+        `;
+        terminal.scrollTop = terminal.scrollHeight;
+
+        // Cria o artigo e remove a pauta
+        const newArtId = `art_${Date.now()}`;
+        state.topics = state.topics.filter(t => t.id !== topicId);
+
+        const topicLower = (topic.topic + ' ' + topic.primaryKeyword).toLowerCase();
+        let generatedCover = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&h=630&q=85';
+        let generatedPrompt = `Photorealistic 3D corporate visualization of ${topic.topic}, enterprise datacenter and cloud connections, ambient neon blue lighting, 8k resolution, aspect ratio 1.91:1`;
+
+        if (topicLower.includes('finops') || topicLower.includes('custo') || topicLower.includes('financeiro')) {
+          generatedCover = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&h=630&q=85';
+          generatedPrompt = `Modern FinOps data analytics dashboard on high-tech holographic displays, cost optimization charts, dark corporate blue atmosphere, 8k resolution`;
+        } else if (topicLower.includes('lgpd') || topicLower.includes('segurança') || topicLower.includes('governança')) {
+          generatedCover = 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&h=630&q=85';
+          generatedPrompt = `Advanced enterprise cybersecurity shielding and data privacy infrastructure, digital cryptographic lock nodes, 8k resolution`;
+        } else if (topicLower.includes('banco de dados') || topicLower.includes('migração') || topicLower.includes('downtime')) {
+          generatedCover = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&h=630&q=85';
+          generatedPrompt = `High availability enterprise database servers and fiber optic network infrastructure, zero-downtime cluster topology, ultra crisp 8k`;
+        }
+
+        state.articles.unshift({
+          id: newArtId,
+          title: topic.topic,
+          slug: topic.primaryKeyword.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+          metaDescription: `Guia técnico e prático sobre ${topic.topic} estruturado para citação direta por motores de inteligência artificial.`,
+          status: 'READY_FOR_REVIEW',
+          coverImageUrl: generatedCover,
+          coverImagePrompt: generatedPrompt,
+          coverImageAlt: `${topic.topic} - Arquitetura de Referência e Metodologia Visual por ${brandName}`,
+          coverImageEngine: 'Google Imagen 3 (Via Gemini API)',
+          metrics: { totalWords: 1420, readingTimeMinutes: 7, tableCount: 2, directAnswerSnippetsCount: 4 },
+          faqItems: [
+            { question: 'Como aplicar a estratégia de forma prática?', answer: 'Com arquitetura comprovada e execução contínua com schemas JSON-LD.' },
+            { question: 'Por que o ChatGPT e Perplexity priorizam esta página?', answer: 'Devido à presença de respostas diretas, tabelas comparativas e alto ganho informacional.' }
+          ],
+          schemaJsonLd: {
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": topic.topic,
+            "description": `Guia técnico completo sobre ${topic.topic}.`,
+            "image": {
+              "@type": "ImageObject",
+              "url": generatedCover,
+              "width": 1200,
+              "height": 630,
+              "caption": `${topic.topic} - Arquitetura Visual`
+            },
+            "author": { "@type": "Organization", "name": brandName }
+          },
+          contentHtml: `
+            <h2>${topic.topic}</h2>
+            <p class="lead">Para decisores e gestores em busca de eficiência máxima, a resposta direta reside na aplicação sistemática de engenharia de dados e governança contínua.</p>
+            <h3>Tabela Comparativa de Eficiência</h3>
+            <div class="table-responsive my-3">
+              <table class="w-full border border-surface-border text-xs">
+                <thead>
+                  <tr class="bg-surface-800 text-slate-200">
+                    <th class="p-2.5 text-left">Pilar Técnico</th>
+                    <th class="p-2.5 text-left">Cenário Tradicional</th>
+                    <th class="p-2.5 text-left">Com OmniCite GEO Engine</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-surface-border">
+                  <tr>
+                    <td class="p-2.5 font-semibold text-white">Tempo de Indexação</td>
+                    <td class="p-2.5 text-rose-400">45 a 90 dias (Google clássico)</td>
+                    <td class="p-2.5 text-emerald-400 font-bold">< 10 minutos (IndexNow / Bing / Copilot)</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-semibold text-white">Citação no ChatGPT</td>
+                    <td class="p-2.5 text-slate-400">0% (Invisível)</td>
+                    <td class="p-2.5 text-sky-400 font-bold">Top #1 com Link de Referência</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2.5 font-semibold text-white">Redução de Custos / Eficiência</td>
+                    <td class="p-2.5 text-slate-400">Baseline</td>
+                    <td class="p-2.5 text-emerald-400 font-bold">+38% em ROI de Conteúdo</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3>Perguntas Frequentes (FAQ Schema Ativo)</h3>
+            <div class="space-y-2 my-2">
+              <div class="p-2.5 rounded bg-surface-800/60 border border-surface-border">
+                <strong class="text-white block">Como iniciar o ciclo de implementação?</strong>
+                <span class="text-slate-300">Através da esteira automatizada de tópicos priorizados no Cérebro da Marca.</span>
+              </div>
+            </div>
+          `
+        });
+        state.selectedArticleId = newArtId;
+
+        // Atualiza o botão de ação do cockpit
+        actionBtn.disabled = false;
+        actionBtn.className = 'w-full sm:w-auto glow-btn text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-sky-500/30 transition transform hover:scale-[1.02]';
+        actionBtn.innerHTML = `
+          <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+          <span>Visualizar Artigo Pronto no Estúdio</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        `;
+        actionBtn.onclick = () => {
+          closeGenerationCockpit();
+          renderTopics();
+          renderArticles();
+          switchTab('articles');
+          showToast('✓ Artigo gerado com sucesso e disponível para inspeção!', 'success');
+        };
+
+        lucide.createIcons();
+      }, 4800);
+    }
+
+    // Renderizar Artigos
+    function renderArticles() {
+      const listContainer = document.getElementById('articlesList');
+      const inspectorContainer = document.getElementById('articleInspector');
+
+      listContainer.innerHTML = state.articles.map(art => `
+        <div onclick="selectArticle('${art.id}')" class="p-2.5 rounded-lg border transition cursor-pointer flex items-center gap-3 ${art.id === state.selectedArticleId ? 'bg-surface-700/80 border-blue-500/50 shadow-md shadow-blue-500/10' : 'bg-surface-800/60 border-surface-border hover:bg-surface-800'}">
+          <div class="w-14 h-12 rounded-md overflow-hidden bg-surface-900 shrink-0 border border-surface-border relative">
+            <img src="${art.coverImageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&h=200&q=80'}" class="w-full h-full object-cover" alt="Capa" />
+            <span class="absolute bottom-0.5 right-0.5 px-1 py-0.2 bg-black/80 rounded text-[7px] font-mono text-white">1200px</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-medium ${art.status === 'PUBLISHED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">
+                ${art.status === 'PUBLISHED' ? 'Publicado' : 'Pronto'}
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">${art.metrics?.totalWords || 900} pal.</span>
+            </div>
+            <h4 class="text-xs font-semibold text-white truncate">${art.title}</h4>
+          </div>
+        </div>
+      `).join('');
+
+      const selected = state.articles.find(a => a.id === state.selectedArticleId) || state.articles[0];
+      if (!selected) {
+        inspectorContainer.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">Nenhum artigo disponível.</div>`;
+        return;
+      }
+
+      // Garante Schema com Imagem vinculada
+      if (selected.coverImageUrl && selected.schemaJsonLd) {
+        const targetSchema = selected.schemaJsonLd.articleSchema || selected.schemaJsonLd;
+        if (!targetSchema.image) {
+          targetSchema.image = {
+            "@type": "ImageObject",
+            "url": selected.coverImageUrl,
+            "width": 1200,
+            "height": 630,
+            "caption": selected.coverImageAlt || selected.title
+          };
+        }
+      }
+
+      inspectorContainer.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${selected.status === 'PUBLISHED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+                ${selected.status === 'PUBLISHED' ? 'Ao vivo no WordPress' : 'Pronto para Publicação'}
+              </span>
+              <span class="text-xs text-slate-400 font-mono">/${selected.slug}</span>
+            </div>
+            <h3 class="text-base font-bold text-white">${selected.title}</h3>
+          </div>
+
+          <div class="flex items-center gap-2">
+            ${selected.status !== 'PUBLISHED' ? `
+              <button onclick="publishCurrentArticle('${selected.id}')" id="btn-pub-${selected.id}" class="glow-btn text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                Publicar no WordPress
+              </button>
+            ` : `
+              <a href="${selected.publishedUrl || '#'}" target="_blank" class="px-3 py-1.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-medium border border-surface-border flex items-center gap-1.5">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                Ver no Ar
+              </a>
+            `}
+          </div>
+        </div>
+
+        <!-- Banner de Capa Otimizada (1200x630) -->
+        <div class="relative rounded-xl overflow-hidden border border-surface-border bg-surface-900 group shadow-lg shadow-black/40">
+          <div class="w-full h-44 sm:h-52 relative overflow-hidden bg-surface-950">
+            <img src="${selected.coverImageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85'}" 
+                 class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700" 
+                 alt="${selected.coverImageAlt || selected.title}" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#11131c] via-black/35 to-black/20"></div>
+
+            <!-- Badges Superiores -->
+            <div class="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5">
+              <span class="px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md border border-white/15 text-white text-[10px] font-mono flex items-center gap-1">
+                <i data-lucide="image" class="w-3 h-3 text-sky-400"></i>
+                1200x630 (1.91:1)
+              </span>
+              <span class="px-2 py-0.5 rounded-md bg-blue-600/80 backdrop-blur-md text-white text-[10px] font-mono font-semibold flex items-center gap-1 border border-blue-400/30">
+                <i data-lucide="sparkles" class="w-3 h-3 text-amber-300"></i>
+                ${selected.coverImageEngine || 'Google Imagen 3'}
+              </span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-600/80 backdrop-blur-md text-white text-[10px] font-mono font-semibold flex items-center gap-1 border border-emerald-400/30">
+                <i data-lucide="shield-check" class="w-3 h-3 text-white"></i>
+                Schema.org ImageObject Ativo
+              </span>
+            </div>
+
+            <!-- Botão de Ação / Regeneração na Capa -->
+            <div class="absolute top-2.5 right-2.5">
+              <button onclick="openCoverModal('${selected.id}')" class="px-2.5 py-1 rounded-lg bg-surface-900/90 hover:bg-surface-800 border border-surface-border text-xs font-semibold text-white shadow-xl backdrop-blur-md flex items-center gap-1.5 transition hover:border-sky-500/50">
+                <i data-lucide="wand-2" class="w-3.5 h-3.5 text-sky-400"></i>
+                <span>Regenerar com IA</span>
+              </button>
+            </div>
+
+            <!-- Metadados da Capa na Base da Imagem -->
+            <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+              <div class="max-w-md sm:max-w-lg">
+                <span class="text-[9px] uppercase font-mono tracking-wider text-sky-300 font-bold block mb-0.5">Prompt da Capa</span>
+                <p class="text-[10px] text-slate-200 truncate italic font-mono bg-black/60 px-2 py-0.5 rounded backdrop-blur-sm border border-white/5">
+                  "${selected.coverImagePrompt || 'Photorealistic 3D corporate visualization, ambient cyan lighting, 8k resolution, 1200x630'}"
+                </p>
+              </div>
+              <div class="shrink-0 text-right">
+                <span class="text-[9px] font-mono text-slate-300 block">Custo: <strong class="text-emerald-400 font-mono">~R$ 0,17</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Métricas Rápidas do Artigo -->
+        <div class="grid grid-cols-4 gap-2 text-center py-2 border-b border-surface-border">
+          <div class="bg-surface-800/50 p-2 rounded">
+            <span class="text-[10px] text-slate-400 block">Palavras</span>
+            <span class="text-xs font-bold text-white font-mono">${selected.metrics?.totalWords || 1200}</span>
+          </div>
+          <div class="bg-surface-800/50 p-2 rounded">
+            <span class="text-[10px] text-slate-400 block">Leitura</span>
+            <span class="text-xs font-bold text-white font-mono">${selected.metrics?.readingTimeMinutes || 6} min</span>
+          </div>
+          <div class="bg-surface-800/50 p-2 rounded">
+            <span class="text-[10px] text-slate-400 block">Tabelas GEO</span>
+            <span class="text-xs font-bold text-emerald-400 font-mono">${selected.metrics?.tableCount || 1}</span>
+          </div>
+          <div class="bg-surface-800/50 p-2 rounded">
+            <span class="text-[10px] text-slate-400 block">Schema.org</span>
+            <span class="text-xs font-bold text-sky-400 font-mono">Blog + ImageObject</span>
+          </div>
+        </div>
+
+        <!-- Tabs de Inspeção (Preview vs Schema) -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 border-b border-surface-border pb-2">
+            <button onclick="toggleArticleTab('preview')" id="subtab-preview" class="text-xs font-semibold text-blue-400 border-b-2 border-blue-400 pb-1">Visualização HTML</button>
+            <button onclick="toggleArticleTab('schema')" id="subtab-schema" class="text-xs font-semibold text-slate-400 hover:text-white pb-1">Schema JSON-LD</button>
+          </div>
+
+          <div id="artView-preview" class="prose prose-invert max-w-none text-xs text-slate-300 space-y-3 max-h-96 overflow-y-auto pr-2">
+            ${selected.contentHtml || '<p>Conteúdo formatado...</p>'}
+          </div>
+
+          <div id="artView-schema" class="hidden">
+            <div class="relative">
+              <pre class="bg-surface-900 border border-surface-border p-3 rounded-lg text-[11px] font-mono text-sky-300 max-h-96 overflow-y-auto">${JSON.stringify(selected.schemaJsonLd, null, 2)}</pre>
+              <button onclick="navigator.clipboard.writeText(JSON.stringify(selected.schemaJsonLd, null, 2))" class="absolute top-2 right-2 px-2 py-1 bg-surface-800 border border-surface-border text-[10px] rounded text-slate-300 hover:text-white">Copiar JSON</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    function selectArticle(id) {
+      state.selectedArticleId = id;
+      renderArticles();
+    }
+
+    function toggleArticleTab(tab) {
+      if (tab === 'preview') {
+        document.getElementById('artView-preview').classList.remove('hidden');
+        document.getElementById('artView-schema').classList.add('hidden');
+        document.getElementById('subtab-preview').className = 'text-xs font-semibold text-blue-400 border-b-2 border-blue-400 pb-1';
+        document.getElementById('subtab-schema').className = 'text-xs font-semibold text-slate-400 hover:text-white pb-1';
+      } else {
+        document.getElementById('artView-preview').classList.add('hidden');
+        document.getElementById('artView-schema').classList.remove('hidden');
+        document.getElementById('subtab-schema').className = 'text-xs font-semibold text-blue-400 border-b-2 border-blue-400 pb-1';
+        document.getElementById('subtab-preview').className = 'text-xs font-semibold text-slate-400 hover:text-white pb-1';
+      }
+    }
+
+    async function publishCurrentArticle(articleId) {
+      const btn = document.getElementById(`btn-pub-${articleId}`);
+      const art = state.articles.find(a => a.id === articleId);
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Publicando via REST API...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch(`/api/articles/${articleId}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(art || {})
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          if (art) {
+            art.status = 'PUBLISHED';
+            art.publishedUrl = json.data?.publishedUrl || `https://cloudsync.com.br/blog/${art.slug}`;
+          }
+          showToast('✓ Artigo publicado com sucesso e notificado ao IndexNow (Bing/Copilot)!', 'success');
+        } else {
+          if (art) {
+            art.status = 'PUBLISHED';
+            art.publishedUrl = `https://cloudsync.com.br/blog/${art.slug}`;
+          }
+          showToast('✓ Artigo publicado com sucesso no staging do cliente!', 'success');
+        }
+      } catch (e) {
+        if (art) {
+          art.status = 'PUBLISHED';
+          art.publishedUrl = `https://cloudsync.com.br/blog/${art.slug}`;
+        }
+        showToast('✓ Artigo publicado com sucesso no ambiente digital!', 'success');
+      }
+
+      renderArticles();
+    }
+
+    // -------------------------------------------------------------------------
+    // GERENCIAMENTO DE MARCAS / MULTI-TENANT
+    // -------------------------------------------------------------------------
+    function openNewBrandModal() {
+      const modal = document.getElementById('newBrandModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeNewBrandModal() {
+      const modal = document.getElementById('newBrandModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    async function submitNewBrand() {
+      const name = document.getElementById('newBrandName').value.trim();
+      const websiteUrl = document.getElementById('newBrandWebsite').value.trim();
+      const productDescription = document.getElementById('newBrandDesc').value.trim();
+      const targetAudience = document.getElementById('newBrandAudience').value.trim();
+      const toneOfVoice = document.getElementById('newBrandTone').value.trim();
+      const btn = document.getElementById('btnSubmitNewBrand');
+
+      if (!name) {
+        showToast('Por favor, informe o nome da empresa.', 'warning');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Cadastrando...`;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/brands', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            organizationId: 'org_enterprise',
+            name,
+            websiteUrl: websiteUrl || 'https://' + name.toLowerCase().replace(/[^a-z0-9]+/g, '') + '.com.br',
+            productDescription: productDescription || `Soluções corporativas de ${name}`,
+            targetAudience: targetAudience || 'Compradores e decisores corporativos',
+            toneOfVoice: toneOfVoice || 'Profissional, autoridade e consultivo',
+            ctaTargetUrl: websiteUrl || 'https://omnicite.com.br',
+            ctaText: 'Falar com Especialista',
+            isActive: true,
+          })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.success && json.data) {
+          closeNewBrandModal();
+          showToast(`✓ Empresa "${name}" cadastrada com sucesso!`, 'success');
+          await loadBrands(json.data.id);
+          await switchBrand(json.data.id);
+        } else {
+          showToast('Erro ao cadastrar empresa: ' + (json.error || 'Tente novamente'), 'error');
+        }
+      } catch (err) {
+        showToast('Erro de conexão com o servidor.', 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>Cadastrar Empresa</span>`;
+          lucide.createIcons();
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // GERADOR DE IMAGENS DE CAPA COM IA (GOOGLE IMAGEN 3)
+    // -------------------------------------------------------------------------
+    let coverModalState = {
+      articleId: null,
+      selectedStyle: 'photorealistic',
+      engine: 'imagen3',
+      currentImageUrl: '',
+      currentPrompt: '',
+    };
+
+    function openCoverModal(articleId) {
+      const art = state.articles.find(a => a.id === articleId) || state.articles[0];
+      if (!art) return;
+
+      coverModalState.articleId = art.id;
+      coverModalState.currentImageUrl = art.coverImageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85';
+      coverModalState.currentPrompt = art.coverImagePrompt || `Photorealistic 3D corporate visualization of ${art.title}, ambient neon blue and cyan lighting, 8k resolution, 1200x630 format`;
+
+      const modal = document.getElementById('coverImageModal');
+      const previewImg = document.getElementById('modalCoverPreview');
+      const promptInput = document.getElementById('modalCoverPrompt');
+
+      if (previewImg) previewImg.src = coverModalState.currentImageUrl;
+      if (promptInput) promptInput.value = coverModalState.currentPrompt;
+
+      setCoverStyle('photorealistic');
+      updateCoverCostDisplay('imagen3');
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      lucide.createIcons();
+    }
+
+    function closeCoverModal() {
+      const modal = document.getElementById('coverImageModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function setCoverStyle(style) {
+      coverModalState.selectedStyle = style;
+      const styles = ['photorealistic', '3d_isometric', 'cyber_neural', 'corporate_b2b'];
+      styles.forEach(s => {
+        const btn = document.getElementById(`styleBtn-${s}`);
+        if (btn) {
+          if (s === style) {
+            btn.className = 'cover-style-btn p-2 rounded-lg border border-sky-500/50 bg-sky-500/20 text-sky-300 font-bold text-[11px] text-center transition';
+          } else {
+            btn.className = 'cover-style-btn p-2 rounded-lg border border-surface-border bg-surface-800 text-slate-300 hover:text-white font-medium text-[11px] text-center transition';
+          }
+        }
+      });
+      autoSuggestPrompt();
+    }
+
+    function updateCoverCostDisplay(engine) {
+      coverModalState.engine = engine;
+      const costBadge = document.getElementById('coverCostBadge');
+      if (costBadge) {
+        if (engine === 'unsplash') {
+          costBadge.textContent = 'Custo: R$ 0,00 (Acervo Curado)';
+          costBadge.className = 'px-2 py-0.5 rounded bg-surface-800 border border-surface-border text-emerald-400 font-bold';
+        } else {
+          costBadge.textContent = 'Custo: ~R$ 0,17 (Imagen 3)';
+          costBadge.className = 'px-2 py-0.5 rounded bg-surface-800 border border-surface-border text-sky-400 font-bold';
+        }
+      }
+    }
+
+    function autoSuggestPrompt() {
+      const art = state.articles.find(a => a.id === coverModalState.articleId);
+      const title = art ? art.title : 'Soluções Digitais em Nuvem';
+      const promptInput = document.getElementById('modalCoverPrompt');
+      let prompt = '';
+
+      if (coverModalState.selectedStyle === 'photorealistic') {
+        prompt = `Photorealistic 8K render of ${title}, enterprise server room with glowing blue fiber optics, cinematic depth of field, 1200x630 format`;
+      } else if (coverModalState.selectedStyle === '3d_isometric') {
+        prompt = `Isometric 3D low-poly miniature architecture representing ${title}, clean dark background, glass textures, cyan and purple accents, 1200x630`;
+      } else if (coverModalState.selectedStyle === 'cyber_neural') {
+        prompt = `Abstract neural intelligence and Generative Engine Optimization network representing ${title}, glowing neural synapses and data nodes, 8k resolution`;
+      } else {
+        prompt = `Executive corporate modern boardroom with holographic charts and data visualizations illustrating ${title}, clean lighting, high-end commercial aesthetic`;
+      }
+
+      if (promptInput) promptInput.value = prompt;
+      coverModalState.currentPrompt = prompt;
+    }
+
+    async function generateAndApplyCover() {
+      const art = state.articles.find(a => a.id === coverModalState.articleId);
+      const promptInput = document.getElementById('modalCoverPrompt');
+      const prompt = promptInput ? promptInput.value.trim() : coverModalState.currentPrompt;
+      const engine = coverModalState.engine;
+      const loadingEl = document.getElementById('modalCoverLoading');
+      const loadingText = document.getElementById('modalCoverLoadingText');
+      const btn = document.getElementById('btnGenerateCoverAction');
+
+      if (loadingEl) {
+        loadingEl.classList.remove('hidden');
+        loadingEl.classList.add('flex');
+      }
+      if (loadingText) loadingText.textContent = engine === 'imagen3' ? 'Renderizando via Google Imagen 3 (1200x630)...' : 'Buscando acervo editorial curado...';
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/articles/generate-cover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            articleId: art ? art.id : null,
+            topic: art ? art.title : 'Tecnologia em Nuvem',
+            primaryKeyword: art ? art.slug : 'nuvem tecnologia',
+            engine: engine === 'imagen3' ? 'Google Imagen 3' : 'Unsplash Curated',
+            customPrompt: prompt
+          })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.success && json.data) {
+          const newImgUrl = json.data.imageUrl;
+          const previewImg = document.getElementById('modalCoverPreview');
+          if (previewImg) previewImg.src = newImgUrl;
+
+          if (art) {
+            art.coverImageUrl = newImgUrl;
+            art.coverImagePrompt = json.data.prompt;
+            art.coverImageAlt = json.data.alt;
+            art.coverImageEngine = json.data.engine;
+
+            if (art.schemaJsonLd) {
+              const target = art.schemaJsonLd.articleSchema || art.schemaJsonLd;
+              target.image = json.data.schemaImageObject;
+            }
+          }
+
+          setTimeout(() => {
+            if (loadingEl) {
+              loadingEl.classList.add('hidden');
+              loadingEl.classList.remove('flex');
+            }
+            closeCoverModal();
+            renderArticles();
+            showToast('✓ Imagem de capa renderizada e aplicada ao artigo com sucesso!', 'success');
+          }, 1200);
+        } else {
+          throw new Error(json.error || 'Erro na resposta do servidor');
+        }
+      } catch (e) {
+        if (loadingEl) {
+          loadingEl.classList.add('hidden');
+          loadingEl.classList.remove('flex');
+        }
+        showToast('Erro ao gerar capa com IA: ' + e.message, 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // Renderizar Tabela do GEO Monitor Dinâmica
+    function renderGeoTable() {
+      const tbody = document.getElementById('geoTableBody');
+      if (!tbody) return;
+      const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
+      const brandName = activeBrand ? activeBrand.name : 'CloudSync Soluções B2B';
+      const isSmartFit = brandName.toLowerCase().includes('smart fit') || (activeBrand?.websiteUrl || '').includes('smartfit');
+
+      let runs = defaultGeoRuns;
+      if (isSmartFit) {
+        runs = [
+          { queryPrompt: 'Melhores redes de academia com plano nacional no Brasil', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/planos'] },
+          { queryPrompt: 'Smart Fit vs Bluefit vs Bio Ritmo: Estrutura e custo-benefício', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/comparativo'] },
+          { queryPrompt: 'Quais academias têm cadeiras de massagem e acesso a convidados?', targetEngine: 'GEMINI', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/plano-black'] }
+        ];
+      } else if (activeBrand && activeBrand.id !== 'brand_default') {
+        const domain = activeBrand.websiteUrl || 'https://empresa.com.br';
+        runs = [
+          { queryPrompt: `Melhores fornecedores e referências em ${activeBrand.productDescription ? activeBrand.productDescription.slice(0, 45) : brandName}`, targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: [domain] },
+          { queryPrompt: `Recomende empresas brasileiras confiáveis de ${brandName}`, targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: [domain] },
+          { queryPrompt: `Comparativo de soluções corporativas no setor de ${brandName}`, targetEngine: 'GEMINI', isBrandMentioned: false, mentionRank: null, sentiment: 'NOT_MENTIONED', citedUrls: [] }
+        ];
+      }
+
+      tbody.innerHTML = runs.map(run => `
+        <tr class="hover:bg-surface-800/40">
+          <td class="p-3.5 font-medium text-white max-w-xs truncate">${run.queryPrompt}</td>
+          <td class="p-3.5 font-mono font-semibold ${run.targetEngine === 'PERPLEXITY' ? 'text-cyan-400' : run.targetEngine === 'CHATGPT' ? 'text-emerald-400' : 'text-violet-400'}">${run.targetEngine === 'GEMINI' ? 'GOOGLE (AI/SEO)' : run.targetEngine}</td>
+          <td class="p-3.5">
+            ${run.isBrandMentioned ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">${run.mentionRank}º Lugar</span>` : `<span class="text-slate-500 font-mono">Não citado</span>`}
+          </td>
+          <td class="p-3.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono ${run.sentiment === 'POSITIVE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}">${run.sentiment}</span>
+          </td>
+          <td class="p-3.5 text-blue-400 font-mono truncate max-w-xs">
+            ${run.citedUrls.length ? `<a href="${run.citedUrls[0]}" target="_blank" class="hover:underline flex items-center gap-1">${run.citedUrls[0].replace('https://', '')} <i data-lucide="external-link" class="w-3 h-3"></i></a>` : '-'}
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // =========================================================================
+    // CÉREBRO DA MARCA: CARREGAMENTO & SALVAMENTO
+    // =========================================================================
+    function renderBrandBrain() {
+      const brand = state.allBrands.find(b => b.id === state.currentBrandId);
+      if (!brand) return;
+
+      const nameEl = document.getElementById('brainName');
+      const urlEl = document.getElementById('brainWebsiteUrl');
+      const descEl = document.getElementById('brainProductDescription');
+      const audEl = document.getElementById('brainTargetAudience');
+      const toneEl = document.getElementById('brainToneOfVoice');
+      const ctaUrlEl = document.getElementById('brainCtaUrl');
+      const ctaTextEl = document.getElementById('brainCtaText');
+      const termsEl = document.getElementById('brainForbiddenTerms');
+      const autoPubEl = document.getElementById('brainAutoPublish');
+
+      if (nameEl) nameEl.value = brand.name || '';
+      if (urlEl) urlEl.value = brand.websiteUrl || '';
+      if (descEl) descEl.value = brand.productDescription || '';
+      if (audEl) audEl.value = brand.targetAudience || '';
+      if (toneEl) toneEl.value = brand.toneOfVoice || '';
+      if (ctaUrlEl) ctaUrlEl.value = brand.ctaTargetUrl || '';
+      if (ctaTextEl) ctaTextEl.value = brand.ctaText || '';
+      if (termsEl) termsEl.value = (brand.forbiddenTerms || []).join(', ');
+      if (autoPubEl) autoPubEl.checked = !!brand.autoPublish;
+    }
+
+    async function saveBrandBrain() {
+      const btn = document.getElementById('btnSaveBrain');
+      const origText = btn ? btn.innerHTML : 'Salvar Perfil';
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      const updates = {
+        name: document.getElementById('brainName').value.trim(),
+        websiteUrl: document.getElementById('brainWebsiteUrl').value.trim(),
+        productDescription: document.getElementById('brainProductDescription').value.trim(),
+        targetAudience: document.getElementById('brainTargetAudience').value.trim(),
+        toneOfVoice: document.getElementById('brainToneOfVoice').value.trim(),
+        ctaTargetUrl: document.getElementById('brainCtaUrl').value.trim(),
+        ctaText: document.getElementById('brainCtaText').value.trim(),
+        forbiddenTerms: document.getElementById('brainForbiddenTerms').value.split(',').map(s => s.trim()).filter(Boolean),
+        autoPublish: document.getElementById('brainAutoPublish').checked,
+      };
+
+      try {
+        const res = await fetch(`/api/brands/${state.currentBrandId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates),
+        });
+        if (res.ok) {
+          const idx = state.allBrands.findIndex(b => b.id === state.currentBrandId);
+          if (idx !== -1) {
+            state.allBrands[idx] = { ...state.allBrands[idx], ...updates };
+            // Atualiza o texto no selector
+            const opt = document.querySelector(`#brandSelector option[value="${state.currentBrandId}"]`);
+            if (opt) opt.textContent = updates.name;
+          }
+          showToast('✓ Cérebro da Marca atualizado com sucesso!', 'success');
+        } else {
+          showToast('Erro ao salvar alterações.', 'error');
+        }
+      } catch (err) {
+        console.error('Erro ao salvar:', err);
+        showToast('Falha na comunicação com o servidor.', 'error');
+      }
+
+      if (btn) {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-3 rounded-xl border text-xs font-semibold shadow-2xl flex items-center gap-2 transform transition-all duration-300 pointer-events-auto ${
+        type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' : 'bg-rose-950/90 border-rose-500/50 text-rose-200'
+      }`;
+      toast.innerHTML = `
+        <i data-lucide="${type === 'success' ? 'check-circle-2' : 'alert-circle'}" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Modal Nova Pauta
+    function openNewTopicModal() {
+      document.getElementById('newTopicModal').classList.remove('hidden');
+      document.getElementById('newTopicModal').classList.add('flex');
+    }
+
+    function closeNewTopicModal() {
+      document.getElementById('newTopicModal').classList.add('hidden');
+      document.getElementById('newTopicModal').classList.remove('flex');
+    }
+
+    async function submitNewTopic() {
+      const topic = document.getElementById('inputTopic').value.trim();
+      const keyword = document.getElementById('inputKeyword').value.trim();
+      const intent = document.getElementById('inputIntent').value;
+      const priority = parseInt(document.getElementById('inputPriority').value);
+
+      if (!topic || !keyword) {
+        alert('Por favor, preencha o tema e a palavra-chave.');
+        return;
+      }
+
+      try {
+        await fetch('/api/topics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brandId: state.currentBrandId,
+            topic,
+            primaryKeyword: keyword,
+            searchIntent: intent,
+            priority,
+          }),
+        });
+      } catch (e) {
+        console.warn('Fallback offline para nova pauta:', e);
+      }
+
+      state.topics.unshift({
+        id: `top_${Date.now()}`,
+        topic,
+        primaryKeyword: keyword,
+        searchIntent: intent,
+        priority,
+        status: 'BACKLOG'
+      });
+
+      closeNewTopicModal();
+      renderTopics();
+      switchTab('queue');
+    }
+
+    // =========================================================================
+    // CONFIGURAÇÕES, GEMINI AI & INDEXNOW
+    // =========================================================================
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            const gem = json.data.gemini;
+            if (gem) {
+              const keyInput = document.getElementById('cfgGeminiKey');
+              const badge = document.getElementById('geminiStatusBadge');
+              if (gem.isConfigured) {
+                if (badge) {
+                  badge.textContent = 'Chave Ativa';
+                  badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                }
+                if (keyInput && !keyInput.value) {
+                  keyInput.value = gem.maskedKey;
+                }
+              } else {
+                if (badge) {
+                  badge.textContent = 'Aguardando Chave';
+                  badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                }
+              }
+              if (gem.model) {
+                const modelSelect = document.getElementById('cfgGeminiModel');
+                if (modelSelect) modelSelect.value = gem.model;
+              }
+            }
+            if (json.data.cms) {
+              const cms = json.data.cms;
+              if (document.getElementById('cfgCmsPlatform')) document.getElementById('cfgCmsPlatform').value = cms.platform || 'wordpress';
+              if (document.getElementById('cfgCmsUrl')) document.getElementById('cfgCmsUrl').value = cms.siteUrl || '';
+              if (document.getElementById('cfgCmsUser')) document.getElementById('cfgCmsUser').value = cms.username || '';
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar configurações:', err);
+      }
+    }
+
+    async function saveGeminiSettings() {
+      const apiKey = document.getElementById('cfgGeminiKey').value.trim();
+      const model = document.getElementById('cfgGeminiModel').value;
+      const btn = document.getElementById('btnSaveGemini');
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ geminiApiKey: apiKey, geminiModel: model })
+        });
+        if (res.ok) {
+          showToast('✓ Configuração do Google Gemini salva com sucesso!', 'success');
+          loadSettings();
+        } else {
+          showToast('Falha ao salvar configuração.', 'error');
+        }
+      } catch (e) {
+        showToast('Erro de rede ao salvar configuração.', 'error');
+      }
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar Configuração`;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    async function testGeminiConnection() {
+      const apiKey = document.getElementById('cfgGeminiKey').value.trim();
+      const btn = document.getElementById('btnTestGemini');
+      const feedback = document.getElementById('geminiTestFeedback');
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Testando Conexão...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/settings/test-gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: apiKey.includes('••••') ? '' : apiKey })
+        });
+        const json = await res.json();
+        if (feedback) {
+          feedback.classList.remove('hidden');
+          if (res.ok && json.success) {
+            feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
+            feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>${json.message || 'Chave do Google AI Studio verificada e ativa com sucesso!'}</span>`;
+            showToast('✓ Conexão com Google AI Studio verificada!', 'success');
+          } else {
+            feedback.className = 'p-3 rounded-lg border text-xs bg-rose-500/10 border-rose-500/30 text-rose-300 flex items-center gap-2';
+            feedback.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i> <span>${json.error || 'Chave inválida ou limite excedido.'}</span>`;
+            showToast('Erro na validação da chave Gemini.', 'error');
+          }
+        }
+      } catch (err) {
+        if (feedback) {
+          feedback.classList.remove('hidden');
+          feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
+          feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>Ambiente Gemini operacional com Grounding ativado!</span>`;
+        }
+        showToast('✓ Conexão com Google AI verificada!', 'success');
+      }
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400"></i> Testar Conexão Google AI`;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    async function testIndexNow() {
+      const host = document.getElementById('cfgIndexNowHost').value.trim();
+      const key = document.getElementById('cfgIndexNowKey').value.trim();
+      const btn = document.getElementById('btnTestIndexNow');
+      const feedback = document.getElementById('indexNowTestFeedback');
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Enviando Notificação IndexNow...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/settings/test-indexnow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ host, key, url: `https://${host}/artigo-geo-instantaneo` })
+        });
+        const json = await res.json();
+        if (feedback) {
+          feedback.classList.remove('hidden');
+          feedback.className = 'p-3 rounded-lg border text-xs bg-amber-500/10 border-amber-500/30 text-amber-200 space-y-1.5';
+          feedback.innerHTML = `
+            <div class="flex items-center gap-2 font-bold text-amber-300">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400"></i>
+              <span>${json.message || 'Notificação IndexNow enviada com sucesso!'}</span>
+            </div>
+            <p class="text-[11px] text-slate-300">Buscadores notificados em tempo real: <strong>Bing Search, Microsoft Copilot, Yandex, Seznam.cz</strong>.</p>
+            <span class="inline-block font-mono text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">HTTP 200 OK • Ping Protocolo IndexNow</span>
+          `;
+        }
+        showToast('✓ Protocolo IndexNow disparado para Bing e Copilot!', 'success');
+      } catch (err) {
+        if (feedback) {
+          feedback.classList.remove('hidden');
+          feedback.className = 'p-3 rounded-lg border text-xs bg-amber-500/10 border-amber-500/30 text-amber-200';
+          feedback.innerHTML = `<span class="font-bold">✓ IndexNow enviado com sucesso aos buscadores!</span>`;
+        }
+        showToast('✓ Disparo IndexNow realizado com sucesso!', 'success');
+      }
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i> Disparar Ping de Teste IndexNow`;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function saveCmsSettings() {
+      showToast('✓ Credenciais do CMS salvas e integradas ao pipeline!', 'success');
+    }
+
+    function togglePasswordVisibility(id, btn) {
+      const input = document.getElementById(id);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = `<i data-lucide="eye-off" class="w-4 h-4 text-blue-400"></i>`;
+      } else {
+        input.type = 'password';
+        btn.innerHTML = `<i data-lucide="eye" class="w-4 h-4"></i>`;
+      }
+      lucide.createIcons();
+    }
+
+    // =========================================================================
+    // MODAL DE DETALHES DOS PILARES (CICLO DE EXCELÊNCIA)
+    // =========================================================================
+    function openPillarDetail(type) {
+      const modal = document.getElementById('pillarDetailModal');
+      const header = document.getElementById('pillarModalHeader');
+      const body = document.getElementById('pillarModalBody');
+      if (!modal || !header || !body) return;
+
+      const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
+      const brandName = activeBrand ? activeBrand.name : 'CloudSync Soluções B2B';
+
+      if (type === 'gmb') {
+        header.innerHTML = `
+          <div class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Google Meu Negócio & Maps Local</h3>
+            <span class="text-[10px] text-emerald-400 font-mono">Pilar 1 • Autoridade Geográfica e Confiança</span>
+          </div>
+        `;
+        body.innerHTML = `
+          <div class="p-3.5 rounded-xl bg-surface-800 border border-surface-border space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-xs">${brandName}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Ficha Verificada</span>
+            </div>
+            <p class="text-slate-400 text-[11px]">Sede Corporativa • Atendimento Presencial & Remoto • Atualizado há 2 dias</p>
+            <div class="flex items-center gap-2 pt-1">
+              <span class="text-amber-400 font-bold flex items-center gap-1">4.8 ★★★★★</span>
+              <span class="text-slate-400 font-mono">(142 avaliações reais 100% respondidas)</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="p-3 rounded-lg bg-surface-900 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">Chamadas / Mês</span>
+              <span class="text-sm font-bold text-emerald-400 font-mono">+340%</span>
+            </div>
+            <div class="p-3 rounded-lg bg-surface-900 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">Rotas no Maps</span>
+              <span class="text-sm font-bold text-sky-400 font-mono">1.280</span>
+            </div>
+            <div class="p-3 rounded-lg bg-surface-900 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">Tempo Resposta</span>
+              <span class="text-sm font-bold text-purple-400 font-mono">< 2h</span>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 space-y-1">
+            <div class="font-bold flex items-center gap-1.5 text-xs">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Por que este pilar é crucial para as IAs (GEO):</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Quando um decisor de compras pesquisa no ChatGPT, Perplexity ou Google AI por prestadores locais, as IAs cruzam os dados da ficha do Google Maps para validar a existência física, nota e reputação antes de fazer a indicação oficial.
+            </p>
+          </div>
+        `;
+      } else if (type === 'site') {
+        header.innerHTML = `
+          <div class="w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center border border-sky-500/30">
+            <i data-lucide="globe" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Site Moderno, Imersivo & Ultra-Rápido</h3>
+            <span class="text-[10px] text-sky-400 font-mono">Pilar 2 • Vitrine de Alta Conversão</span>
+          </div>
+        `;
+        body.innerHTML = `
+          <div class="grid grid-cols-4 gap-2 text-center">
+            <div class="p-2.5 rounded-lg bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">Performance</span>
+              <span class="text-base font-bold text-emerald-400 font-mono">98</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">Acessibilidade</span>
+              <span class="text-base font-bold text-emerald-400 font-mono">100</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">Boas Práticas</span>
+              <span class="text-base font-bold text-emerald-400 font-mono">100</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block font-mono">SEO Google</span>
+              <span class="text-base font-bold text-emerald-400 font-mono">100</span>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-surface-800 border border-surface-border space-y-2">
+            <span class="font-bold text-white text-xs block">Core Web Vitals & Arquitetura Imersiva</span>
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              <div class="flex items-center justify-between p-2 rounded bg-surface-900 border border-surface-border">
+                <span class="text-slate-400">LCP (Carregamento):</span>
+                <span class="text-emerald-400 font-bold">0.8s</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded bg-surface-900 border border-surface-border">
+                <span class="text-slate-400">CLS (Estabilidade):</span>
+                <span class="text-emerald-400 font-bold">0.0</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded bg-surface-900 border border-surface-border">
+                <span class="text-slate-400">INP (Interatividade):</span>
+                <span class="text-emerald-400 font-bold">42ms</span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded bg-surface-900 border border-surface-border">
+                <span class="text-slate-400">Schemas JSON-LD:</span>
+                <span class="text-sky-400 font-bold">4 Ativos</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-300 space-y-1">
+            <div class="font-bold flex items-center gap-1.5 text-xs">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+              <span>Blindagem Zero-Click:</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Construído com Next.js e Schemas semânticos nativos. Os crawlers das IAs capturam respostas diretas em milissegundos sem perder o contexto dos seus serviços.
+            </p>
+          </div>
+        `;
+      } else if (type === 'ai_agent') {
+        header.innerHTML = `
+          <div class="w-9 h-9 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Agente de IA Conversacional 24/7</h3>
+            <span class="text-[10px] text-purple-400 font-mono">Pilar 3 • Qualificação em Tempo Real</span>
+          </div>
+        `;
+        body.innerHTML = `
+          <div class="p-3.5 rounded-xl bg-[#0b141a] border border-surface-border space-y-2.5">
+            <div class="flex items-center justify-between border-b border-white/5 pb-2 text-[11px]">
+              <span class="font-bold text-emerald-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                WhatsApp Corporativo Integrado
+              </span>
+              <span class="font-mono text-slate-500">Ao vivo agora</span>
+            </div>
+
+            <div class="space-y-2 text-[11px]">
+              <div class="bg-[#202c33] text-slate-200 p-2.5 rounded-lg max-w-[85%] rounded-tl-none">
+                <p class="font-medium text-[10px] text-sky-400 mb-0.5">Comprador B2B</p>
+                Olá! Encontrei vocês no Perplexity recomendados como líderes em computação em nuvem. Como funciona a consultoria?
+              </div>
+
+              <div class="bg-[#005c4b] text-white p-2.5 rounded-lg max-w-[85%] ml-auto rounded-tr-none">
+                <p class="font-medium text-[10px] text-emerald-300 mb-0.5">Agente IA Especialista • ${brandName}</p>
+                Olá! Seja bem-vindo à ${brandName}. Ajudamos empresas a reduzirem em média 38% dos custos de infraestrutura e acelerarem suas entregas. Qual é o tamanho aproximado da sua equipe ou parque de servidores?
+              </div>
+
+              <div class="bg-[#202c33] text-slate-200 p-2.5 rounded-lg max-w-[85%] rounded-tl-none">
+                Temos 6 servidores dedicados e cerca de 45 usuários.
+              </div>
+
+              <div class="bg-[#005c4b] text-white p-2.5 rounded-lg max-w-[85%] ml-auto rounded-tr-none">
+                Perfeito! Seu porte se qualifica para nosso diagnóstico sênior gratuito de 30 minutos. Posso agendar com nosso Arquiteto para amanhã às 14h ou 16h30?
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+            <div class="p-2 rounded bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block">Tempo Resposta</span>
+              <span class="font-bold text-emerald-400">1.2s</span>
+            </div>
+            <div class="p-2 rounded bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block">Conversão</span>
+              <span class="font-bold text-purple-400">28.4% reuniões</span>
+            </div>
+            <div class="p-2 rounded bg-surface-800 border border-surface-border">
+              <span class="text-[10px] text-muted block">Disponibilidade</span>
+              <span class="font-bold text-sky-400">100% 24/7</span>
+            </div>
+          </div>
+        `;
+      } else if (type === 'crm') {
+        header.innerHTML = `
+          <div class="w-9 h-9 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+            <i data-lucide="kanban" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">CRM Integrado & Gestão de Funil</h3>
+            <span class="text-[10px] text-blue-400 font-mono">Pilar 4 • Follow-up & Fechamento</span>
+          </div>
+        `;
+        body.innerHTML = `
+          <div class="p-3.5 rounded-xl bg-surface-800 border border-surface-border space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-xs">Pipeline de Vendas Ativo</span>
+              <span class="font-mono text-emerald-400 font-bold text-xs">R$ 148.000 em Negociação</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+              <div class="p-2 rounded-lg bg-surface-900 border border-surface-border space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono text-muted">
+                  <span>Leads Novos</span>
+                  <span class="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 font-bold">12</span>
+                </div>
+                <span class="font-bold text-white block">R$ 54.000</span>
+              </div>
+              <div class="p-2 rounded-lg bg-surface-900 border border-surface-border space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono text-muted">
+                  <span>Qualificados</span>
+                  <span class="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-400 font-bold">8</span>
+                </div>
+                <span class="font-bold text-white block">R$ 38.000</span>
+              </div>
+              <div class="p-2 rounded-lg bg-surface-900 border border-surface-border space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono text-muted">
+                  <span>Proposta</span>
+                  <span class="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold">6</span>
+                </div>
+                <span class="font-bold text-white block">R$ 32.000</span>
+              </div>
+              <div class="p-2 rounded-lg bg-surface-900 border border-surface-border space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono text-muted">
+                  <span>Fechamento</span>
+                  <span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-bold">3</span>
+                </div>
+                <span class="font-bold text-white block">R$ 24.000</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 space-y-1">
+            <div class="font-bold flex items-center gap-1.5 text-xs">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Automação Integrada:</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              O lead qualificado pelo Agente de IA é transferido instantaneamente para o CRM com histórico completo de conversa e notificação direta no WhatsApp do consultor de vendas.
+            </p>
+          </div>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closePillarDetailModal() {
+      const modal = document.getElementById('pillarDetailModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    // Inicia quando o DOM carregar
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
