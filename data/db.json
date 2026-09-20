@@ -244,5 +244,49 @@
       "id": "geo_1789859188243_zl5bi",
       "createdAt": "2026-09-19T23:06:28.243Z"
     }
+  ],
+  "scans": [],
+  "whatsappConfig": {
+    "verifyToken": "omnicite_meta_verify_secret_2026",
+    "accessToken": "",
+    "phoneNumberId": "",
+    "businessAccountId": "",
+    "templateName": "dossie_executivo_geo",
+    "isEnabled": true,
+    "testMode": true
+  },
+  "whatsappMessages": [
+    {
+      "to": "(11) 99876-5432",
+      "formattedTo": "5511998765432",
+      "type": "TEMPLATE",
+      "templateName": "dossie_executivo_geo",
+      "status": "DELIVERED",
+      "metaMessageId": "wamid.HBgL1789931405791SIMULATED==",
+      "clientName": "Dr. Rubens Roberto",
+      "companyName": "Clínica Sorriso SP",
+      "reportSlug": "clinica-sorriso-sp",
+      "dossierUrl": "https://rubensloss.github.io/omnicite-engine/relatorio.html?slug=clinica-sorriso-sp",
+      "errorMessage": "Disparo simulado com sucesso. Para envio real pela Meta, insira seu META_WA_TOKEN nas Configurações.",
+      "id": "wam_mua6xzvj_oyvh",
+      "createdAt": "2026-09-20T19:10:05.791Z",
+      "updatedAt": "2026-09-20T19:10:05.792Z"
+    },
+    {
+      "to": "(11) 99876-5432",
+      "formattedTo": "5511998765432",
+      "type": "TEMPLATE",
+      "templateName": "dossie_executivo_geo",
+      "status": "DELIVERED",
+      "metaMessageId": "wamid.HBgL1789931405791SIMULATED==",
+      "clientName": "Dr. Rubens Roberto",
+      "companyName": "Clínica Sorriso SP",
+      "reportSlug": "clinica-sorriso-sp",
+      "dossierUrl": "https://rubensloss.github.io/omnicite-engine/relatorio.html?slug=clinica-sorriso-sp",
+      "errorMessage": "Disparo simulado com sucesso. Para envio real pela Meta, insira seu META_WA_TOKEN nas Configurações.",
+      "id": "wam_mua6xzvj_oyvh",
+      "createdAt": "2026-09-20T19:10:05.791Z",
+      "updatedAt": "2026-09-20T19:10:05.792Z"
+    }
   ]
 }

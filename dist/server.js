@@ -11,6 +11,7 @@ import { publishArticleToCMS } from './publishers/index.js';
 import { executeGEOScan } from './services/scanner.js';
 import { registerUser, loginUser, authMiddleware, optionalAuthMiddleware, hashPassword, } from './services/auth.js';
 import { AVAILABLE_PLANS, processCheckout } from './services/billing.js';
+import { whatsappCloudApi } from './services/whatsappCloudApi.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3333;
@@ -709,6 +710,108 @@ app.get('/api/settings/backup', (req, res) => {
     else {
         res.status(404).json({ success: false, error: 'Arquivo de dados ainda não criado.' });
     }
+});
+// -----------------------------------------------------------------------------
+// WHATSAPP CLOUD API (OFICIAL META BUSINESS PLATFORM)
+// -----------------------------------------------------------------------------
+// 1. Webhook Handshake (Verificação da Meta)
+app.get('/api/whatsapp/webhook', (req, res) => {
+    const query = req.query;
+    const verification = whatsappCloudApi.verifyWebhook(query);
+    if (verification.isValid && verification.challenge) {
+        console.log('✅ [WhatsApp Webhook] Handshake da Meta verificado com sucesso!');
+        return res.status(200).send(verification.challenge);
+    }
+    console.warn('⚠️ [WhatsApp Webhook] Falha de verificação no handshake da Meta:', query);
+    return res.status(403).send('Forbidden: Invalid verify token');
+});
+// 2. Webhook Event Receiver (Eventos de entrega e respostas de clientes)
+app.post('/api/whatsapp/webhook', (req, res) => {
+    try {
+        const result = whatsappCloudApi.handleIncomingWebhook(req.body);
+        console.log(`📩 [WhatsApp Webhook] ${result.processedCount} eventos processados.`, result.events);
+        // Meta exige resposta 200 OK imediata para não repetir a chamada
+        return res.status(200).json({ success: true, processed: result.processedCount });
+    }
+    catch (err) {
+        console.error('❌ [WhatsApp Webhook] Erro ao processar webhook:', err);
+        return res.status(200).json({ success: false, error: err.message });
+    }
+});
+// 3. Obter Configurações do WhatsApp
+app.get('/api/whatsapp/config', (req, res) => {
+    const config = whatsappCloudApi.getConfig();
+    const maskedToken = config.accessToken
+        ? `${config.accessToken.substring(0, 6)}...${config.accessToken.substring(config.accessToken.length - 4)}`
+        : '';
+    res.json({
+        success: true,
+        data: {
+            ...config,
+            isConfigured: Boolean(config.accessToken && config.phoneNumberId),
+            maskedToken,
+            webhookUrl: `${req.protocol}://${req.get('host')}/api/whatsapp/webhook`,
+        },
+    });
+});
+// 4. Salvar Configurações do WhatsApp
+app.post('/api/whatsapp/config', (req, res) => {
+    try {
+        const { accessToken, phoneNumberId, businessAccountId, verifyToken, templateName, isEnabled, testMode } = req.body;
+        const updated = whatsappCloudApi.saveConfig({
+            ...(accessToken ? { accessToken } : {}),
+            ...(phoneNumberId ? { phoneNumberId } : {}),
+            ...(businessAccountId ? { businessAccountId } : {}),
+            ...(verifyToken ? { verifyToken } : {}),
+            ...(templateName ? { templateName } : {}),
+            isEnabled: isEnabled !== undefined ? Boolean(isEnabled) : true,
+            testMode: testMode !== undefined ? Boolean(testMode) : false,
+        });
+        res.json({ success: true, message: 'Configurações da Meta WhatsApp Cloud API salvas com sucesso!', data: updated });
+    }
+    catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+// 5. Testar Conexão com Meta Graph API
+app.post('/api/whatsapp/test-connection', async (req, res) => {
+    try {
+        const result = await whatsappCloudApi.testConnection();
+        res.json(result);
+    }
+    catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+// 6. Disparar Dossiê Executivo via Template Oficial
+app.post('/api/whatsapp/send-dossier', async (req, res) => {
+    try {
+        const { to, clientName, companyName, reportSlug, score, customNotes } = req.body;
+        if (!to) {
+            return res.status(400).json({ success: false, error: 'O número de telefone é obrigatório.' });
+        }
+        if (!reportSlug) {
+            return res.status(400).json({ success: false, error: 'O slug do relatório é obrigatório.' });
+        }
+        const result = await whatsappCloudApi.sendDossierReport({
+            to,
+            clientName,
+            companyName,
+            reportSlug,
+            score,
+            customNotes,
+        });
+        res.json(result);
+    }
+    catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+// 7. Listar Mensagens Enviadas / Histórico
+app.get('/api/whatsapp/messages', (req, res) => {
+    const limit = req.query.limit ? parseInt(req.query.limit) : 20;
+    const messages = db.listWhatsAppMessages(limit);
+    res.json({ success: true, data: messages });
 });
 // -----------------------------------------------------------------------------
 // WORKER CRON AUTÔNOMO 24/7 & MONITOR DE EXECUÇÃO

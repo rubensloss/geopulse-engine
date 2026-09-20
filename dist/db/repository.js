@@ -19,6 +19,16 @@ export class EnterpriseRepository {
     internalLinks = new Map();
     geoMonitors = [];
     scans = new Map();
+    whatsappConfig = {
+        verifyToken: process.env.META_WA_VERIFY_TOKEN || 'omnicite_meta_verify_secret_2026',
+        accessToken: process.env.META_WA_TOKEN || '',
+        phoneNumberId: process.env.META_WA_PHONE_NUMBER_ID || '',
+        businessAccountId: process.env.META_WA_BUSINESS_ACCOUNT_ID || '',
+        templateName: 'dossie_executivo_geo',
+        isEnabled: true,
+        testMode: !process.env.META_WA_TOKEN,
+    };
+    whatsappMessages = new Map();
     constructor() {
         this.loadFromDisk();
     }
@@ -68,6 +78,19 @@ export class EnterpriseRepository {
                         this.scans.set(scan.slug, scan);
                 }
             }
+            if (data.whatsappConfig) {
+                this.whatsappConfig = { ...this.whatsappConfig, ...data.whatsappConfig };
+            }
+            if (data.whatsappMessages) {
+                this.whatsappMessages = new Map(data.whatsappMessages.map((item) => [
+                    item.id,
+                    {
+                        ...item,
+                        createdAt: new Date(item.createdAt),
+                        updatedAt: new Date(item.updatedAt),
+                    }
+                ]));
+            }
         }
         catch (err) {
             console.warn('⚠️ [DB] Não foi possível carregar base persistente anterior:', err);
@@ -94,6 +117,8 @@ export class EnterpriseRepository {
                     internalLinks: Array.from(this.internalLinks.values()),
                     geoMonitors: this.geoMonitors,
                     scans: Array.from(new Set(this.scans.values())),
+                    whatsappConfig: this.whatsappConfig,
+                    whatsappMessages: Array.from(this.whatsappMessages.values()),
                 };
                 fs.writeFileSync(this.storageFile, JSON.stringify(snapshot, null, 2), 'utf-8');
             }
@@ -472,6 +497,53 @@ export class EnterpriseRepository {
     }
     listRecentScans(limit = 10) {
         const unique = Array.from(new Set(this.scans.values()));
+        return unique
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, limit);
+    }
+    // ---------------------------------------------------------------------------
+    // WHATSAPP CLOUD API (META OFICIAL)
+    // ---------------------------------------------------------------------------
+    getWhatsAppConfig() {
+        return { ...this.whatsappConfig };
+    }
+    saveWhatsAppConfig(updates) {
+        this.whatsappConfig = {
+            ...this.whatsappConfig,
+            ...updates,
+        };
+        this.persist();
+        return this.whatsappConfig;
+    }
+    saveWhatsAppMessage(msg) {
+        const id = `wam_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+        const record = {
+            ...msg,
+            id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+        this.whatsappMessages.set(id, record);
+        if (record.metaMessageId) {
+            this.whatsappMessages.set(record.metaMessageId, record);
+        }
+        this.persist();
+        return record;
+    }
+    updateWhatsAppMessageStatus(idOrMetaId, status, errorMessage) {
+        const record = this.whatsappMessages.get(idOrMetaId);
+        if (!record)
+            return false;
+        record.status = status;
+        record.updatedAt = new Date();
+        if (errorMessage) {
+            record.errorMessage = errorMessage;
+        }
+        this.persist();
+        return true;
+    }
+    listWhatsAppMessages(limit = 20) {
+        const unique = Array.from(new Set(this.whatsappMessages.values()));
         return unique
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, limit);

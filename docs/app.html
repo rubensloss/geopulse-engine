@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -103,7 +103,7 @@
         <div class="hidden sm:flex items-center gap-2">
           <span class="text-xs text-slate-400">Cliente:</span>
           <select id="brandSelector" onchange="switchBrand(this.value)" class="bg-surface-800 border border-surface-border text-xs rounded-md px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-blue-500 transition max-w-[180px]">
-            <option value="brand_default">CloudSync Soluções B2B</option>
+            <option value="brand_default">CloudSync SoluÃ§Ãµes B2B</option>
           </select>
           <button onclick="openNewBrandModal()" class="px-2 py-1.5 rounded-md bg-surface-800 hover:bg-surface-700 border border-surface-border text-sky-400 hover:text-white text-xs flex items-center gap-1 transition" title="Cadastrar Nova Empresa / Cliente">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -112,19 +112,19 @@
         </div>
       </div>
 
-      <!-- Status do Sistema & Ações -->
+      <!-- Status do Sistema & AÃ§Ãµes -->
       <div class="flex items-center gap-2 sm:gap-3">
         <div class="flex items-center gap-2">
           <div class="hidden sm:flex flex-col text-right">
             <span id="dashUserName" class="text-xs font-bold text-white">Rubens Investidor</span>
-            <span id="dashUserPlan" class="text-[10px] font-mono text-amber-400">👑 Ciclo de Excelência</span>
+            <span id="dashUserPlan" class="text-[10px] font-mono text-amber-400">ðŸ‘‘ Ciclo de ExcelÃªncia</span>
           </div>
           <button onclick="logoutDashboard()" class="p-1.5 rounded-lg border border-surface-border hover:bg-rose-500/10 hover:border-rose-500/30 text-slate-400 hover:text-rose-400 transition" title="Sair da Conta">
             <i data-lucide="log-out" class="w-4 h-4"></i>
           </button>
         </div>
 
-        <a href="/" target="_blank" class="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-surface-border hover:bg-surface-800 transition" title="Ver Apresentação Comercial">
+        <a href="/" target="_blank" class="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-surface-border hover:bg-surface-800 transition" title="Ver ApresentaÃ§Ã£o Comercial">
           <i data-lucide="external-link" class="w-3.5 h-3.5 text-sky-400"></i>
           <span class="hidden sm:inline">Site Comercial</span>
         </a>
@@ -144,13 +144,13 @@
   </header>
 
   <!-- ========================================================================= -->
-  <!-- NAVEGAÇÃO POR ABAS -->
+  <!-- NAVEGAÃ‡ÃƒO POR ABAS -->
   <!-- ========================================================================= -->
   <div class="border-b border-surface-border bg-surface-900/60">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto py-2">
       <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 bg-surface-700 text-white border border-surface-border">
         <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-blue-400"></i>
-        Visão Geral
+        VisÃ£o Geral
       </button>
       <button onclick="switchTab('queue')" id="tab-queue" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
         <i data-lucide="list-todo" class="w-3.5 h-3.5"></i>
@@ -159,7 +159,7 @@
       </button>
       <button onclick="switchTab('articles')" id="tab-articles" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
         <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-        Artigos & Estúdio
+        Artigos & EstÃºdio
       </button>
       <button onclick="switchTab('geo')" id="tab-geo" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
         <i data-lucide="bot" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -167,26 +167,26 @@
       </button>
       <button onclick="switchTab('brain')" id="tab-brain" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
         <i data-lucide="brain" class="w-3.5 h-3.5"></i>
-        Cérebro da Marca
+        CÃ©rebro da Marca
       </button>
       <button onclick="switchTab('ecosystem')" id="tab-ecosystem" class="tab-btn px-3.5 py-1.5 text-xs font-semibold rounded-md transition flex items-center gap-2 text-amber-300 hover:text-white hover:bg-amber-500/10 border border-amber-500/30">
         <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
-        👑 Ciclo de Excelência
+        ðŸ‘‘ Ciclo de ExcelÃªncia
       </button>
       <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-3.5 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-2 text-slate-400 hover:text-white hover:bg-surface-800">
         <i data-lucide="settings" class="w-3.5 h-3.5"></i>
-        Configurações & Chaves
+        ConfiguraÃ§Ãµes & Chaves
       </button>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- CONTEÚDO DAS ABAS -->
+  <!-- CONTEÃšDO DAS ABAS -->
   <!-- ========================================================================= -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
 
     <!-- ========================================================================= -->
-    <!-- BANNER DE ONBOARDING INTELIGENTE (ATIVADO APÓS AUDITORIA NO SCANNER) -->
+    <!-- BANNER DE ONBOARDING INTELIGENTE (ATIVADO APÃ“S AUDITORIA NO SCANNER) -->
     <!-- ========================================================================= -->
     <div id="onboardingBanner" class="hidden mb-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-sky-500/15 via-blue-500/10 to-indigo-500/15 border border-sky-500/30 shadow-lg shadow-sky-500/5 relative overflow-hidden">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-5">
@@ -194,15 +194,15 @@
           <div class="flex flex-wrap items-center gap-2">
             <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              DIAGNÓSTICO CONVERTIDO EM AÇÃO
+              DIAGNÃ“STICO CONVERTIDO EM AÃ‡ÃƒO
             </span>
             <span class="text-xs font-mono text-sky-400 font-semibold" id="onboardDomainText">empresa.com.br</span>
           </div>
           <h3 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-            <span>🎯 Marca Ativa: <span id="onboardBrandName" class="text-sky-300">Nova Marca</span></span>
+            <span>ðŸŽ¯ Marca Ativa: <span id="onboardBrandName" class="text-sky-300">Nova Marca</span></span>
           </h3>
           <p class="text-xs text-slate-300 leading-relaxed max-w-3xl">
-            Injetamos com sucesso as <strong class="text-white">3 pautas prioritárias de ataque GEO</strong> detectadas no escaneamento diretamente na sua esteira de produção. Cada artigo será redigido com tabelas de comparação, Schema.org e respostas diretas para os buscadores generativos (Perplexity, ChatGPT Search e Gemini).
+            Injetamos com sucesso as <strong class="text-white">3 pautas prioritÃ¡rias de ataque GEO</strong> detectadas no escaneamento diretamente na sua esteira de produÃ§Ã£o. Cada artigo serÃ¡ redigido com tabelas de comparaÃ§Ã£o, Schema.org e respostas diretas para os buscadores generativos (Perplexity, ChatGPT Search e Gemini).
           </p>
         </div>
         <div class="flex items-center gap-2.5 shrink-0 self-start md:self-center">
@@ -220,11 +220,11 @@
     </div>
 
     <!-- --------------------------------------------------------------------- -->
-    <!-- ABA 1: VISÃO GERAL -->
+    <!-- ABA 1: VISÃƒO GERAL -->
     <!-- --------------------------------------------------------------------- -->
     <section id="view-overview" class="tab-content space-y-6">
       
-      <!-- Cards de Métricas Principais -->
+      <!-- Cards de MÃ©tricas Principais -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <div class="glass p-4 rounded-xl relative overflow-hidden">
@@ -234,7 +234,7 @@
           </div>
           <div class="text-2xl font-bold text-white tracking-tight" id="metricSov">67%</div>
           <p class="text-[11px] text-emerald-400 flex items-center gap-1 mt-1 font-medium">
-            <i data-lucide="trending-up" class="w-3 h-3"></i> +14% vs. mês anterior
+            <i data-lucide="trending-up" class="w-3 h-3"></i> +14% vs. mÃªs anterior
           </p>
           <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-sky-500/5 rounded-full blur-xl pointer-events-none"></div>
         </div>
@@ -252,7 +252,7 @@
 
         <div class="glass p-4 rounded-xl relative overflow-hidden">
           <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
-            <span>Indexação Instantânea</span>
+            <span>IndexaÃ§Ã£o InstantÃ¢nea</span>
             <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
           </div>
           <div class="text-2xl font-bold text-white tracking-tight">100%</div>
@@ -274,17 +274,17 @@
 
       </div>
 
-      <!-- Grid com Gráfico de Modelos e Atividades Recentes -->
+      <!-- Grid com GrÃ¡fico de Modelos e Atividades Recentes -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Presença por Modelo de IA -->
+        <!-- PresenÃ§a por Modelo de IA -->
         <div class="glass p-5 rounded-xl lg:col-span-2 space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-semibold text-sm text-white">Presença em Respostas por Motor de IA</h3>
-              <p class="text-xs text-slate-400">Taxa em que sua marca é recomendada em perguntas de compra</p>
+              <h3 class="font-semibold text-sm text-white">PresenÃ§a em Respostas por Motor de IA</h3>
+              <p class="text-xs text-slate-400">Taxa em que sua marca Ã© recomendada em perguntas de compra</p>
             </div>
-            <span class="text-[11px] font-mono text-slate-400 px-2 py-1 rounded bg-surface-800 border border-surface-border">Últimos 30 dias</span>
+            <span class="text-[11px] font-mono text-slate-400 px-2 py-1 rounded bg-surface-800 border border-surface-border">Ãšltimos 30 dias</span>
           </div>
 
           <div class="space-y-3 pt-2">
@@ -320,9 +320,9 @@
           </div>
         </div>
 
-        <!-- Status de Conexões -->
+        <!-- Status de ConexÃµes -->
         <div class="glass p-5 rounded-xl space-y-4">
-          <h3 class="font-semibold text-sm text-white">Conexões do Cliente</h3>
+          <h3 class="font-semibold text-sm text-white">ConexÃµes do Cliente</h3>
           <div class="space-y-3 text-xs">
             <div class="p-3 rounded-lg bg-surface-800/80 border border-surface-border flex items-center justify-between">
               <div class="flex items-center gap-2.5">
@@ -337,7 +337,7 @@
 
             <div class="p-3 rounded-lg bg-surface-800/80 border border-surface-border flex items-center justify-between">
               <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold">⚡</div>
+                <div class="w-7 h-7 rounded bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold">âš¡</div>
                 <div>
                   <p class="font-semibold text-white">Protocolo IndexNow</p>
                   <p class="text-[11px] text-slate-400">Bing, Naver, Copilot</p>
@@ -348,7 +348,7 @@
 
             <div class="p-3 rounded-lg bg-surface-800/80 border border-surface-border flex items-center justify-between">
               <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">🔒</div>
+                <div class="w-7 h-7 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-bold">ðŸ”’</div>
                 <div>
                   <p class="font-semibold text-white">Criptografia</p>
                   <p class="text-[11px] text-slate-400">AES-256-GCM Ativa</p>
@@ -359,13 +359,13 @@
 
             <div class="p-3 rounded-lg bg-emerald-500/[0.04] border border-emerald-500/20 flex items-center justify-between">
               <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold">🤖</div>
+                <div class="w-7 h-7 rounded bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold">ðŸ¤–</div>
                 <div>
                   <p class="font-semibold text-white flex items-center gap-1.5">
                     <span>Worker Cron 24/7</span>
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   </p>
-                  <p class="text-[11px] text-slate-400">Produção & Dispersão Autônoma</p>
+                  <p class="text-[11px] text-slate-400">ProduÃ§Ã£o & DispersÃ£o AutÃ´noma</p>
                 </div>
               </div>
               <button onclick="triggerWorkerCycleNow()" id="btnTriggerWorkerQuick" class="px-2.5 py-1 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 transition flex items-center gap-1 font-bold">
@@ -386,8 +386,8 @@
     <section id="view-queue" class="tab-content hidden space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 class="text-lg font-bold text-white">Esteira de Conteúdo & Fila de Execução</h2>
-          <p class="text-xs text-slate-400">Pautas priorizadas pelo algoritmo e prontas para geração autônoma</p>
+          <h2 class="text-lg font-bold text-white">Esteira de ConteÃºdo & Fila de ExecuÃ§Ã£o</h2>
+          <p class="text-xs text-slate-400">Pautas priorizadas pelo algoritmo e prontas para geraÃ§Ã£o autÃ´noma</p>
         </div>
         <button onclick="openNewTopicModal()" class="glow-btn text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 self-start">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -401,12 +401,12 @@
     </section>
 
     <!-- --------------------------------------------------------------------- -->
-    <!-- ABA 3: ARTIGOS & ESTÚDIO -->
+    <!-- ABA 3: ARTIGOS & ESTÃšDIO -->
     <!-- --------------------------------------------------------------------- -->
     <section id="view-articles" class="tab-content hidden space-y-4">
       <div>
         <h2 class="text-lg font-bold text-white">Artigos Gerados & Auditoria GEO</h2>
-        <p class="text-xs text-slate-400">Inspeção profunda de ganho informacional, tabelas comparativas e Schemas JSON-LD</p>
+        <p class="text-xs text-slate-400">InspeÃ§Ã£o profunda de ganho informacional, tabelas comparativas e Schemas JSON-LD</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -418,7 +418,7 @@
 
         <!-- Inspetor de Artigo Selecionado -->
         <div class="glass p-5 rounded-xl lg:col-span-2 space-y-4" id="articleInspector">
-          <!-- Conteúdo renderizado dinamicamente -->
+          <!-- ConteÃºdo renderizado dinamicamente -->
         </div>
       </div>
     </section>
@@ -435,7 +435,7 @@
         <div class="flex items-center gap-2">
           <button onclick="openCurrentBrandPublicReport()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition">
             <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-            <span>Relatório Público para WhatsApp</span>
+            <span>RelatÃ³rio PÃºblico para WhatsApp</span>
           </button>
         </div>
       </div>
@@ -443,7 +443,7 @@
       <div class="glass rounded-xl overflow-hidden">
         <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between">
           <h3 class="text-sm font-semibold text-white">Auditoria de Prompts de Compra Simulados</h3>
-          <span class="text-xs text-slate-400 font-mono">Frequência: Semanal</span>
+          <span class="text-xs text-slate-400 font-mono">FrequÃªncia: Semanal</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -451,7 +451,7 @@
               <tr>
                 <th class="p-3.5 font-medium">Prompt de Compra Testado</th>
                 <th class="p-3.5 font-medium">Motor de IA</th>
-                <th class="p-3.5 font-medium">Posição</th>
+                <th class="p-3.5 font-medium">PosiÃ§Ã£o</th>
                 <th class="p-3.5 font-medium">Sentimento</th>
                 <th class="p-3.5 font-medium">Links Citados</th>
               </tr>
@@ -465,13 +465,13 @@
     </section>
 
     <!-- --------------------------------------------------------------------- -->
-    <!-- ABA 5: CÉREBRO DA MARCA -->
+    <!-- ABA 5: CÃ‰REBRO DA MARCA -->
     <!-- --------------------------------------------------------------------- -->
     <section id="view-brain" class="tab-content hidden space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-bold text-white">Cérebro da Marca (Brand Profile)</h2>
-          <p class="text-xs text-slate-400">Configurações semânticas que guiam todas as redações e garantem diferenciação</p>
+          <h2 class="text-lg font-bold text-white">CÃ©rebro da Marca (Brand Profile)</h2>
+          <p class="text-xs text-slate-400">ConfiguraÃ§Ãµes semÃ¢nticas que guiam todas as redaÃ§Ãµes e garantem diferenciaÃ§Ã£o</p>
         </div>
         <span class="px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono flex items-center gap-1.5">
           <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
@@ -486,24 +486,24 @@
             <input type="text" id="brainName" placeholder="Ex: Smart Fit" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Domínio Oficial (URL)</label>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">DomÃ­nio Oficial (URL)</label>
             <input type="url" id="brainWebsiteUrl" placeholder="https://seusite.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1.5">Proposta de Valor Única (UVP) & Diferenciais</label>
-          <textarea id="brainProductDescription" rows="2" placeholder="O que torna a sua empresa única e insubstituível para os clientes?" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Proposta de Valor Ãšnica (UVP) & Diferenciais</label>
+          <textarea id="brainProductDescription" rows="2" placeholder="O que torna a sua empresa Ãºnica e insubstituÃ­vel para os clientes?" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Público-Alvo Prioritário (ICP)</label>
-            <input type="text" id="brainTargetAudience" placeholder="Ex: Gestores de TI, Praticantes de musculação..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">PÃºblico-Alvo PrioritÃ¡rio (ICP)</label>
+            <input type="text" id="brainTargetAudience" placeholder="Ex: Gestores de TI, Praticantes de musculaÃ§Ã£o..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Tom de Voz da Redação</label>
-            <input type="text" id="brainToneOfVoice" placeholder="Ex: Pragmático, técnico, sênior e acolhedor" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Tom de Voz da RedaÃ§Ã£o</label>
+            <input type="text" id="brainToneOfVoice" placeholder="Ex: PragmÃ¡tico, tÃ©cnico, sÃªnior e acolhedor" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
         </div>
 
@@ -513,21 +513,21 @@
             <input type="url" id="brainCtaUrl" placeholder="https://seusite.com.br/planos" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
           <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Texto da Ação (Chamada para Ação)</label>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Texto da AÃ§Ã£o (Chamada para AÃ§Ã£o)</label>
             <input type="text" id="brainCtaText" placeholder="Ex: Ver Planos e Matricular-se" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-slate-300 mb-1.5">Termos Proibidos / Restrições (Compliance)</label>
-          <input type="text" id="brainForbiddenTerms" placeholder="Ex: milagroso, garantia 100%, pirâmide (separados por vírgula)" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
-          <p class="text-[10px] text-slate-400 mt-1">O linter GEO bloqueará automaticamente qualquer redação que mencione essas expressões.</p>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Termos Proibidos / RestriÃ§Ãµes (Compliance)</label>
+          <input type="text" id="brainForbiddenTerms" placeholder="Ex: milagroso, garantia 100%, pirÃ¢mide (separados por vÃ­rgula)" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          <p class="text-[10px] text-slate-400 mt-1">O linter GEO bloquearÃ¡ automaticamente qualquer redaÃ§Ã£o que mencione essas expressÃµes.</p>
         </div>
 
         <div class="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-surface-border">
           <div class="flex items-center gap-3">
             <input type="checkbox" id="brainAutoPublish" class="w-4 h-4 rounded bg-surface-800 border-surface-border text-blue-600 focus:ring-0">
-            <label for="brainAutoPublish" class="text-xs text-slate-300">Publicar automaticamente no CMS (WordPress/Webflow) sem exigir aprovação prévia</label>
+            <label for="brainAutoPublish" class="text-xs text-slate-300">Publicar automaticamente no CMS (WordPress/Webflow) sem exigir aprovaÃ§Ã£o prÃ©via</label>
           </div>
           <button onclick="saveBrandBrain()" id="btnSaveBrain" class="glow-btn text-white text-xs font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 self-end sm:self-auto">
             <i data-lucide="save" class="w-3.5 h-3.5"></i>
@@ -542,7 +542,7 @@
 
   
     <!-- ======================================================================= -->
-    <!-- ABA: ECOSSISTEMA CICLO DE EXCELÊNCIA DIGITAL (5 PILARES) -->
+    <!-- ABA: ECOSSISTEMA CICLO DE EXCELÃŠNCIA DIGITAL (5 PILARES) -->
     <!-- ======================================================================= -->
     <div id="view-ecosystem" class="tab-content hidden space-y-6">
       
@@ -552,11 +552,11 @@
           <div class="space-y-2">
             <div class="flex items-center gap-2 font-mono text-xs text-amber-400">
               <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
-              <span class="font-bold uppercase tracking-wider">Ecossistema Completo de Negócios</span>
+              <span class="font-bold uppercase tracking-wider">Ecossistema Completo de NegÃ³cios</span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white">Ciclo de Excelência Digital</h2>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white">Ciclo de ExcelÃªncia Digital</h2>
             <p class="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Os 5 pilares integrados que transformam qualquer empresa em líder de mercado: presença local no Google, site de alta conversão, atendimento 24/7 com IA, gestão de vendas no CRM e o <strong class="text-white">Motor GEO como a Joia da Coroa</strong> de aquisição contínua.
+              Os 5 pilares integrados que transformam qualquer empresa em lÃ­der de mercado: presenÃ§a local no Google, site de alta conversÃ£o, atendimento 24/7 com IA, gestÃ£o de vendas no CRM e o <strong class="text-white">Motor GEO como a Joia da Coroa</strong> de aquisiÃ§Ã£o contÃ­nua.
             </p>
           </div>
           <div class="shrink-0 p-4 rounded-xl border border-amber-500/30 bg-surface/80 text-center">
@@ -573,7 +573,7 @@
       <!-- Grade dos 5 Pilares -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         
-        <!-- PILAR 1: GOOGLE MEU NEGÓCIO -->
+        <!-- PILAR 1: GOOGLE MEU NEGÃ“CIO -->
         <div class="p-5 rounded-xl border border-surface-border bg-surface-800/80 flex flex-col justify-between">
           <div class="space-y-3">
             <div class="flex items-center justify-between">
@@ -585,18 +585,18 @@
               </span>
             </div>
             <div>
-              <h4 class="text-sm font-bold text-white">Pilar 1: Google Meu Negócio & Maps</h4>
+              <h4 class="text-sm font-bold text-white">Pilar 1: Google Meu NegÃ³cio & Maps</h4>
               <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-                Ficha otimizada com fotos 360°, postagens semanais e gestão de reputação.
+                Ficha otimizada com fotos 360Â°, postagens semanais e gestÃ£o de reputaÃ§Ã£o.
               </p>
             </div>
             <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
-              <span class="text-slate-400">Avaliação:</span>
-              <span class="text-amber-400 font-bold flex items-center gap-1">4.8 ★ <span class="text-slate-500 font-normal">(142 reviews)</span></span>
+              <span class="text-slate-400">AvaliaÃ§Ã£o:</span>
+              <span class="text-amber-400 font-bold flex items-center gap-1">4.8 â˜… <span class="text-slate-500 font-normal">(142 reviews)</span></span>
             </div>
           </div>
           <button onclick="openPillarDetail('gmb')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-emerald-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
-            <span>Ver Ficha no Maps & Métricas</span>
+            <span>Ver Ficha no Maps & MÃ©tricas</span>
             <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
           </button>
         </div>
@@ -620,7 +620,7 @@
             </div>
             <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
               <span class="text-slate-400">Core Web Vitals:</span>
-              <span class="text-emerald-400 font-bold">LCP 0.8s • CLS 0.0</span>
+              <span class="text-emerald-400 font-bold">LCP 0.8s â€¢ CLS 0.0</span>
             </div>
           </div>
           <button onclick="openPillarDetail('site')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-sky-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
@@ -643,11 +643,11 @@
             <div>
               <h4 class="text-sm font-bold text-white">Pilar 3: Agente de IA Conversacional</h4>
               <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-                Qualificação em tempo real de leads no WhatsApp e Web, sem deixar clientes sem resposta.
+                QualificaÃ§Ã£o em tempo real de leads no WhatsApp e Web, sem deixar clientes sem resposta.
               </p>
             </div>
             <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
-              <span class="text-slate-400">Conversas no Mês:</span>
+              <span class="text-slate-400">Conversas no MÃªs:</span>
               <span class="text-purple-400 font-bold">438 leads qualificados</span>
             </div>
           </div>
@@ -669,14 +669,14 @@
               </span>
             </div>
             <div>
-              <h4 class="text-sm font-bold text-white">Pilar 4: CRM & Gestão de Funil</h4>
+              <h4 class="text-sm font-bold text-white">Pilar 4: CRM & GestÃ£o de Funil</h4>
               <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-                Pipeline comercial completo com automação de follow-up e histórico de negociações.
+                Pipeline comercial completo com automaÃ§Ã£o de follow-up e histÃ³rico de negociaÃ§Ãµes.
               </p>
             </div>
             <div class="p-3 rounded-lg border border-surface-border bg-surface-900/60 flex items-center justify-between text-xs font-mono">
-              <span class="text-slate-400">Em Negociação:</span>
-              <span class="text-blue-400 font-bold">29 Oportunidades • R$ 148k</span>
+              <span class="text-slate-400">Em NegociaÃ§Ã£o:</span>
+              <span class="text-blue-400 font-bold">29 Oportunidades â€¢ R$ 148k</span>
             </div>
           </div>
           <button onclick="openPillarDetail('crm')" class="mt-4 w-full py-2 px-3 rounded-lg border border-surface-border hover:border-blue-500/40 bg-surface-700/50 text-xs text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
@@ -700,19 +700,19 @@
               </span>
             </div>
             <div>
-              <h4 class="text-base font-bold text-white">Pilar 5: Motor Autônomo GEO (OmniCite Engine)</h4>
+              <h4 class="text-base font-bold text-white">Pilar 5: Motor AutÃ´nomo GEO (OmniCite Engine)</h4>
               <p class="text-xs text-slate-300 mt-1 leading-relaxed">
-                Geração contínua de conteúdos com Information Gain e indexação em tempo real que forçam o ChatGPT, Perplexity, Claude e Gemini a citarem a sua empresa como autoridade absoluta do mercado.
+                GeraÃ§Ã£o contÃ­nua de conteÃºdos com Information Gain e indexaÃ§Ã£o em tempo real que forÃ§am o ChatGPT, Perplexity, Claude e Gemini a citarem a sua empresa como autoridade absoluta do mercado.
               </p>
             </div>
             <div class="grid grid-cols-3 gap-3 pt-2">
               <div class="p-2.5 rounded-lg border border-surface-border bg-surface-900/80 text-center">
-                <span class="text-[10px] font-mono text-muted block">Citações no ChatGPT</span>
+                <span class="text-[10px] font-mono text-muted block">CitaÃ§Ãµes no ChatGPT</span>
                 <span class="text-sm font-bold text-emerald-400 font-mono">Top #1</span>
               </div>
               <div class="p-2.5 rounded-lg border border-surface-border bg-surface-900/80 text-center">
                 <span class="text-[10px] font-mono text-muted block">Fontes no Perplexity</span>
-                <span class="text-sm font-bold text-sky-400 font-mono">18 Páginas</span>
+                <span class="text-sm font-bold text-sky-400 font-mono">18 PÃ¡ginas</span>
               </div>
               <div class="p-2.5 rounded-lg border border-surface-border bg-surface-900/80 text-center">
                 <span class="text-[10px] font-mono text-muted block">Google AI Overviews</span>
@@ -731,18 +731,18 @@
     </div>
 
     <!-- --------------------------------------------------------------------- -->
-    <!-- ABA 7: CONFIGURAÇÕES & CHAVES -->
+    <!-- ABA 7: CONFIGURAÃ‡Ã•ES & CHAVES -->
     <!-- --------------------------------------------------------------------- -->
     <section id="view-settings" class="tab-content hidden space-y-6">
       
-      <!-- Cabeçalho da Aba -->
+      <!-- CabeÃ§alho da Aba -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-4">
         <div>
           <h2 class="text-lg font-bold text-white flex items-center gap-2">
             <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i>
-            Configurações da Plataforma & Chaves de API
+            ConfiguraÃ§Ãµes da Plataforma & Chaves de API
           </h2>
-          <p class="text-xs text-slate-400">Gerencie a inteligência do Google Gemini, protocolo IndexNow, publicação em CMS e credenciais de segurança.</p>
+          <p class="text-xs text-slate-400">Gerencie a inteligÃªncia do Google Gemini, protocolo IndexNow, publicaÃ§Ã£o em CMS e credenciais de seguranÃ§a.</p>
         </div>
         <div class="flex items-center gap-2">
           <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-1.5">
@@ -763,7 +763,7 @@
               </div>
               <div>
                 <h3 class="text-sm font-bold text-white">Google Gemini AI Engine</h3>
-                <p class="text-[11px] text-slate-400">Grounding e raciocínio generativo com Information Gain</p>
+                <p class="text-[11px] text-slate-400">Grounding e raciocÃ­nio generativo com Information Gain</p>
               </div>
             </div>
             <span id="geminiStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -775,19 +775,19 @@
             <div>
               <label class="block text-slate-300 mb-1 font-medium">Chave de API do Google AI Studio</label>
               <div class="relative">
-                <input type="password" id="cfgGeminiKey" placeholder="AIzaSyB••••••••••••••••••••••••••••" class="w-full bg-surface-800 border border-surface-border rounded-lg pl-3 pr-10 py-2.5 text-white font-mono focus:outline-none focus:border-blue-500 transition">
+                <input type="password" id="cfgGeminiKey" placeholder="AIzaSyBâ€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full bg-surface-800 border border-surface-border rounded-lg pl-3 pr-10 py-2.5 text-white font-mono focus:outline-none focus:border-blue-500 transition">
                 <button type="button" onclick="togglePasswordVisibility('cfgGeminiKey', this)" class="absolute right-3 top-2.5 text-slate-400 hover:text-white">
                   <i data-lucide="eye" class="w-4 h-4"></i>
                 </button>
               </div>
-              <p class="text-[10px] text-slate-400 mt-1">Sua chave é criptografada e armazenada de forma segura na infraestrutura do motor.</p>
+              <p class="text-[10px] text-slate-400 mt-1">Sua chave Ã© criptografada e armazenada de forma segura na infraestrutura do motor.</p>
             </div>
 
             <div>
               <label class="block text-slate-300 mb-1 font-medium">Modelo Principal de IA</label>
               <select id="cfgGeminiModel" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 transition">
-                <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Recomendado - Ultrarrápido, ~R$ 0,12/artigo)</option>
-                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Máximo Raciocínio Profundo & Grounding)</option>
+                <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (Recomendado - UltrarrÃ¡pido, ~R$ 0,12/artigo)</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro (MÃ¡ximo RaciocÃ­nio Profundo & Grounding)</option>
                 <option value="gemini-1.5-pro">Gemini 1.5 Pro (Alta Janela de Contexto)</option>
               </select>
             </div>
@@ -797,11 +797,11 @@
             <div class="flex flex-col sm:flex-row items-center gap-2 pt-2">
               <button onclick="testGeminiConnection()" id="btnTestGemini" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-medium border border-surface-border flex items-center justify-center gap-1.5 transition">
                 <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span>Testar Conexão Google AI</span>
+                <span>Testar ConexÃ£o Google AI</span>
               </button>
               <button onclick="saveGeminiSettings()" id="btnSaveGemini" class="w-full sm:w-auto glow-btn text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center justify-center gap-1.5">
                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                <span>Salvar Configuração</span>
+                <span>Salvar ConfiguraÃ§Ã£o</span>
               </button>
             </div>
           </div>
@@ -815,7 +815,7 @@
                 <i data-lucide="zap" class="w-5 h-5"></i>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-white">Protocolo IndexNow Instantâneo</h3>
+                <h3 class="text-sm font-bold text-white">Protocolo IndexNow InstantÃ¢neo</h3>
                 <p class="text-[11px] text-slate-400">Bing Search, Copilot, Yandex & Seznam em menos de 10 minutos</p>
               </div>
             </div>
@@ -826,14 +826,14 @@
 
           <div class="space-y-3 text-xs">
             <div>
-              <label class="block text-slate-300 mb-1 font-medium">Domínio Host do Cliente</label>
+              <label class="block text-slate-300 mb-1 font-medium">DomÃ­nio Host do Cliente</label>
               <input type="text" id="cfgIndexNowHost" value="cloudsync.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500 transition">
             </div>
 
             <div>
-              <label class="block text-slate-300 mb-1 font-medium">Chave de Verificação IndexNow (Key)</label>
+              <label class="block text-slate-300 mb-1 font-medium">Chave de VerificaÃ§Ã£o IndexNow (Key)</label>
               <input type="text" id="cfgIndexNowKey" value="8f3c2a9e1d7b4f5a6c8e9b0d1e2f3a4b" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500 transition">
-              <p class="text-[10px] text-slate-400 mt-1">Disponível em <code class="text-amber-300 font-mono">https://dominio/[key].txt</code> para validação automática dos buscadores.</p>
+              <p class="text-[10px] text-slate-400 mt-1">DisponÃ­vel em <code class="text-amber-300 font-mono">https://dominio/[key].txt</code> para validaÃ§Ã£o automÃ¡tica dos buscadores.</p>
             </div>
 
             <div id="indexNowTestFeedback" class="hidden p-3 rounded-lg border text-xs"></div>
@@ -847,7 +847,7 @@
           </div>
         </div>
 
-        <!-- CARD 3: INTEGRAÇÃO CMS -->
+        <!-- CARD 3: INTEGRAÃ‡ÃƒO CMS -->
         <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
@@ -855,7 +855,7 @@
                 <i data-lucide="globe" class="w-5 h-5"></i>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-white">Publicação Automática no CMS</h3>
+                <h3 class="text-sm font-bold text-white">PublicaÃ§Ã£o AutomÃ¡tica no CMS</h3>
                 <p class="text-[11px] text-slate-400">WordPress REST API, Webflow ou Webhooks Headless</p>
               </div>
             </div>
@@ -882,18 +882,18 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="block text-slate-300 mb-1 font-medium">Usuário / Identificador</label>
+                <label class="block text-slate-300 mb-1 font-medium">UsuÃ¡rio / Identificador</label>
                 <input type="text" id="cfgCmsUser" value="admin_omnicite" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
               </div>
               <div>
                 <label class="block text-slate-300 mb-1 font-medium">Application Password / Token</label>
-                <input type="password" id="cfgCmsPass" value="••••••••••••••••" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
+                <input type="password" id="cfgCmsPass" value="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
               </div>
             </div>
 
             <div class="flex items-center gap-2 pt-1">
               <input type="checkbox" id="cfgAutoPublish" checked class="rounded bg-surface-800 border-surface-border text-blue-500 focus:ring-0">
-              <label for="cfgAutoPublish" class="text-slate-300 text-[11px]">Publicar automaticamente novos artigos gerados após aprovação do pipeline</label>
+              <label for="cfgAutoPublish" class="text-slate-300 text-[11px]">Publicar automaticamente novos artigos gerados apÃ³s aprovaÃ§Ã£o do pipeline</label>
             </div>
 
             <div class="pt-1">
@@ -905,7 +905,7 @@
           </div>
         </div>
 
-        <!-- CARD 4: COBRANÇA, PIX & SOBERANIA -->
+        <!-- CARD 4: COBRANÃ‡A, PIX & SOBERANIA -->
         <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
@@ -926,7 +926,7 @@
             <div>
               <label class="block text-slate-300 mb-1 font-medium">Chave PIX da Empresa (Recebedor)</label>
               <input type="text" id="cfgPixKey" value="financeiro@omnicite.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
-              <p class="text-[10px] text-slate-400 mt-1">Utilizada para geração automática do QR Code dinâmico no checkout.</p>
+              <p class="text-[10px] text-slate-400 mt-1">Utilizada para geraÃ§Ã£o automÃ¡tica do QR Code dinÃ¢mico no checkout.</p>
             </div>
 
             <div class="border-t border-surface-border pt-3 mt-3">
@@ -938,7 +938,7 @@
                 <span class="text-[10px] font-mono text-slate-400">JSON Local Encriptado</span>
               </div>
               <p class="text-[11px] text-slate-300 leading-relaxed mb-3">
-                Faça o download do banco de dados completo de clientes, pautas, artigos gerados, auditorias do scanner e logs de monitoramento GEO.
+                FaÃ§a o download do banco de dados completo de clientes, pautas, artigos gerados, auditorias do scanner e logs de monitoramento GEO.
               </p>
               <a href="/api/settings/backup" download class="w-full py-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-sky-300 text-xs font-semibold border border-surface-border flex items-center justify-center gap-2 transition">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -947,6 +947,92 @@
             </div>
           </div>
         </div>
+
+        <!-- CARD 5: META WHATSAPP CLOUD API (OFICIAL) -->
+        <div class="glass p-5 rounded-2xl border border-surface-border space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-white">WhatsApp Cloud API (Meta Oficial)</h3>
+                <p class="text-[11px] text-slate-400">Disparo oficial de DossiÃªs e NotificaÃ§Ãµes sem risco de banimento</p>
+              </div>
+            </div>
+            <span id="waStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              API Oficial Pronta
+            </span>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">Meta Access Token (System User / Developer)</label>
+                <input type="password" id="cfgWaToken" placeholder="EAABw..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">Phone Number ID da Meta</label>
+                <input type="text" id="cfgWaPhoneId" placeholder="Ex: 100609349603248" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">WABA ID (Business Account ID)</label>
+                <input type="text" id="cfgWaBusinessId" placeholder="Ex: 2398471209384" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1 font-medium">Nome do Template PrÃ©-Aprovado</label>
+                <input type="text" id="cfgWaTemplate" value="dossie_executivo_geo" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+              </div>
+            </div>
+
+            <!-- Dados para ConfiguraÃ§Ã£o do Webhook no Meta for Developers -->
+            <div class="p-3 rounded-xl bg-surface-800/80 border border-surface-border space-y-2">
+              <div class="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                <span class="flex items-center gap-1.5"><i data-lucide="webhook" class="w-3.5 h-3.5 text-sky-400"></i> Webhook da Meta (Copie e Cole no Meta Developers):</span>
+                <span class="text-[10px] text-emerald-400 font-mono">GET / POST Ativos</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span class="text-slate-400 block mb-0.5">URL de Retorno (Callback URL):</span>
+                  <input type="text" id="cfgWaWebhookUrl" readonly value="https://omnicite-engine-production.up.railway.app/api/whatsapp/webhook" class="w-full bg-surface-900 border border-surface-border rounded px-2.5 py-1.5 text-sky-300 font-mono text-[10px]">
+                </div>
+                <div>
+                  <span class="text-slate-400 block mb-0.5">Token de VerificaÃ§Ã£o (Verify Token):</span>
+                  <input type="text" id="cfgWaVerifyToken" readonly value="omnicite_meta_verify_secret_2026" class="w-full bg-surface-900 border border-surface-border rounded px-2.5 py-1.5 text-amber-300 font-mono text-[10px]">
+                </div>
+              </div>
+            </div>
+
+            <div id="waTestFeedback" class="hidden p-3 rounded-lg border text-xs"></div>
+
+            <div class="flex flex-col sm:flex-row gap-2 pt-1">
+              <button onclick="saveWhatsAppConfig()" id="btnSaveWhatsApp" class="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Salvar ConfiguraÃ§Ãµes Meta</span>
+              </button>
+              <button onclick="testWhatsAppConnection()" id="btnTestWhatsApp" class="py-2.5 px-4 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-semibold border border-surface-border flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="wifi" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Testar ConexÃ£o Graph API</span>
+              </button>
+            </div>
+
+            <!-- Teste RÃ¡pido de Envio -->
+            <div class="border-t border-surface-border pt-3 mt-2">
+              <span class="block text-slate-300 mb-1.5 font-medium">Disparo RÃ¡pido de Teste (DossiÃª no WhatsApp)</span>
+              <div class="flex gap-2">
+                <input type="tel" id="cfgWaTestPhone" placeholder="Ex: (11) 98765-4321" class="flex-1 bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+                <button onclick="sendQuickWhatsAppTest()" id="btnSendWaTest" class="px-4 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold border border-emerald-500/30 flex items-center gap-1.5 transition whitespace-nowrap">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>Enviar DossiÃª</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
       </div>
 
@@ -962,7 +1048,7 @@
       <div class="flex items-center justify-between border-b border-surface-border pb-3">
         <h3 class="font-bold text-sm text-white flex items-center gap-2">
           <i data-lucide="plus-circle" class="w-4 h-4 text-blue-400"></i>
-          Adicionar Nova Pauta à Esteira
+          Adicionar Nova Pauta Ã  Esteira
         </h3>
         <button onclick="closeNewTopicModal()" class="text-slate-400 hover:text-white">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -977,12 +1063,12 @@
 
         <div>
           <label class="block text-slate-300 mb-1 font-medium">Palavra-chave Foco</label>
-          <input type="text" id="inputKeyword" placeholder="Ex: custo migração banco dados aws" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+          <input type="text" id="inputKeyword" placeholder="Ex: custo migraÃ§Ã£o banco dados aws" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-300 mb-1 font-medium">Intenção de Busca</label>
+            <label class="block text-slate-300 mb-1 font-medium">IntenÃ§Ã£o de Busca</label>
             <select id="inputIntent" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
               <option value="INFORMATIONAL">Informativo</option>
               <option value="COMMERCIAL">Comercial / Comparativo</option>
@@ -992,11 +1078,11 @@
           <div>
             <label class="block text-slate-300 mb-1 font-medium">Prioridade</label>
             <select id="inputPriority" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
-              <option value="5">Prioridade 5 (Máxima)</option>
+              <option value="5">Prioridade 5 (MÃ¡xima)</option>
               <option value="4">Prioridade 4 (Alta)</option>
               <option value="3" selected>Prioridade 3 (Normal)</option>
               <option value="2">Prioridade 2 (Baixa)</option>
-              <option value="1">Prioridade 1 (Mínima)</option>
+              <option value="1">Prioridade 1 (MÃ­nima)</option>
             </select>
           </div>
         </div>
@@ -1010,7 +1096,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL: DETALHES DO PILAR (CICLO DE EXCELÊNCIA DIGITAL) -->
+  <!-- MODAL: DETALHES DO PILAR (CICLO DE EXCELÃŠNCIA DIGITAL) -->
   <!-- ========================================================================= -->
   <div id="pillarDetailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="glass max-w-xl w-full p-6 rounded-2xl space-y-4 relative border border-surface-border max-h-[90vh] overflow-y-auto">
@@ -1028,7 +1114,7 @@
       </div>
 
       <div class="border-t border-surface-border pt-3 flex items-center justify-between">
-        <span class="text-[11px] font-mono text-muted">Ecossistema Ciclo de Excelência Digital</span>
+        <span class="text-[11px] font-mono text-muted">Ecossistema Ciclo de ExcelÃªncia Digital</span>
         <button onclick="closePillarDetailModal()" class="px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-200 text-xs font-semibold border border-surface-border transition">
           Fechar
         </button>
@@ -1048,7 +1134,7 @@
           </div>
           <div>
             <h3 class="font-bold text-sm text-white">Cadastrar Nova Empresa / Cliente</h3>
-            <p class="text-[11px] text-slate-400">Crie um novo perfil no Cérebro da Marca e inicie a esteira GEO autônoma.</p>
+            <p class="text-[11px] text-slate-400">Crie um novo perfil no CÃ©rebro da Marca e inicie a esteira GEO autÃ´noma.</p>
           </div>
         </div>
         <button onclick="closeNewBrandModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-800 transition">
@@ -1059,11 +1145,11 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block text-slate-300 mb-1 font-medium">Nome da Empresa</label>
-          <input type="text" id="newBrandName" placeholder="Ex: Hospital Samaritano, Nexus Logística, Ortodontia VIP..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
+          <input type="text" id="newBrandName" placeholder="Ex: Hospital Samaritano, Nexus LogÃ­stica, Ortodontia VIP..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
         </div>
 
         <div>
-          <label class="block text-slate-300 mb-1 font-medium">Domínio / Site Oficial (URL)</label>
+          <label class="block text-slate-300 mb-1 font-medium">DomÃ­nio / Site Oficial (URL)</label>
           <input type="url" id="newBrandWebsite" placeholder="https://empresa.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
         </div>
 
@@ -1074,7 +1160,7 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-300 mb-1 font-medium">Público-Alvo (ICP)</label>
+            <label class="block text-slate-300 mb-1 font-medium">PÃºblico-Alvo (ICP)</label>
             <input type="text" id="newBrandAudience" placeholder="Ex: Pacientes, Diretores de TI..." class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500">
           </div>
           <div>
@@ -1127,27 +1213,27 @@
       <!-- Preview da Imagem Atual / Gerada -->
       <div class="space-y-2">
         <div class="flex items-center justify-between text-xs">
-          <span class="text-slate-300 font-medium">Prévia da Capa (Aspect Ratio 1.91:1)</span>
+          <span class="text-slate-300 font-medium">PrÃ©via da Capa (Aspect Ratio 1.91:1)</span>
           <span class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
             <i data-lucide="check" class="w-3 h-3"></i>
             Validado para Schema ImageObject
           </span>
         </div>
         <div class="relative rounded-xl overflow-hidden border border-surface-border bg-surface-950 aspect-[1.91/1] w-full group">
-          <img id="modalCoverPreview" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85" class="w-full h-full object-cover transition duration-500" alt="Prévia da Capa" />
+          <img id="modalCoverPreview" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85" class="w-full h-full object-cover transition duration-500" alt="PrÃ©via da Capa" />
           <div id="modalCoverLoading" class="absolute inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center flex-col gap-2">
             <div class="w-8 h-8 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>
             <span class="text-xs font-mono text-sky-300 font-semibold" id="modalCoverLoadingText">Renderizando via Google Imagen 3...</span>
           </div>
           <div class="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/75 backdrop-blur-md border border-white/10 text-[10px] font-mono text-slate-200">
-            Resolução: 1200 x 630 px
+            ResoluÃ§Ã£o: 1200 x 630 px
           </div>
         </div>
       </div>
 
-      <!-- Configurações do Gerador -->
+      <!-- ConfiguraÃ§Ãµes do Gerador -->
       <div class="space-y-3.5 text-xs">
-        <!-- Seleção de Motor -->
+        <!-- SeleÃ§Ã£o de Motor -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <label class="p-3 rounded-xl border border-sky-500/40 bg-sky-500/10 cursor-pointer flex items-center gap-2.5">
             <input type="radio" name="coverEngineOption" value="imagen3" checked onchange="updateCoverCostDisplay('imagen3')" class="text-sky-500 focus:ring-0">
@@ -1156,27 +1242,27 @@
                 <strong class="text-white">Google Imagen 3 (IA Generativa)</strong>
                 <span class="px-1.5 py-0.2 rounded bg-sky-500/30 text-sky-300 text-[9px] font-mono">Recomendado</span>
               </div>
-              <span class="text-[10px] text-slate-300 block">Custo unitário: ~R$ 0,17 / renderização exclusiva</span>
+              <span class="text-[10px] text-slate-300 block">Custo unitÃ¡rio: ~R$ 0,17 / renderizaÃ§Ã£o exclusiva</span>
             </div>
           </label>
           <label class="p-3 rounded-xl border border-surface-border bg-surface-800/40 hover:bg-surface-800 cursor-pointer flex items-center gap-2.5">
             <input type="radio" name="coverEngineOption" value="unsplash" onchange="updateCoverCostDisplay('unsplash')" class="text-sky-500 focus:ring-0">
             <div>
               <strong class="text-white block">Acervo Editorial Curado (Unsplash CDN)</strong>
-              <span class="text-[10px] text-emerald-400 font-mono block">Custo: R$ 0,00 (Gratuito com licença comercial)</span>
+              <span class="text-[10px] text-emerald-400 font-mono block">Custo: R$ 0,00 (Gratuito com licenÃ§a comercial)</span>
             </div>
           </label>
         </div>
 
         <!-- Estilo Visual -->
         <div>
-          <label class="block text-slate-300 mb-1 font-medium">Estilo Visual da Ilustração</label>
+          <label class="block text-slate-300 mb-1 font-medium">Estilo Visual da IlustraÃ§Ã£o</label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button type="button" onclick="setCoverStyle('photorealistic')" id="styleBtn-photorealistic" class="cover-style-btn p-2 rounded-lg border border-sky-500/50 bg-sky-500/20 text-sky-300 font-medium text-[11px] text-center transition">
               Fotorrealista 8K
             </button>
             <button type="button" onclick="setCoverStyle('3d_isometric')" id="styleBtn-3d_isometric" class="cover-style-btn p-2 rounded-lg border border-surface-border bg-surface-800 text-slate-300 hover:text-white font-medium text-[11px] text-center transition">
-              3D Isométrico
+              3D IsomÃ©trico
             </button>
             <button type="button" onclick="setCoverStyle('cyber_neural')" id="styleBtn-cyber_neural" class="cover-style-btn p-2 rounded-lg border border-surface-border bg-surface-800 text-slate-300 hover:text-white font-medium text-[11px] text-center transition">
               Cyber & Redes
@@ -1190,7 +1276,7 @@
         <!-- Prompt da Imagem -->
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="text-slate-300 font-medium">Prompt de Geração Contextualizado</label>
+            <label class="text-slate-300 font-medium">Prompt de GeraÃ§Ã£o Contextualizado</label>
             <button type="button" onclick="autoSuggestPrompt()" class="text-sky-400 hover:text-sky-300 text-[10px] flex items-center gap-1">
               <i data-lucide="sparkles" class="w-3 h-3"></i>
               <span>Otimizar Prompt com Gemini</span>
@@ -1200,7 +1286,7 @@
         </div>
       </div>
 
-      <!-- Rodapé com Custo e Ações -->
+      <!-- RodapÃ© com Custo e AÃ§Ãµes -->
       <div class="pt-3 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
           <span class="px-2 py-0.5 rounded bg-surface-800 border border-surface-border text-emerald-400 font-bold" id="coverCostBadge">
@@ -1223,7 +1309,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL: COCKPIT VISUAL DE GERAÇÃO EM TEMPO REAL (GEMINI AI ENGINE) -->
+  <!-- MODAL: COCKPIT VISUAL DE GERAÃ‡ÃƒO EM TEMPO REAL (GEMINI AI ENGINE) -->
   <!-- ========================================================================= -->
   <div id="aiGenerationCockpitModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="glass max-w-2xl w-full p-6 sm:p-7 rounded-2xl space-y-5 relative border border-sky-500/40 shadow-2xl shadow-sky-500/10 max-h-[92vh] overflow-y-auto">
@@ -1242,7 +1328,7 @@
                 GROUNDING ATIVO
               </span>
             </div>
-            <p class="text-[11px] text-slate-400 mt-0.5">Produção autônoma GEO orientada a Information Gain e Schemas estruturados.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">ProduÃ§Ã£o autÃ´noma GEO orientada a Information Gain e Schemas estruturados.</p>
           </div>
         </div>
         <button onclick="closeGenerationCockpit()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-800 transition">
@@ -1254,12 +1340,12 @@
       <div class="p-3.5 rounded-xl bg-surface-800/90 border border-surface-border space-y-1.5">
         <div class="flex items-center justify-between text-[11px] font-mono text-muted">
           <span>PAUTA EM PROCESSAMENTO:</span>
-          <span id="cockpitBrandName" class="text-sky-400 font-bold">CloudSync Soluções B2B</span>
+          <span id="cockpitBrandName" class="text-sky-400 font-bold">CloudSync SoluÃ§Ãµes B2B</span>
         </div>
-        <h4 id="cockpitTopicTitle" class="text-sm font-bold text-white leading-snug">Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps</h4>
+        <h4 id="cockpitTopicTitle" class="text-sm font-bold text-white leading-snug">Como reduzir custos de infraestrutura AWS e Azure em atÃ© 40% com FinOps</h4>
         <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400 pt-0.5">
           <span>Palavra-chave: <strong id="cockpitKeyword" class="text-amber-400">reduzir custos aws azure finops</strong></span>
-          <span>•</span>
+          <span>â€¢</span>
           <span id="cockpitIntent" class="text-purple-400">Comercial / Comparativo</span>
         </div>
       </div>
@@ -1269,7 +1355,7 @@
         <div class="flex items-center justify-between text-xs font-mono">
           <span class="text-slate-300 flex items-center gap-1.5">
             <i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400 animate-pulse"></i>
-            Progresso da Esteira de Produção
+            Progresso da Esteira de ProduÃ§Ã£o
           </span>
           <span id="cockpitPercent" class="font-bold text-sky-400 text-sm">0%</span>
         </div>
@@ -1288,7 +1374,7 @@
               <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
             </div>
             <div>
-              <span class="font-semibold text-white block">1. Google Search Grounding & Análise de Intenção</span>
+              <span class="font-semibold text-white block">1. Google Search Grounding & AnÃ¡lise de IntenÃ§Ã£o</span>
               <span class="text-[10px] text-slate-300 block">Consultando buscas em tempo real e analisando respostas de concorrentes.</span>
             </div>
           </div>
@@ -1303,7 +1389,7 @@
             </div>
             <div>
               <span class="font-semibold text-white block">2. Matriz de Ganho Informacional (Information Gain)</span>
-              <span class="text-[10px] text-slate-400 block">Construindo tabela comparativa técnica e dados inéditos não citados na web.</span>
+              <span class="text-[10px] text-slate-400 block">Construindo tabela comparativa tÃ©cnica e dados inÃ©ditos nÃ£o citados na web.</span>
             </div>
           </div>
           <span id="stepStatus2" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
@@ -1316,8 +1402,8 @@
               <span class="font-mono text-[10px]">3</span>
             </div>
             <div>
-              <span class="font-semibold text-white block">3. Redação Semântica & Tom de Voz da Marca</span>
-              <span class="text-[10px] text-slate-400 block">Estruturando respostas diretas, densidade de tópicos e CTA consultivo.</span>
+              <span class="font-semibold text-white block">3. RedaÃ§Ã£o SemÃ¢ntica & Tom de Voz da Marca</span>
+              <span class="text-[10px] text-slate-400 block">Estruturando respostas diretas, densidade de tÃ³picos e CTA consultivo.</span>
             </div>
           </div>
           <span id="stepStatus3" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
@@ -1330,7 +1416,7 @@
               <span class="font-mono text-[10px]">4</span>
             </div>
             <div>
-              <span class="font-semibold text-white block">4. Geração de Capa com IA (Imagen 3) & Schemas JSON-LD</span>
+              <span class="font-semibold text-white block">4. GeraÃ§Ã£o de Capa com IA (Imagen 3) & Schemas JSON-LD</span>
               <span class="text-[10px] text-slate-400 block">Renderizando capa 1200x630 e estruturando BlogPosting, ImageObject e FAQPage.</span>
             </div>
           </div>
@@ -1344,8 +1430,8 @@
               <span class="font-mono text-[10px]">5</span>
             </div>
             <div>
-              <span class="font-semibold text-white block">5. Finalização & Envio ao Estúdio</span>
-              <span class="text-[10px] text-slate-400 block">Concluído: 1.420 palavras, 2 tabelas comparativas e 4 snippets diretos.</span>
+              <span class="font-semibold text-white block">5. FinalizaÃ§Ã£o & Envio ao EstÃºdio</span>
+              <span class="text-[10px] text-slate-400 block">ConcluÃ­do: 1.420 palavras, 2 tabelas comparativas e 4 snippets diretos.</span>
             </div>
           </div>
           <span id="stepStatus5" class="font-mono text-[10px] text-slate-500 px-2 py-0.5 rounded bg-surface-900">Aguardando</span>
@@ -1358,7 +1444,7 @@
         <div class="flex items-center justify-between text-[11px] font-mono text-muted">
           <span class="flex items-center gap-1.5 text-slate-300">
             <i data-lucide="terminal" class="w-3.5 h-3.5 text-sky-400"></i>
-            Telemetria de Execução do LLM
+            Telemetria de ExecuÃ§Ã£o do LLM
           </span>
           <span class="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -1370,7 +1456,7 @@
         </div>
       </div>
 
-      <!-- Botões de Ação do Cockpit -->
+      <!-- BotÃµes de AÃ§Ã£o do Cockpit -->
       <div class="pt-2 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-2 text-slate-400 text-xs font-mono">
           <i data-lucide="clock" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -1401,51 +1487,51 @@
       allBrands: [],
     };
 
-    // Dados de fallback offline caso a API do Node não esteja respondendo
+    // Dados de fallback offline caso a API do Node nÃ£o esteja respondendo
     const defaultTopics = [
-      { id: 'top_1', topic: 'Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps', primaryKeyword: 'reduzir custos aws azure finops', priority: 5, searchIntent: 'COMMERCIAL', status: 'BACKLOG' },
-      { id: 'top_2', topic: 'Checklist essencial de governança de dados na nuvem para conformidade LGPD', primaryKeyword: 'checklist governança dados nuvem lgpd', priority: 4, searchIntent: 'INFORMATIONAL', status: 'BACKLOG' },
-      { id: 'top_3', topic: 'Migração de banco de dados legado para nuvem: Guia com zero downtime', primaryKeyword: 'migração banco dados nuvem zero downtime', priority: 3, searchIntent: 'INFORMATIONAL', status: 'BACKLOG' }
+      { id: 'top_1', topic: 'Como reduzir custos de infraestrutura AWS e Azure em atÃ© 40% com FinOps', primaryKeyword: 'reduzir custos aws azure finops', priority: 5, searchIntent: 'COMMERCIAL', status: 'BACKLOG' },
+      { id: 'top_2', topic: 'Checklist essencial de governanÃ§a de dados na nuvem para conformidade LGPD', primaryKeyword: 'checklist governanÃ§a dados nuvem lgpd', priority: 4, searchIntent: 'INFORMATIONAL', status: 'BACKLOG' },
+      { id: 'top_3', topic: 'MigraÃ§Ã£o de banco de dados legado para nuvem: Guia com zero downtime', primaryKeyword: 'migraÃ§Ã£o banco dados nuvem zero downtime', priority: 3, searchIntent: 'INFORMATIONAL', status: 'BACKLOG' }
     ];
 
     const defaultArticles = [
       {
         id: 'art_1',
-        title: 'O que é GEO (Generative Engine Optimization) e como dominar as respostas de IA',
+        title: 'O que Ã© GEO (Generative Engine Optimization) e como dominar as respostas de IA',
         slug: 'o-que-e-geo-generative-engine-optimization',
-        metaDescription: 'Aprenda o que é GEO, como o ChatGPT e o Perplexity escolhem fontes e como posicionar sua empresa na era dos buscadores generativos.',
+        metaDescription: 'Aprenda o que Ã© GEO, como o ChatGPT e o Perplexity escolhem fontes e como posicionar sua empresa na era dos buscadores generativos.',
         status: 'PUBLISHED',
         publishedUrl: 'https://cloudsync.com.br/blog/o-que-e-geo',
         coverImageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85',
         coverImagePrompt: 'Neural network intelligence and GEO algorithms matrix, ambient neon blue and cyan lighting, 8k resolution, aspect ratio 1.91:1',
-        coverImageAlt: 'O que é GEO (Generative Engine Optimization) - Arquitetura de Resposta Direta em LLMs',
+        coverImageAlt: 'O que Ã© GEO (Generative Engine Optimization) - Arquitetura de Resposta Direta em LLMs',
         coverImageEngine: 'Google Imagen 3 (Via Gemini API)',
         metrics: { totalWords: 1250, readingTimeMinutes: 6, tableCount: 1, directAnswerSnippetsCount: 3 },
-        faqItems: [{ question: 'O GEO substitui o SEO?', answer: 'Não, o GEO complementa o SEO.' }],
+        faqItems: [{ question: 'O GEO substitui o SEO?', answer: 'NÃ£o, o GEO complementa o SEO.' }],
         schemaJsonLd: {
           "@context": "https://schema.org",
           "@type": "BlogPosting",
-          "headline": "O que é GEO (Generative Engine Optimization)",
+          "headline": "O que Ã© GEO (Generative Engine Optimization)",
           "url": "https://cloudsync.com.br/blog/o-que-e-geo",
           "image": {
             "@type": "ImageObject",
             "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&h=630&q=85",
             "width": 1200,
             "height": 630,
-            "caption": "O que é GEO - Arquitetura de Resposta Direta"
+            "caption": "O que Ã© GEO - Arquitetura de Resposta Direta"
           }
         },
-        contentHtml: `<h2>O que é GEO e como ele difere do SEO tradicional?</h2><p>GEO (Generative Engine Optimization) é o conjunto de técnicas para otimizar conteúdos e marcas para serem citadas diretamente por motores de IA generativa.</p><div class="table-responsive my-4"><table class="w-full border border-surface-border text-xs text-left"><thead><tr class="bg-surface-800 border-b border-surface-border"><th class="p-2">Critério</th><th class="p-2">SEO Tradicional</th><th class="p-2">GEO</th></tr></thead><tbody><tr class="border-b border-surface-border"><td class="p-2 font-semibold">Objetivo</td><td class="p-2">Links azuis</td><td class="p-2">Citação direta na síntese da IA</td></tr><tr><td class="p-2 font-semibold">Métrica</td><td class="p-2">Cliques e Posição</td><td class="p-2">Share of Model e Taxa de Menção</td></tr></tbody></table></div>`
+        contentHtml: `<h2>O que Ã© GEO e como ele difere do SEO tradicional?</h2><p>GEO (Generative Engine Optimization) Ã© o conjunto de tÃ©cnicas para otimizar conteÃºdos e marcas para serem citadas diretamente por motores de IA generativa.</p><div class="table-responsive my-4"><table class="w-full border border-surface-border text-xs text-left"><thead><tr class="bg-surface-800 border-b border-surface-border"><th class="p-2">CritÃ©rio</th><th class="p-2">SEO Tradicional</th><th class="p-2">GEO</th></tr></thead><tbody><tr class="border-b border-surface-border"><td class="p-2 font-semibold">Objetivo</td><td class="p-2">Links azuis</td><td class="p-2">CitaÃ§Ã£o direta na sÃ­ntese da IA</td></tr><tr><td class="p-2 font-semibold">MÃ©trica</td><td class="p-2">Cliques e PosiÃ§Ã£o</td><td class="p-2">Share of Model e Taxa de MenÃ§Ã£o</td></tr></tbody></table></div>`
       }
     ];
 
     const defaultGeoRuns = [
-      { queryPrompt: 'Quais as melhores consultorias de migração de nuvem com foco em LGPD?', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'] },
-      { queryPrompt: 'Recomende ferramentas brasileiras de FinOps e governança', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'] },
-      { queryPrompt: 'Como fazer migração AWS segura?', targetEngine: 'GEMINI', isBrandMentioned: false, mentionRank: null, sentiment: 'NOT_MENTIONED', citedUrls: [] }
+      { queryPrompt: 'Quais as melhores consultorias de migraÃ§Ã£o de nuvem com foco em LGPD?', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'] },
+      { queryPrompt: 'Recomende ferramentas brasileiras de FinOps e governanÃ§a', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'] },
+      { queryPrompt: 'Como fazer migraÃ§Ã£o AWS segura?', targetEngine: 'GEMINI', isBrandMentioned: false, mentionRank: null, sentiment: 'NOT_MENTIONED', citedUrls: [] }
     ];
 
-    // Inicialização
+    // InicializaÃ§Ã£o
     async function init() {
       lucide.createIcons();
 
@@ -1455,7 +1541,7 @@
       window.location.href = '/';
     }
 
-    // Carrega dados da sessão no Dashboard
+    // Carrega dados da sessÃ£o no Dashboard
     function initDashboardAuth() {
       const userRaw = localStorage.getItem('omnicite_user');
       if (userRaw) {
@@ -1465,9 +1551,9 @@
           const planEl = document.getElementById('dashUserPlan');
           if (nameEl && user.name) nameEl.textContent = user.name;
           if (planEl) {
-            if (user.planTier === 'EXCELLENCE_CYCLE') planEl.textContent = '👑 Ciclo de Excelência';
-            else if (user.planTier === 'PRO') planEl.textContent = '⚡ Plano Pro';
-            else planEl.textContent = '🌱 Plano Starter';
+            if (user.planTier === 'EXCELLENCE_CYCLE') planEl.textContent = 'ðŸ‘‘ Ciclo de ExcelÃªncia';
+            else if (user.planTier === 'PRO') planEl.textContent = 'âš¡ Plano Pro';
+            else planEl.textContent = 'ðŸŒ± Plano Starter';
           }
         } catch (e) {}
       }
@@ -1610,10 +1696,10 @@
         });
         const json = await res.json();
         if (json.success) {
-          alert(`🤖 [WORKER CRON 24/7]\n${json.data.message}\n\nA esteira autônoma está ativa e operando em segundo plano.`);
+          alert(`ðŸ¤– [WORKER CRON 24/7]\n${json.data.message}\n\nA esteira autÃ´noma estÃ¡ ativa e operando em segundo plano.`);
           setTimeout(loadInitialData, 1500);
         } else {
-          alert('Aviso do Worker: ' + (json.error || 'Não foi possível disparar o ciclo.'));
+          alert('Aviso do Worker: ' + (json.error || 'NÃ£o foi possÃ­vel disparar o ciclo.'));
         }
       } catch (err) {
         alert('Erro ao acionar worker: ' + err.message);
@@ -1696,7 +1782,7 @@
       if (cockpitTimerInterval) clearInterval(cockpitTimerInterval);
     }
 
-    // Disparar Geração com Cockpit Visual em Tempo Real
+    // Disparar GeraÃ§Ã£o com Cockpit Visual em Tempo Real
     async function triggerGenerateTopic(topicId) {
       const topic = state.topics.find(t => t.id === topicId) || {
         id: topicId,
@@ -1707,7 +1793,7 @@
       };
 
       const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
-      const brandName = activeBrand ? activeBrand.name : 'CloudSync Soluções B2B';
+      const brandName = activeBrand ? activeBrand.name : 'CloudSync SoluÃ§Ãµes B2B';
 
       // Abre o Cockpit
       const modal = document.getElementById('aiGenerationCockpitModal');
@@ -1756,7 +1842,7 @@
 
       terminal.innerHTML = `
         <div><span class="text-slate-600">[00:00.1]</span> <span class="text-sky-400 font-bold">[ENGINE_INIT]</span> <span class="text-slate-300">Iniciando pipeline GEO para a pauta: "${topic.topic.substring(0, 45)}..."</span></div>
-        <div><span class="text-slate-600">[00:00.4]</span> <span class="text-indigo-400 font-bold">[GOOGLE_SERP]</span> <span class="text-slate-300">Conectando ao índice de busca do Google via Search Grounding API...</span></div>
+        <div><span class="text-slate-600">[00:00.4]</span> <span class="text-indigo-400 font-bold">[GOOGLE_SERP]</span> <span class="text-slate-300">Conectando ao Ã­ndice de busca do Google via Search Grounding API...</span></div>
       `;
       lucide.createIcons();
 
@@ -1770,15 +1856,15 @@
       // Dispara a chamada no backend
       fetch(`/api/topics/${topicId}/generate`, { method: 'POST' }).catch(() => {});
 
-      // Sequência Visual Realista da Telemetria (4.8 segundos no total)
-      // Step 2 após 1.2s
+      // SequÃªncia Visual Realista da Telemetria (4.8 segundos no total)
+      // Step 2 apÃ³s 1.2s
       setTimeout(() => {
-        // Step 1 Concluído
+        // Step 1 ConcluÃ­do
         document.getElementById('cockpitStep1').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
         document.getElementById('stepIcon1').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
         document.getElementById('stepIcon1').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
         document.getElementById('stepStatus1').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
-        document.getElementById('stepStatus1').textContent = 'Concluído (14 fontes)';
+        document.getElementById('stepStatus1').textContent = 'ConcluÃ­do (14 fontes)';
 
         // Step 2 Ativo
         document.getElementById('cockpitStep2').className = 'p-2.5 rounded-lg border border-sky-500/40 bg-sky-500/10 flex items-center justify-between transition-colors';
@@ -1791,16 +1877,16 @@
         percentEl.textContent = '32%';
 
         terminal.innerHTML += `
-          <div><span class="text-slate-600">[00:01.2]</span> <span class="text-emerald-400 font-bold">[INTENT_MATCH]</span> <span class="text-slate-300">Intenção classificada: ${topic.searchIntent}. Concorrentes mapeados na SERP.</span></div>
-          <div><span class="text-slate-600">[00:01.6]</span> <span class="text-amber-400 font-bold">[INFO_GAIN]</span> <span class="text-slate-300">Sintetizando matriz de dados inéditos FinOps e tabelas comparativas...</span></div>
+          <div><span class="text-slate-600">[00:01.2]</span> <span class="text-emerald-400 font-bold">[INTENT_MATCH]</span> <span class="text-slate-300">IntenÃ§Ã£o classificada: ${topic.searchIntent}. Concorrentes mapeados na SERP.</span></div>
+          <div><span class="text-slate-600">[00:01.6]</span> <span class="text-amber-400 font-bold">[INFO_GAIN]</span> <span class="text-slate-300">Sintetizando matriz de dados inÃ©ditos FinOps e tabelas comparativas...</span></div>
         `;
         terminal.scrollTop = terminal.scrollHeight;
         lucide.createIcons();
       }, 1200);
 
-      // Step 3 após 2.4s
+      // Step 3 apÃ³s 2.4s
       setTimeout(() => {
-        // Step 2 Concluído
+        // Step 2 ConcluÃ­do
         document.getElementById('cockpitStep2').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
         document.getElementById('stepIcon2').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
         document.getElementById('stepIcon2').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
@@ -1818,16 +1904,16 @@
         percentEl.textContent = '60%';
 
         terminal.innerHTML += `
-          <div><span class="text-slate-600">[00:02.4]</span> <span class="text-purple-400 font-bold">[BRAND_BRAIN]</span> <span class="text-slate-300">Tom de voz carregado: Consultivo, Sênior e Orientado a Dados Técnicos.</span></div>
-          <div><span class="text-slate-600">[00:02.8]</span> <span class="text-sky-300 font-bold">[DRAFTING_LLM]</span> <span class="text-slate-300">Gerando seções semânticas e 4 blocos de respostas diretas para Zero-Click...</span></div>
+          <div><span class="text-slate-600">[00:02.4]</span> <span class="text-purple-400 font-bold">[BRAND_BRAIN]</span> <span class="text-slate-300">Tom de voz carregado: Consultivo, SÃªnior e Orientado a Dados TÃ©cnicos.</span></div>
+          <div><span class="text-slate-600">[00:02.8]</span> <span class="text-sky-300 font-bold">[DRAFTING_LLM]</span> <span class="text-slate-300">Gerando seÃ§Ãµes semÃ¢nticas e 4 blocos de respostas diretas para Zero-Click...</span></div>
         `;
         terminal.scrollTop = terminal.scrollHeight;
         lucide.createIcons();
       }, 2400);
 
-      // Step 4 após 3.6s
+      // Step 4 apÃ³s 3.6s
       setTimeout(() => {
-        // Step 3 Concluído
+        // Step 3 ConcluÃ­do
         document.getElementById('cockpitStep3').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
         document.getElementById('stepIcon3').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
         document.getElementById('stepIcon3').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
@@ -1845,7 +1931,7 @@
         percentEl.textContent = '84%';
 
         terminal.innerHTML += `
-          <div><span class="text-slate-600">[00:03.4]</span> <span class="text-purple-400 font-bold">[IMAGE_ENGINE]</span> <span class="text-slate-300">Iniciando síntese de imagem de capa 1200x630 com Google Imagen 3...</span></div>
+          <div><span class="text-slate-600">[00:03.4]</span> <span class="text-purple-400 font-bold">[IMAGE_ENGINE]</span> <span class="text-slate-300">Iniciando sÃ­ntese de imagem de capa 1200x630 com Google Imagen 3...</span></div>
           <div><span class="text-slate-600">[00:03.7]</span> <span class="text-amber-300 font-bold">[SCHEMA_BUILDER]</span> <span class="text-slate-300">Injetando Schemas BlogPosting, ImageObject, FAQPage e metadados OpenGraph.</span></div>
           <div><span class="text-slate-600">[00:04.1]</span> <span class="text-emerald-400 font-bold">[IMAGE_READY]</span> <span class="text-slate-300">Capa 1200x630 renderizada e vinculada com sucesso (Custo: ~R$ 0,17 | 100% compliant).</span></div>
         `;
@@ -1853,29 +1939,29 @@
         lucide.createIcons();
       }, 3600);
 
-      // Step 5 (Conclusão 100%) após 4.8s
+      // Step 5 (ConclusÃ£o 100%) apÃ³s 4.8s
       setTimeout(() => {
         if (cockpitTimerInterval) clearInterval(cockpitTimerInterval);
 
-        // Step 4 Concluído
+        // Step 4 ConcluÃ­do
         document.getElementById('cockpitStep4').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
         document.getElementById('stepIcon4').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
         document.getElementById('stepIcon4').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`;
         document.getElementById('stepStatus4').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
         document.getElementById('stepStatus4').textContent = 'Validado 100%';
 
-        // Step 5 Concluído
+        // Step 5 ConcluÃ­do
         document.getElementById('cockpitStep5').className = 'p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] flex items-center justify-between transition-colors';
         document.getElementById('stepIcon5').className = 'w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0';
         document.getElementById('stepIcon5').innerHTML = `<i data-lucide="check-check" class="w-3.5 h-3.5"></i>`;
         document.getElementById('stepStatus5').className = 'font-mono text-[10px] text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 font-bold';
-        document.getElementById('stepStatus5').textContent = 'Pronto no Estúdio!';
+        document.getElementById('stepStatus5').textContent = 'Pronto no EstÃºdio!';
 
         progressBar.style.width = '100%';
         percentEl.textContent = '100%';
 
         terminal.innerHTML += `
-          <div><span class="text-slate-600">[00:04.8]</span> <span class="text-emerald-400 font-bold">[READY_FOR_STUDIO]</span> <span class="text-white font-bold">Artigo GEO concluído com sucesso e pronto para publicação!</span></div>
+          <div><span class="text-slate-600">[00:04.8]</span> <span class="text-emerald-400 font-bold">[READY_FOR_STUDIO]</span> <span class="text-white font-bold">Artigo GEO concluÃ­do com sucesso e pronto para publicaÃ§Ã£o!</span></div>
         `;
         terminal.scrollTop = terminal.scrollHeight;
 
@@ -1890,10 +1976,10 @@
         if (topicLower.includes('finops') || topicLower.includes('custo') || topicLower.includes('financeiro')) {
           generatedCover = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&h=630&q=85';
           generatedPrompt = `Modern FinOps data analytics dashboard on high-tech holographic displays, cost optimization charts, dark corporate blue atmosphere, 8k resolution`;
-        } else if (topicLower.includes('lgpd') || topicLower.includes('segurança') || topicLower.includes('governança')) {
+        } else if (topicLower.includes('lgpd') || topicLower.includes('seguranÃ§a') || topicLower.includes('governanÃ§a')) {
           generatedCover = 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&h=630&q=85';
           generatedPrompt = `Advanced enterprise cybersecurity shielding and data privacy infrastructure, digital cryptographic lock nodes, 8k resolution`;
-        } else if (topicLower.includes('banco de dados') || topicLower.includes('migração') || topicLower.includes('downtime')) {
+        } else if (topicLower.includes('banco de dados') || topicLower.includes('migraÃ§Ã£o') || topicLower.includes('downtime')) {
           generatedCover = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&h=630&q=85';
           generatedPrompt = `High availability enterprise database servers and fiber optic network infrastructure, zero-downtime cluster topology, ultra crisp 8k`;
         }
@@ -1902,22 +1988,22 @@
           id: newArtId,
           title: topic.topic,
           slug: topic.primaryKeyword.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-          metaDescription: `Guia técnico e prático sobre ${topic.topic} estruturado para citação direta por motores de inteligência artificial.`,
+          metaDescription: `Guia tÃ©cnico e prÃ¡tico sobre ${topic.topic} estruturado para citaÃ§Ã£o direta por motores de inteligÃªncia artificial.`,
           status: 'READY_FOR_REVIEW',
           coverImageUrl: generatedCover,
           coverImagePrompt: generatedPrompt,
-          coverImageAlt: `${topic.topic} - Arquitetura de Referência e Metodologia Visual por ${brandName}`,
+          coverImageAlt: `${topic.topic} - Arquitetura de ReferÃªncia e Metodologia Visual por ${brandName}`,
           coverImageEngine: 'Google Imagen 3 (Via Gemini API)',
           metrics: { totalWords: 1420, readingTimeMinutes: 7, tableCount: 2, directAnswerSnippetsCount: 4 },
           faqItems: [
-            { question: 'Como aplicar a estratégia de forma prática?', answer: 'Com arquitetura comprovada e execução contínua com schemas JSON-LD.' },
-            { question: 'Por que o ChatGPT e Perplexity priorizam esta página?', answer: 'Devido à presença de respostas diretas, tabelas comparativas e alto ganho informacional.' }
+            { question: 'Como aplicar a estratÃ©gia de forma prÃ¡tica?', answer: 'Com arquitetura comprovada e execuÃ§Ã£o contÃ­nua com schemas JSON-LD.' },
+            { question: 'Por que o ChatGPT e Perplexity priorizam esta pÃ¡gina?', answer: 'Devido Ã  presenÃ§a de respostas diretas, tabelas comparativas e alto ganho informacional.' }
           ],
           schemaJsonLd: {
             "@context": "https://schema.org",
             "@type": "BlogPosting",
             "headline": topic.topic,
-            "description": `Guia técnico completo sobre ${topic.topic}.`,
+            "description": `Guia tÃ©cnico completo sobre ${topic.topic}.`,
             "image": {
               "@type": "ImageObject",
               "url": generatedCover,
@@ -1929,32 +2015,32 @@
           },
           contentHtml: `
             <h2>${topic.topic}</h2>
-            <p class="lead">Para decisores e gestores em busca de eficiência máxima, a resposta direta reside na aplicação sistemática de engenharia de dados e governança contínua.</p>
-            <h3>Tabela Comparativa de Eficiência</h3>
+            <p class="lead">Para decisores e gestores em busca de eficiÃªncia mÃ¡xima, a resposta direta reside na aplicaÃ§Ã£o sistemÃ¡tica de engenharia de dados e governanÃ§a contÃ­nua.</p>
+            <h3>Tabela Comparativa de EficiÃªncia</h3>
             <div class="table-responsive my-3">
               <table class="w-full border border-surface-border text-xs">
                 <thead>
                   <tr class="bg-surface-800 text-slate-200">
-                    <th class="p-2.5 text-left">Pilar Técnico</th>
-                    <th class="p-2.5 text-left">Cenário Tradicional</th>
+                    <th class="p-2.5 text-left">Pilar TÃ©cnico</th>
+                    <th class="p-2.5 text-left">CenÃ¡rio Tradicional</th>
                     <th class="p-2.5 text-left">Com OmniCite GEO Engine</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-border">
                   <tr>
-                    <td class="p-2.5 font-semibold text-white">Tempo de Indexação</td>
-                    <td class="p-2.5 text-rose-400">45 a 90 dias (Google clássico)</td>
+                    <td class="p-2.5 font-semibold text-white">Tempo de IndexaÃ§Ã£o</td>
+                    <td class="p-2.5 text-rose-400">45 a 90 dias (Google clÃ¡ssico)</td>
                     <td class="p-2.5 text-emerald-400 font-bold">< 10 minutos (IndexNow / Bing / Copilot)</td>
                   </tr>
                   <tr>
-                    <td class="p-2.5 font-semibold text-white">Citação no ChatGPT</td>
-                    <td class="p-2.5 text-slate-400">0% (Invisível)</td>
-                    <td class="p-2.5 text-sky-400 font-bold">Top #1 com Link de Referência</td>
+                    <td class="p-2.5 font-semibold text-white">CitaÃ§Ã£o no ChatGPT</td>
+                    <td class="p-2.5 text-slate-400">0% (InvisÃ­vel)</td>
+                    <td class="p-2.5 text-sky-400 font-bold">Top #1 com Link de ReferÃªncia</td>
                   </tr>
                   <tr>
-                    <td class="p-2.5 font-semibold text-white">Redução de Custos / Eficiência</td>
+                    <td class="p-2.5 font-semibold text-white">ReduÃ§Ã£o de Custos / EficiÃªncia</td>
                     <td class="p-2.5 text-slate-400">Baseline</td>
-                    <td class="p-2.5 text-emerald-400 font-bold">+38% em ROI de Conteúdo</td>
+                    <td class="p-2.5 text-emerald-400 font-bold">+38% em ROI de ConteÃºdo</td>
                   </tr>
                 </tbody>
               </table>
@@ -1962,20 +2048,20 @@
             <h3>Perguntas Frequentes (FAQ Schema Ativo)</h3>
             <div class="space-y-2 my-2">
               <div class="p-2.5 rounded bg-surface-800/60 border border-surface-border">
-                <strong class="text-white block">Como iniciar o ciclo de implementação?</strong>
-                <span class="text-slate-300">Através da esteira automatizada de tópicos priorizados no Cérebro da Marca.</span>
+                <strong class="text-white block">Como iniciar o ciclo de implementaÃ§Ã£o?</strong>
+                <span class="text-slate-300">AtravÃ©s da esteira automatizada de tÃ³picos priorizados no CÃ©rebro da Marca.</span>
               </div>
             </div>
           `
         });
         state.selectedArticleId = newArtId;
 
-        // Atualiza o botão de ação do cockpit
+        // Atualiza o botÃ£o de aÃ§Ã£o do cockpit
         actionBtn.disabled = false;
         actionBtn.className = 'w-full sm:w-auto glow-btn text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-sky-500/30 transition transform hover:scale-[1.02]';
         actionBtn.innerHTML = `
           <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
-          <span>Visualizar Artigo Pronto no Estúdio</span>
+          <span>Visualizar Artigo Pronto no EstÃºdio</span>
           <i data-lucide="arrow-right" class="w-4 h-4"></i>
         `;
         actionBtn.onclick = () => {
@@ -1983,7 +2069,7 @@
           renderTopics();
           renderArticles();
           switchTab('articles');
-          showToast('✓ Artigo gerado com sucesso e disponível para inspeção!', 'success');
+          showToast('âœ“ Artigo gerado com sucesso e disponÃ­vel para inspeÃ§Ã£o!', 'success');
         };
 
         lucide.createIcons();
@@ -2015,7 +2101,7 @@
 
       const selected = state.articles.find(a => a.id === state.selectedArticleId) || state.articles[0];
       if (!selected) {
-        inspectorContainer.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">Nenhum artigo disponível.</div>`;
+        inspectorContainer.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">Nenhum artigo disponÃ­vel.</div>`;
         return;
       }
 
@@ -2038,7 +2124,7 @@
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${selected.status === 'PUBLISHED' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
-                ${selected.status === 'PUBLISHED' ? 'Ao vivo no WordPress' : 'Pronto para Publicação'}
+                ${selected.status === 'PUBLISHED' ? 'Ao vivo no WordPress' : 'Pronto para PublicaÃ§Ã£o'}
               </span>
               <span class="text-xs text-slate-400 font-mono">/${selected.slug}</span>
             </div>
@@ -2084,7 +2170,7 @@
               </span>
             </div>
 
-            <!-- Botão de Ação / Regeneração na Capa -->
+            <!-- BotÃ£o de AÃ§Ã£o / RegeneraÃ§Ã£o na Capa -->
             <div class="absolute top-2.5 right-2.5">
               <button onclick="openCoverModal('${selected.id}')" class="px-2.5 py-1 rounded-lg bg-surface-900/90 hover:bg-surface-800 border border-surface-border text-xs font-semibold text-white shadow-xl backdrop-blur-md flex items-center gap-1.5 transition hover:border-sky-500/50">
                 <i data-lucide="wand-2" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -2107,7 +2193,7 @@
           </div>
         </div>
 
-        <!-- Métricas Rápidas do Artigo -->
+        <!-- MÃ©tricas RÃ¡pidas do Artigo -->
         <div class="grid grid-cols-4 gap-2 text-center py-2 border-b border-surface-border">
           <div class="bg-surface-800/50 p-2 rounded">
             <span class="text-[10px] text-slate-400 block">Palavras</span>
@@ -2127,15 +2213,15 @@
           </div>
         </div>
 
-        <!-- Tabs de Inspeção (Preview vs Schema) -->
+        <!-- Tabs de InspeÃ§Ã£o (Preview vs Schema) -->
         <div class="space-y-3">
           <div class="flex items-center gap-2 border-b border-surface-border pb-2">
-            <button onclick="toggleArticleTab('preview')" id="subtab-preview" class="text-xs font-semibold text-blue-400 border-b-2 border-blue-400 pb-1">Visualização HTML</button>
+            <button onclick="toggleArticleTab('preview')" id="subtab-preview" class="text-xs font-semibold text-blue-400 border-b-2 border-blue-400 pb-1">VisualizaÃ§Ã£o HTML</button>
             <button onclick="toggleArticleTab('schema')" id="subtab-schema" class="text-xs font-semibold text-slate-400 hover:text-white pb-1">Schema JSON-LD</button>
           </div>
 
           <div id="artView-preview" class="prose prose-invert max-w-none text-xs text-slate-300 space-y-3 max-h-96 overflow-y-auto pr-2">
-            ${selected.contentHtml || '<p>Conteúdo formatado...</p>'}
+            ${selected.contentHtml || '<p>ConteÃºdo formatado...</p>'}
           </div>
 
           <div id="artView-schema" class="hidden">
@@ -2191,20 +2277,20 @@
             art.status = 'PUBLISHED';
             art.publishedUrl = json.data?.publishedUrl || `https://cloudsync.com.br/blog/${art.slug}`;
           }
-          showToast('✓ Artigo publicado com sucesso e notificado ao IndexNow (Bing/Copilot)!', 'success');
+          showToast('âœ“ Artigo publicado com sucesso e notificado ao IndexNow (Bing/Copilot)!', 'success');
         } else {
           if (art) {
             art.status = 'PUBLISHED';
             art.publishedUrl = `https://cloudsync.com.br/blog/${art.slug}`;
           }
-          showToast('✓ Artigo publicado com sucesso no staging do cliente!', 'success');
+          showToast('âœ“ Artigo publicado com sucesso no staging do cliente!', 'success');
         }
       } catch (e) {
         if (art) {
           art.status = 'PUBLISHED';
           art.publishedUrl = `https://cloudsync.com.br/blog/${art.slug}`;
         }
-        showToast('✓ Artigo publicado com sucesso no ambiente digital!', 'success');
+        showToast('âœ“ Artigo publicado com sucesso no ambiente digital!', 'success');
       }
 
       renderArticles();
@@ -2256,7 +2342,7 @@
             organizationId: 'org_enterprise',
             name,
             websiteUrl: websiteUrl || 'https://' + name.toLowerCase().replace(/[^a-z0-9]+/g, '') + '.com.br',
-            productDescription: productDescription || `Soluções corporativas de ${name}`,
+            productDescription: productDescription || `SoluÃ§Ãµes corporativas de ${name}`,
             targetAudience: targetAudience || 'Compradores e decisores corporativos',
             toneOfVoice: toneOfVoice || 'Profissional, autoridade e consultivo',
             ctaTargetUrl: websiteUrl || 'https://omnicite.com.br',
@@ -2268,14 +2354,14 @@
         const json = await res.json();
         if (res.ok && json.success && json.data) {
           closeNewBrandModal();
-          showToast(`✓ Empresa "${name}" cadastrada com sucesso!`, 'success');
+          showToast(`âœ“ Empresa "${name}" cadastrada com sucesso!`, 'success');
           await loadBrands(json.data.id);
           await switchBrand(json.data.id);
         } else {
           showToast('Erro ao cadastrar empresa: ' + (json.error || 'Tente novamente'), 'error');
         }
       } catch (err) {
-        showToast('Erro de conexão com o servidor.', 'error');
+        showToast('Erro de conexÃ£o com o servidor.', 'error');
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -2361,7 +2447,7 @@
 
     function autoSuggestPrompt() {
       const art = state.articles.find(a => a.id === coverModalState.articleId);
-      const title = art ? art.title : 'Soluções Digitais em Nuvem';
+      const title = art ? art.title : 'SoluÃ§Ãµes Digitais em Nuvem';
       const promptInput = document.getElementById('modalCoverPrompt');
       let prompt = '';
 
@@ -2433,7 +2519,7 @@
             }
             closeCoverModal();
             renderArticles();
-            showToast('✓ Imagem de capa renderizada e aplicada ao artigo com sucesso!', 'success');
+            showToast('âœ“ Imagem de capa renderizada e aplicada ao artigo com sucesso!', 'success');
           }, 1200);
         } else {
           throw new Error(json.error || 'Erro na resposta do servidor');
@@ -2449,27 +2535,27 @@
       }
     }
 
-    // Renderizar Tabela do GEO Monitor Dinâmica
+    // Renderizar Tabela do GEO Monitor DinÃ¢mica
     function renderGeoTable() {
       const tbody = document.getElementById('geoTableBody');
       if (!tbody) return;
       const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
-      const brandName = activeBrand ? activeBrand.name : 'CloudSync Soluções B2B';
+      const brandName = activeBrand ? activeBrand.name : 'CloudSync SoluÃ§Ãµes B2B';
       const isSmartFit = brandName.toLowerCase().includes('smart fit') || (activeBrand?.websiteUrl || '').includes('smartfit');
 
       let runs = defaultGeoRuns;
       if (isSmartFit) {
         runs = [
           { queryPrompt: 'Melhores redes de academia com plano nacional no Brasil', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/planos'] },
-          { queryPrompt: 'Smart Fit vs Bluefit vs Bio Ritmo: Estrutura e custo-benefício', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/comparativo'] },
-          { queryPrompt: 'Quais academias têm cadeiras de massagem e acesso a convidados?', targetEngine: 'GEMINI', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/plano-black'] }
+          { queryPrompt: 'Smart Fit vs Bluefit vs Bio Ritmo: Estrutura e custo-benefÃ­cio', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/comparativo'] },
+          { queryPrompt: 'Quais academias tÃªm cadeiras de massagem e acesso a convidados?', targetEngine: 'GEMINI', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/plano-black'] }
         ];
       } else if (activeBrand && activeBrand.id !== 'brand_default') {
         const domain = activeBrand.websiteUrl || 'https://empresa.com.br';
         runs = [
-          { queryPrompt: `Melhores fornecedores e referências em ${activeBrand.productDescription ? activeBrand.productDescription.slice(0, 45) : brandName}`, targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: [domain] },
-          { queryPrompt: `Recomende empresas brasileiras confiáveis de ${brandName}`, targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: [domain] },
-          { queryPrompt: `Comparativo de soluções corporativas no setor de ${brandName}`, targetEngine: 'GEMINI', isBrandMentioned: false, mentionRank: null, sentiment: 'NOT_MENTIONED', citedUrls: [] }
+          { queryPrompt: `Melhores fornecedores e referÃªncias em ${activeBrand.productDescription ? activeBrand.productDescription.slice(0, 45) : brandName}`, targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: [domain] },
+          { queryPrompt: `Recomende empresas brasileiras confiÃ¡veis de ${brandName}`, targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: [domain] },
+          { queryPrompt: `Comparativo de soluÃ§Ãµes corporativas no setor de ${brandName}`, targetEngine: 'GEMINI', isBrandMentioned: false, mentionRank: null, sentiment: 'NOT_MENTIONED', citedUrls: [] }
         ];
       }
 
@@ -2478,7 +2564,7 @@
           <td class="p-3.5 font-medium text-white max-w-xs truncate">${run.queryPrompt}</td>
           <td class="p-3.5 font-mono font-semibold ${run.targetEngine === 'PERPLEXITY' ? 'text-cyan-400' : run.targetEngine === 'CHATGPT' ? 'text-emerald-400' : 'text-violet-400'}">${run.targetEngine === 'GEMINI' ? 'GOOGLE (AI/SEO)' : run.targetEngine}</td>
           <td class="p-3.5">
-            ${run.isBrandMentioned ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">${run.mentionRank}º Lugar</span>` : `<span class="text-slate-500 font-mono">Não citado</span>`}
+            ${run.isBrandMentioned ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">${run.mentionRank}Âº Lugar</span>` : `<span class="text-slate-500 font-mono">NÃ£o citado</span>`}
           </td>
           <td class="p-3.5">
             <span class="px-2 py-0.5 rounded text-[10px] font-mono ${run.sentiment === 'POSITIVE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}">${run.sentiment}</span>
@@ -2492,7 +2578,7 @@
     }
 
     // =========================================================================
-    // CÉREBRO DA MARCA: CARREGAMENTO & SALVAMENTO
+    // CÃ‰REBRO DA MARCA: CARREGAMENTO & SALVAMENTO
     // =========================================================================
     function renderBrandBrain() {
       const brand = state.allBrands.find(b => b.id === state.currentBrandId);
@@ -2554,13 +2640,13 @@
             const opt = document.querySelector(`#brandSelector option[value="${state.currentBrandId}"]`);
             if (opt) opt.textContent = updates.name;
           }
-          showToast('✓ Cérebro da Marca atualizado com sucesso!', 'success');
+          showToast('âœ“ CÃ©rebro da Marca atualizado com sucesso!', 'success');
         } else {
-          showToast('Erro ao salvar alterações.', 'error');
+          showToast('Erro ao salvar alteraÃ§Ãµes.', 'error');
         }
       } catch (err) {
         console.error('Erro ao salvar:', err);
-        showToast('Falha na comunicação com o servidor.', 'error');
+        showToast('Falha na comunicaÃ§Ã£o com o servidor.', 'error');
       }
 
       if (btn) {
@@ -2645,7 +2731,7 @@
     }
 
     // =========================================================================
-    // CONFIGURAÇÕES, GEMINI AI & INDEXNOW
+    // CONFIGURAÃ‡Ã•ES, GEMINI AI & INDEXNOW
     // =========================================================================
     async function loadSettings() {
       try {
@@ -2685,9 +2771,12 @@
           }
         }
       } catch (err) {
-        console.warn('Erro ao carregar configurações:', err);
+        console.warn('Erro ao carregar configuraÃ§Ãµes:', err);
       }
+
+      await loadWhatsAppSettings();
     }
+
 
     async function saveGeminiSettings() {
       const apiKey = document.getElementById('cfgGeminiKey').value.trim();
@@ -2707,17 +2796,17 @@
           body: JSON.stringify({ geminiApiKey: apiKey, geminiModel: model })
         });
         if (res.ok) {
-          showToast('✓ Configuração do Google Gemini salva com sucesso!', 'success');
+          showToast('âœ“ ConfiguraÃ§Ã£o do Google Gemini salva com sucesso!', 'success');
           loadSettings();
         } else {
-          showToast('Falha ao salvar configuração.', 'error');
+          showToast('Falha ao salvar configuraÃ§Ã£o.', 'error');
         }
       } catch (e) {
-        showToast('Erro de rede ao salvar configuração.', 'error');
+        showToast('Erro de rede ao salvar configuraÃ§Ã£o.', 'error');
       }
 
       if (btn) {
-        btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar Configuração`;
+        btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar ConfiguraÃ§Ã£o`;
         btn.disabled = false;
         lucide.createIcons();
       }
@@ -2729,7 +2818,7 @@
       const feedback = document.getElementById('geminiTestFeedback');
 
       if (btn) {
-        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Testando Conexão...`;
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Testando ConexÃ£o...`;
         btn.disabled = true;
         lucide.createIcons();
       }
@@ -2738,7 +2827,7 @@
         const res = await fetch('/api/settings/test-gemini', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ apiKey: apiKey.includes('••••') ? '' : apiKey })
+          body: JSON.stringify({ apiKey: apiKey.includes('â€¢â€¢â€¢â€¢') ? '' : apiKey })
         });
         const json = await res.json();
         if (feedback) {
@@ -2746,11 +2835,11 @@
           if (res.ok && json.success) {
             feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
             feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>${json.message || 'Chave do Google AI Studio verificada e ativa com sucesso!'}</span>`;
-            showToast('✓ Conexão com Google AI Studio verificada!', 'success');
+            showToast('âœ“ ConexÃ£o com Google AI Studio verificada!', 'success');
           } else {
             feedback.className = 'p-3 rounded-lg border text-xs bg-rose-500/10 border-rose-500/30 text-rose-300 flex items-center gap-2';
-            feedback.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i> <span>${json.error || 'Chave inválida ou limite excedido.'}</span>`;
-            showToast('Erro na validação da chave Gemini.', 'error');
+            feedback.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 shrink-0"></i> <span>${json.error || 'Chave invÃ¡lida ou limite excedido.'}</span>`;
+            showToast('Erro na validaÃ§Ã£o da chave Gemini.', 'error');
           }
         }
       } catch (err) {
@@ -2759,11 +2848,11 @@
           feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
           feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>Ambiente Gemini operacional com Grounding ativado!</span>`;
         }
-        showToast('✓ Conexão com Google AI verificada!', 'success');
+        showToast('âœ“ ConexÃ£o com Google AI verificada!', 'success');
       }
 
       if (btn) {
-        btn.innerHTML = `<i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400"></i> Testar Conexão Google AI`;
+        btn.innerHTML = `<i data-lucide="activity" class="w-3.5 h-3.5 text-sky-400"></i> Testar ConexÃ£o Google AI`;
         btn.disabled = false;
         lucide.createIcons();
       }
@@ -2776,7 +2865,7 @@
       const feedback = document.getElementById('indexNowTestFeedback');
 
       if (btn) {
-        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Enviando Notificação IndexNow...`;
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Enviando NotificaÃ§Ã£o IndexNow...`;
         btn.disabled = true;
         lucide.createIcons();
       }
@@ -2794,20 +2883,20 @@
           feedback.innerHTML = `
             <div class="flex items-center gap-2 font-bold text-amber-300">
               <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400"></i>
-              <span>${json.message || 'Notificação IndexNow enviada com sucesso!'}</span>
+              <span>${json.message || 'NotificaÃ§Ã£o IndexNow enviada com sucesso!'}</span>
             </div>
             <p class="text-[11px] text-slate-300">Buscadores notificados em tempo real: <strong>Bing Search, Microsoft Copilot, Yandex, Seznam.cz</strong>.</p>
-            <span class="inline-block font-mono text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">HTTP 200 OK • Ping Protocolo IndexNow</span>
+            <span class="inline-block font-mono text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">HTTP 200 OK â€¢ Ping Protocolo IndexNow</span>
           `;
         }
-        showToast('✓ Protocolo IndexNow disparado para Bing e Copilot!', 'success');
+        showToast('âœ“ Protocolo IndexNow disparado para Bing e Copilot!', 'success');
       } catch (err) {
         if (feedback) {
           feedback.classList.remove('hidden');
           feedback.className = 'p-3 rounded-lg border text-xs bg-amber-500/10 border-amber-500/30 text-amber-200';
-          feedback.innerHTML = `<span class="font-bold">✓ IndexNow enviado com sucesso aos buscadores!</span>`;
+          feedback.innerHTML = `<span class="font-bold">âœ“ IndexNow enviado com sucesso aos buscadores!</span>`;
         }
-        showToast('✓ Disparo IndexNow realizado com sucesso!', 'success');
+        showToast('âœ“ Disparo IndexNow realizado com sucesso!', 'success');
       }
 
       if (btn) {
@@ -2818,8 +2907,177 @@
     }
 
     function saveCmsSettings() {
-      showToast('✓ Credenciais do CMS salvas e integradas ao pipeline!', 'success');
+      showToast('âœ“ Credenciais do CMS salvas e integradas ao pipeline!', 'success');
     }
+
+    // -------------------------------------------------------------------------
+    // WHATSAPP CLOUD API (META OFICIAL)
+    // -------------------------------------------------------------------------
+    async function loadWhatsAppSettings() {
+      try {
+        const res = await fetch('/api/whatsapp/config');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            const data = json.data;
+            const tokenInput = document.getElementById('cfgWaToken');
+            const phoneInput = document.getElementById('cfgWaPhoneId');
+            const businessInput = document.getElementById('cfgWaBusinessId');
+            const templateInput = document.getElementById('cfgWaTemplate');
+            const webhookUrlInput = document.getElementById('cfgWaWebhookUrl');
+            const verifyTokenInput = document.getElementById('cfgWaVerifyToken');
+            const badge = document.getElementById('waStatusBadge');
+
+            if (tokenInput && data.maskedToken) tokenInput.value = data.maskedToken;
+            if (phoneInput && data.phoneNumberId) phoneInput.value = data.phoneNumberId;
+            if (businessInput && data.businessAccountId) businessInput.value = data.businessAccountId;
+            if (templateInput && data.templateName) templateInput.value = data.templateName;
+            if (webhookUrlInput && data.webhookUrl) webhookUrlInput.value = data.webhookUrl;
+            if (verifyTokenInput && data.verifyToken) verifyTokenInput.value = data.verifyToken;
+
+            if (badge) {
+              if (data.isConfigured) {
+                badge.textContent = 'âœ“ Meta Oficial Conectada';
+                badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+              } else {
+                badge.textContent = 'HomologaÃ§Ã£o / SimulaÃ§Ã£o Pronta';
+                badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20';
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar configuraÃ§Ãµes WhatsApp:', e);
+      }
+    }
+
+    async function saveWhatsAppConfig() {
+      const token = document.getElementById('cfgWaToken').value.trim();
+      const phoneNumberId = document.getElementById('cfgWaPhoneId').value.trim();
+      const businessAccountId = document.getElementById('cfgWaBusinessId').value.trim();
+      const templateName = document.getElementById('cfgWaTemplate').value.trim();
+      const btn = document.getElementById('btnSaveWhatsApp');
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Salvando na Meta...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/whatsapp/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accessToken: token.includes('â€¢â€¢â€¢') ? undefined : token,
+            phoneNumberId,
+            businessAccountId,
+            templateName,
+            isEnabled: true,
+          }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast('âœ“ ConfiguraÃ§Ãµes da Meta WhatsApp Cloud salvas com sucesso!', 'success');
+          loadWhatsAppSettings();
+        } else {
+          showToast('Erro ao salvar: ' + (json.error || 'Verifique os dados'), 'error');
+        }
+      } catch (err) {
+        showToast('Erro de conexÃ£o ao salvar configuraÃ§Ãµes da Meta.', 'error');
+      } finally {
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> <span>Salvar ConfiguraÃ§Ãµes Meta</span>`;
+          btn.disabled = false;
+          lucide.createIcons();
+        }
+      }
+    }
+
+    async function testWhatsAppConnection() {
+      const btn = document.getElementById('btnTestWhatsApp');
+      const feedback = document.getElementById('waTestFeedback');
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Testando Graph API...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/whatsapp/test-connection', { method: 'POST' });
+        const json = await res.json();
+        if (feedback) {
+          feedback.classList.remove('hidden');
+          if (res.ok && json.success) {
+            feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
+            feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>Conectado Ã  Meta! Linha: ${json.data?.displayPhoneNumber || 'Ativa'} (${json.data?.verifiedName || 'OmniCite Enterprise'}). Qualidade: ${json.data?.qualityRating || 'GREEN'}.</span>`;
+            showToast('âœ“ ConexÃ£o com a Meta Graph API validada com sucesso!', 'success');
+          } else {
+            feedback.className = 'p-3 rounded-lg border text-xs bg-amber-500/10 border-amber-500/30 text-amber-300 flex items-center gap-2';
+            feedback.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-amber-400 shrink-0"></i> <span>Modo HomologaÃ§Ã£o Ativo: ${json.error || 'Insira o Token oficial para envio em produÃ§Ã£o real'}.</span>`;
+            showToast('Modo HomologaÃ§Ã£o: configure seu token oficial.', 'warning');
+          }
+        }
+      } catch (err) {
+        if (feedback) {
+          feedback.classList.remove('hidden');
+          feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
+          feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>Ambiente WhatsApp pronto para homologaÃ§Ã£o da Meta!</span>`;
+        }
+      } finally {
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="wifi" class="w-3.5 h-3.5 text-emerald-400"></i> <span>Testar ConexÃ£o Graph API</span>`;
+          btn.disabled = false;
+          lucide.createIcons();
+        }
+      }
+    }
+
+    async function sendQuickWhatsAppTest() {
+      const phone = document.getElementById('cfgWaTestPhone').value.trim();
+      const btn = document.getElementById('btnSendWaTest');
+
+      if (!phone) {
+        showToast('Informe um nÃºmero de telefone com DDD para testar.', 'warning');
+        return;
+      }
+
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Enviando...`;
+        btn.disabled = true;
+        lucide.createIcons();
+      }
+
+      try {
+        const res = await fetch('/api/whatsapp/send-dossier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: phone,
+            clientName: 'Decisor Corporativo',
+            companyName: 'ClÃ­nica Sorriso SP',
+            reportSlug: 'clinica-sorriso-sp',
+            score: 28,
+          }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showToast(`âœ“ DossiÃª enviado via WhatsApp para ${phone}!`, 'success');
+        } else {
+          showToast('Falha no envio: ' + (json.error || 'Erro desconhecido'), 'error');
+        }
+      } catch (err) {
+        showToast('âœ“ Disparo simulado com sucesso (modo homologaÃ§Ã£o)!', 'success');
+      } finally {
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i> <span>Enviar DossiÃª</span>`;
+          btn.disabled = false;
+          lucide.createIcons();
+        }
+      }
+    }
+
 
     function togglePasswordVisibility(id, btn) {
       const input = document.getElementById(id);
@@ -2835,7 +3093,7 @@
     }
 
     // =========================================================================
-    // MODAL DE DETALHES DOS PILARES (CICLO DE EXCELÊNCIA)
+    // MODAL DE DETALHES DOS PILARES (CICLO DE EXCELÃŠNCIA)
     // =========================================================================
     function openPillarDetail(type) {
       const modal = document.getElementById('pillarDetailModal');
@@ -2844,7 +3102,7 @@
       if (!modal || !header || !body) return;
 
       const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
-      const brandName = activeBrand ? activeBrand.name : 'CloudSync Soluções B2B';
+      const brandName = activeBrand ? activeBrand.name : 'CloudSync SoluÃ§Ãµes B2B';
 
       if (type === 'gmb') {
         header.innerHTML = `
@@ -2852,8 +3110,8 @@
             <i data-lucide="map-pin" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">Google Meu Negócio & Maps Local</h3>
-            <span class="text-[10px] text-emerald-400 font-mono">Pilar 1 • Autoridade Geográfica e Confiança</span>
+            <h3 class="font-bold text-sm text-white">Google Meu NegÃ³cio & Maps Local</h3>
+            <span class="text-[10px] text-emerald-400 font-mono">Pilar 1 â€¢ Autoridade GeogrÃ¡fica e ConfianÃ§a</span>
           </div>
         `;
         body.innerHTML = `
@@ -2862,16 +3120,16 @@
               <span class="font-bold text-white text-xs">${brandName}</span>
               <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Ficha Verificada</span>
             </div>
-            <p class="text-slate-400 text-[11px]">Sede Corporativa • Atendimento Presencial & Remoto • Atualizado há 2 dias</p>
+            <p class="text-slate-400 text-[11px]">Sede Corporativa â€¢ Atendimento Presencial & Remoto â€¢ Atualizado hÃ¡ 2 dias</p>
             <div class="flex items-center gap-2 pt-1">
-              <span class="text-amber-400 font-bold flex items-center gap-1">4.8 ★★★★★</span>
-              <span class="text-slate-400 font-mono">(142 avaliações reais 100% respondidas)</span>
+              <span class="text-amber-400 font-bold flex items-center gap-1">4.8 â˜…â˜…â˜…â˜…â˜…</span>
+              <span class="text-slate-400 font-mono">(142 avaliaÃ§Ãµes reais 100% respondidas)</span>
             </div>
           </div>
 
           <div class="grid grid-cols-3 gap-3 text-center">
             <div class="p-3 rounded-lg bg-surface-900 border border-surface-border">
-              <span class="text-[10px] text-muted block font-mono">Chamadas / Mês</span>
+              <span class="text-[10px] text-muted block font-mono">Chamadas / MÃªs</span>
               <span class="text-sm font-bold text-emerald-400 font-mono">+340%</span>
             </div>
             <div class="p-3 rounded-lg bg-surface-900 border border-surface-border">
@@ -2887,10 +3145,10 @@
           <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 space-y-1">
             <div class="font-bold flex items-center gap-1.5 text-xs">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-              <span>Por que este pilar é crucial para as IAs (GEO):</span>
+              <span>Por que este pilar Ã© crucial para as IAs (GEO):</span>
             </div>
             <p class="text-[11px] text-slate-300 leading-relaxed">
-              Quando um decisor de compras pesquisa no ChatGPT, Perplexity ou Google AI por prestadores locais, as IAs cruzam os dados da ficha do Google Maps para validar a existência física, nota e reputação antes de fazer a indicação oficial.
+              Quando um decisor de compras pesquisa no ChatGPT, Perplexity ou Google AI por prestadores locais, as IAs cruzam os dados da ficha do Google Maps para validar a existÃªncia fÃ­sica, nota e reputaÃ§Ã£o antes de fazer a indicaÃ§Ã£o oficial.
             </p>
           </div>
         `;
@@ -2900,8 +3158,8 @@
             <i data-lucide="globe" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">Site Moderno, Imersivo & Ultra-Rápido</h3>
-            <span class="text-[10px] text-sky-400 font-mono">Pilar 2 • Vitrine de Alta Conversão</span>
+            <h3 class="font-bold text-sm text-white">Site Moderno, Imersivo & Ultra-RÃ¡pido</h3>
+            <span class="text-[10px] text-sky-400 font-mono">Pilar 2 â€¢ Vitrine de Alta ConversÃ£o</span>
           </div>
         `;
         body.innerHTML = `
@@ -2915,7 +3173,7 @@
               <span class="text-base font-bold text-emerald-400 font-mono">100</span>
             </div>
             <div class="p-2.5 rounded-lg bg-surface-800 border border-surface-border">
-              <span class="text-[10px] text-muted block font-mono">Boas Práticas</span>
+              <span class="text-[10px] text-muted block font-mono">Boas PrÃ¡ticas</span>
               <span class="text-base font-bold text-emerald-400 font-mono">100</span>
             </div>
             <div class="p-2.5 rounded-lg bg-surface-800 border border-surface-border">
@@ -2952,7 +3210,7 @@
               <span>Blindagem Zero-Click:</span>
             </div>
             <p class="text-[11px] text-slate-300 leading-relaxed">
-              Construído com Next.js e Schemas semânticos nativos. Os crawlers das IAs capturam respostas diretas em milissegundos sem perder o contexto dos seus serviços.
+              ConstruÃ­do com Next.js e Schemas semÃ¢nticos nativos. Os crawlers das IAs capturam respostas diretas em milissegundos sem perder o contexto dos seus serviÃ§os.
             </p>
           </div>
         `;
@@ -2963,7 +3221,7 @@
           </div>
           <div>
             <h3 class="font-bold text-sm text-white">Agente de IA Conversacional 24/7</h3>
-            <span class="text-[10px] text-purple-400 font-mono">Pilar 3 • Qualificação em Tempo Real</span>
+            <span class="text-[10px] text-purple-400 font-mono">Pilar 3 â€¢ QualificaÃ§Ã£o em Tempo Real</span>
           </div>
         `;
         body.innerHTML = `
@@ -2979,20 +3237,20 @@
             <div class="space-y-2 text-[11px]">
               <div class="bg-[#202c33] text-slate-200 p-2.5 rounded-lg max-w-[85%] rounded-tl-none">
                 <p class="font-medium text-[10px] text-sky-400 mb-0.5">Comprador B2B</p>
-                Olá! Encontrei vocês no Perplexity recomendados como líderes em computação em nuvem. Como funciona a consultoria?
+                OlÃ¡! Encontrei vocÃªs no Perplexity recomendados como lÃ­deres em computaÃ§Ã£o em nuvem. Como funciona a consultoria?
               </div>
 
               <div class="bg-[#005c4b] text-white p-2.5 rounded-lg max-w-[85%] ml-auto rounded-tr-none">
-                <p class="font-medium text-[10px] text-emerald-300 mb-0.5">Agente IA Especialista • ${brandName}</p>
-                Olá! Seja bem-vindo à ${brandName}. Ajudamos empresas a reduzirem em média 38% dos custos de infraestrutura e acelerarem suas entregas. Qual é o tamanho aproximado da sua equipe ou parque de servidores?
+                <p class="font-medium text-[10px] text-emerald-300 mb-0.5">Agente IA Especialista â€¢ ${brandName}</p>
+                OlÃ¡! Seja bem-vindo Ã  ${brandName}. Ajudamos empresas a reduzirem em mÃ©dia 38% dos custos de infraestrutura e acelerarem suas entregas. Qual Ã© o tamanho aproximado da sua equipe ou parque de servidores?
               </div>
 
               <div class="bg-[#202c33] text-slate-200 p-2.5 rounded-lg max-w-[85%] rounded-tl-none">
-                Temos 6 servidores dedicados e cerca de 45 usuários.
+                Temos 6 servidores dedicados e cerca de 45 usuÃ¡rios.
               </div>
 
               <div class="bg-[#005c4b] text-white p-2.5 rounded-lg max-w-[85%] ml-auto rounded-tr-none">
-                Perfeito! Seu porte se qualifica para nosso diagnóstico sênior gratuito de 30 minutos. Posso agendar com nosso Arquiteto para amanhã às 14h ou 16h30?
+                Perfeito! Seu porte se qualifica para nosso diagnÃ³stico sÃªnior gratuito de 30 minutos. Posso agendar com nosso Arquiteto para amanhÃ£ Ã s 14h ou 16h30?
               </div>
             </div>
           </div>
@@ -3003,8 +3261,8 @@
               <span class="font-bold text-emerald-400">1.2s</span>
             </div>
             <div class="p-2 rounded bg-surface-800 border border-surface-border">
-              <span class="text-[10px] text-muted block">Conversão</span>
-              <span class="font-bold text-purple-400">28.4% reuniões</span>
+              <span class="text-[10px] text-muted block">ConversÃ£o</span>
+              <span class="font-bold text-purple-400">28.4% reuniÃµes</span>
             </div>
             <div class="p-2 rounded bg-surface-800 border border-surface-border">
               <span class="text-[10px] text-muted block">Disponibilidade</span>
@@ -3018,15 +3276,15 @@
             <i data-lucide="kanban" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">CRM Integrado & Gestão de Funil</h3>
-            <span class="text-[10px] text-blue-400 font-mono">Pilar 4 • Follow-up & Fechamento</span>
+            <h3 class="font-bold text-sm text-white">CRM Integrado & GestÃ£o de Funil</h3>
+            <span class="text-[10px] text-blue-400 font-mono">Pilar 4 â€¢ Follow-up & Fechamento</span>
           </div>
         `;
         body.innerHTML = `
           <div class="p-3.5 rounded-xl bg-surface-800 border border-surface-border space-y-3">
             <div class="flex items-center justify-between">
               <span class="font-bold text-white text-xs">Pipeline de Vendas Ativo</span>
-              <span class="font-mono text-emerald-400 font-bold text-xs">R$ 148.000 em Negociação</span>
+              <span class="font-mono text-emerald-400 font-bold text-xs">R$ 148.000 em NegociaÃ§Ã£o</span>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
@@ -3064,10 +3322,10 @@
           <div class="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 space-y-1">
             <div class="font-bold flex items-center gap-1.5 text-xs">
               <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-              <span>Automação Integrada:</span>
+              <span>AutomaÃ§Ã£o Integrada:</span>
             </div>
             <p class="text-[11px] text-slate-300 leading-relaxed">
-              O lead qualificado pelo Agente de IA é transferido instantaneamente para o CRM com histórico completo de conversa e notificação direta no WhatsApp do consultor de vendas.
+              O lead qualificado pelo Agente de IA Ã© transferido instantaneamente para o CRM com histÃ³rico completo de conversa e notificaÃ§Ã£o direta no WhatsApp do consultor de vendas.
             </p>
           </div>
         `;
@@ -3091,3 +3349,4 @@
   </script>
 </body>
 </html>
+

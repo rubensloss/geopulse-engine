@@ -182,3 +182,30 @@ export interface StoredScanReport {
   viewCount: number;
 }
 
+export interface WhatsAppCloudConfig {
+  accessToken?: string;
+  phoneNumberId?: string;
+  businessAccountId?: string;
+  verifyToken: string;
+  templateName?: string;
+  isEnabled: boolean;
+  testMode?: boolean;
+}
+
+export interface StoredWhatsAppMessage {
+  id: string;
+  to: string;
+  formattedTo: string;
+  type: 'TEMPLATE' | 'TEXT';
+  templateName?: string;
+  status: 'QUEUED' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED' | 'SIMULATED';
+  metaMessageId?: string;
+  clientName?: string;
+  companyName?: string;
+  reportSlug?: string;
+  dossierUrl?: string;
+  errorMessage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
