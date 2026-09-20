@@ -170,3 +170,15 @@ export interface RecordGEOMonitorDto {
   citedUrls?: string[];
   rawAnswerText: string;
 }
+
+export interface StoredScanReport {
+  id: string;
+  slug: string;
+  domain: string;
+  brandName: string;
+  niche: string;
+  scanData: any;
+  createdAt: Date;
+  viewCount: number;
+}
+

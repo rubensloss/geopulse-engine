@@ -1340,6 +1340,29 @@
               <p class="text-xs text-muted leading-relaxed">
                 O <strong>OmniCite Growth Engine</strong> implementa a metodologia completa de GEO: geramos as 90 pautas técnicas de alta densidade por mês, injetamos schemas estruturados JSON-LD e dispersamos seus conteúdos via IndexNow para você assumir o topo das respostas nas IAs.
               </p>
+
+              <!-- Banner de Compartilhamento no WhatsApp do Decisor -->
+              <div class="my-5 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.05] text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 text-xs font-mono font-bold text-emerald-400">
+                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                    <span>LINK PÚBLICO GERADO PARA ENVIO NO WHATSAPP</span>
+                  </div>
+                  <p class="text-xs text-slate-300">
+                    Compartilhe este diagnóstico completo diretamente com o proprietário ou diretoria sem necessidade de login.
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="shareLandingScanWhatsApp()" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    <span>Mandar no WhatsApp</span>
+                  </button>
+                  <a id="lnkOpenPublicReport" href="#" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-line flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5 text-sky-400"></i>
+                    <span>Ver Relatório</span>
+                  </a>
+                </div>
+              </div>
               
               <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button type="button" onclick="proceedToOnboarding()" id="btnBottomOnboard" class="beam-btn rounded-xl p-[1px] w-full sm:w-auto inline-block">
@@ -2612,6 +2635,8 @@
         const response = await apiPromise;
         if (response && response.success) {
           scanData = response.data;
+          scanData.publicUrl = response.publicUrl;
+          scanData.slug = response.slug;
         }
       } catch (err) {
         console.warn('Erro ao obter dados do scanner da API:', err);
@@ -2976,12 +3001,13 @@
         // Ações Google
         const actionsList = document.getElementById('resGoogleActionsList');
         if (actionsList && google.actionPlan) {
-          actionsList.innerHTML = google.actionPlan.map(a => `
-            <div class="p-3.5 rounded-xl border border-line bg-surface/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="space-y-0.5">
-                <span class="text-[10px] font-mono font-bold uppercase text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
-                  ${a.target}
-                </span>
+          actionsList.innerHTML = google.actionPlan.map((a, i) => `
+            <div class="p-3.5 rounded-xl border border-line bg-surface/40 flex items-start gap-3">
+              <span class="w-6 h-6 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-0.5">
+                ${i + 1}
+              </span>
+              <div>
+                <span class="text-[10px] font-mono text-muted uppercase tracking-wider">${a.target}</span>
                 <h5 class="text-xs font-bold text-white mt-1">${a.action}</h5>
                 <p class="text-[11px] text-slate-400"><strong class="text-slate-300">Impacto Direto:</strong> ${a.impact}</p>
               </div>
@@ -2989,6 +3015,25 @@
           `).join('');
         }
       }
+
+      // Atualiza link de relatório público e WhatsApp
+      const reportSlug = data.slug || data.domain?.replace(/[^a-z0-9]/gi, '-');
+      const publicPath = data.publicUrl || `/relatorio/${reportSlug}`;
+      const fullReportUrl = window.location.origin + publicPath;
+      const lnkOpen = document.getElementById('lnkOpenPublicReport');
+      if (lnkOpen) lnkOpen.href = publicPath;
+
+      window.currentScanReportUrl = fullReportUrl;
+      window.currentScanBrand = data.brandName || data.domain;
+      window.currentScanScore = data.geoScore || 34;
+    }
+
+    function shareLandingScanWhatsApp() {
+      const url = window.currentScanReportUrl || (window.location.origin + '/relatorio/clinica-sorriso-sp');
+      const brand = window.currentScanBrand || 'Sua Empresa';
+      const score = window.currentScanScore || 34;
+      const msg = `Olá! Acabei de gerar o Diagnóstico Oficial de Visibilidade em Inteligência Artificial (GEO) da *${brand}*.\n\n📊 *Score GEO:* ${score}/100\n🚨 *Status:* Quando os clientes perguntam ao ChatGPT e Perplexity por soluções no seu nicho, a sua empresa não está sendo citada.\n\nConfira o relatório completo e o plano de recuperação aqui:\n👉 ${url}`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     // =========================================================================

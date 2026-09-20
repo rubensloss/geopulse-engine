@@ -13,6 +13,7 @@ import {
   PlanTier,
   SubscriptionStatus,
   UserRole,
+  StoredScanReport,
 } from './types.js';
 import { decryptJsonCredential, encryptJsonCredential } from '../security/encryption.js';
 
@@ -86,6 +87,7 @@ export class EnterpriseRepository {
   private articles: Map<string, StoredArticle> = new Map();
   private internalLinks: Map<string, StoredInternalLink> = new Map();
   private geoMonitors: StoredGEOMonitor[] = [];
+  private scans: Map<string, StoredScanReport> = new Map();
 
   constructor() {
     this.loadFromDisk();
@@ -130,6 +132,12 @@ export class EnterpriseRepository {
       if (data.geoMonitors) {
         this.geoMonitors = data.geoMonitors.map((item: any) => ({ ...item, createdAt: new Date(item.createdAt) }));
       }
+      if (data.scans) {
+        this.scans = new Map(data.scans.map((item: any) => [item.id, { ...item, createdAt: new Date(item.createdAt) }]));
+        for (const scan of Array.from(this.scans.values())) {
+          if (scan.slug) this.scans.set(scan.slug, scan);
+        }
+      }
     } catch (err) {
       console.warn('⚠️ [DB] Não foi possível carregar base persistente anterior:', err);
     }
@@ -155,6 +163,7 @@ export class EnterpriseRepository {
           articles: Array.from(this.articles.values()),
           internalLinks: Array.from(this.internalLinks.values()),
           geoMonitors: this.geoMonitors,
+          scans: Array.from(new Set(this.scans.values())),
         };
         fs.writeFileSync(this.storageFile, JSON.stringify(snapshot, null, 2), 'utf-8');
       } catch (err) {
@@ -535,6 +544,50 @@ export class EnterpriseRepository {
         actionLabel: 'Ver Pautas e Monitoramento',
       },
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // RELATÓRIOS PÚBLICOS DE AUDITORIA GEO (LEAD MAGNET & COMPARTILHAMENTO)
+  // ---------------------------------------------------------------------------
+  saveScan(scanData: any): StoredScanReport {
+    const rawDomain = (scanData.domain || 'empresa.com.br').toLowerCase().trim();
+    const cleanDomain = rawDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/[^a-z0-9]/g, '-');
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    const id = `scan_${Date.now().toString(36)}_${randomSuffix}`;
+    const slug = `${cleanDomain}-${randomSuffix}`;
+
+    const report: StoredScanReport = {
+      id,
+      slug,
+      domain: rawDomain,
+      brandName: scanData.brandName || scanData.domain,
+      niche: scanData.niche || 'Geral',
+      scanData,
+      createdAt: new Date(),
+      viewCount: 0,
+    };
+
+    this.scans.set(report.id, report);
+    this.scans.set(report.slug, report);
+    this.persist();
+    return report;
+  }
+
+  getScan(idOrSlug: string): StoredScanReport | undefined {
+    if (!idOrSlug) return undefined;
+    const report = this.scans.get(idOrSlug);
+    if (report) {
+      report.viewCount = (report.viewCount || 0) + 1;
+      this.persist();
+    }
+    return report;
+  }
+
+  listRecentScans(limit: number = 10): StoredScanReport[] {
+    const unique = Array.from(new Set(this.scans.values()));
+    return unique
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
   }
 }
 

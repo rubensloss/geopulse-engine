@@ -50,6 +50,15 @@ app.get('/dashboard', (req, res) => {
   res.redirect('/app');
 });
 
+// Relatório Executivo Público Compartilhável (Sem necessidade de login para envio no WhatsApp)
+app.get('/relatorio/:idOrSlug', (req, res) => {
+  res.sendFile('report.html', { root: PUBLIC_DIR });
+});
+
+app.get('/report/:idOrSlug', (req, res) => {
+  res.sendFile('report.html', { root: PUBLIC_DIR });
+});
+
 // -----------------------------------------------------------------------------
 // SEED DE DADOS INICIAIS (Para o painel já iniciar vivo e interativo)
 // -----------------------------------------------------------------------------
@@ -209,6 +218,22 @@ Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bi
       billingCycle: 'MONTHLY',
       paymentMethod: 'PIX',
       paymentId: 'tx_demo_initial_seed',
+    });
+  }
+
+  // Seed de Relatório Demonstrativo Público para envio no WhatsApp
+  if (db.listRecentScans().length === 0) {
+    executeGEOScan({
+      domain: 'clinicasorrisoperfeito.com.br',
+      brandName: 'Clínica Sorriso Perfeito',
+      niche: 'Implantes Dentários e Estética Oral',
+    }).then(scanResult => {
+      const demoScan = db.saveScan(scanResult);
+      demoScan.slug = 'clinica-sorriso-sp';
+      (db as any).scans.set('clinica-sorriso-sp', demoScan);
+      (db as any).persist();
+    }).catch(err => {
+      console.warn('⚠️ [SEED] Falha ao gerar scan de demonstração:', err);
     });
   }
 }
@@ -560,10 +585,41 @@ app.post('/api/scanner/audit', async (req, res) => {
       brandName,
     });
 
-    res.json({ success: true, data: result });
+    // Salva o relatório no repositório persistente para acesso público e compartilhamento
+    const stored = db.saveScan(result);
+
+    res.json({
+      success: true,
+      data: result,
+      scanId: stored.id,
+      slug: stored.slug,
+      publicUrl: `/relatorio/${stored.slug}`,
+    });
   } catch (error: any) {
     console.error('Erro na auditoria do GEO Scanner:', error);
     res.status(500).json({ success: false, error: error.message || 'Erro ao processar auditoria GEO.' });
+  }
+});
+
+// Endpoint público para consulta do relatório de auditoria (para envio via WhatsApp)
+app.get('/api/public/scans/:idOrSlug', (req, res) => {
+  try {
+    const { idOrSlug } = req.params;
+    const scan = db.getScan(idOrSlug);
+
+    if (!scan) {
+      return res.status(404).json({
+        success: false,
+        error: 'Relatório de auditoria não encontrado ou expirado.',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: scan,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
