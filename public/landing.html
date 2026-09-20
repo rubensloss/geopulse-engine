@@ -7,7 +7,8 @@
   <meta name="description" content="Seja a marca recomendada pelo ChatGPT, Gemini, Perplexity e Google. Construa autoridade e atraia contratos qualificados no piloto automático com o OmniCite GEO Engine.">
   
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
     // =========================================================================
     // SISTEMA DE AUTH, CHECKOUT E SESSÃO
     // =========================================================================
@@ -112,6 +113,14 @@
       }
     }
 
+    function getAppUrl(path = '/app') {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+        if (path.startsWith('/app?')) return 'app.html?' + path.slice(5);
+        return 'app.html';
+      }
+      return path;
+    }
+
     async function submitLogin(event) {
       if (event) event.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
@@ -128,7 +137,7 @@
         if (res.success && res.data) {
           localStorage.setItem('omnicite_token', res.data.token);
           localStorage.setItem('omnicite_user', JSON.stringify(res.data.user));
-          window.location.href = '/app';
+          window.location.href = getAppUrl('/app');
         } else {
           if (errEl) {
             errEl.textContent = res.error || 'Credenciais inválidas.';
@@ -170,7 +179,7 @@
         if (res.success && res.data) {
           localStorage.setItem('omnicite_token', res.data.token);
           localStorage.setItem('omnicite_user', JSON.stringify(res.data.user));
-          window.location.href = '/app';
+          window.location.href = getAppUrl('/app');
         } else {
           if (errEl) {
             errEl.textContent = res.error || 'Erro ao registrar conta.';
@@ -206,7 +215,7 @@
           localStorage.setItem('omnicite_token', res.data.token);
           localStorage.setItem('omnicite_user', JSON.stringify(res.data.user));
           alert('🎉 Pagamento Aprovado com Sucesso! Sua conta foi ativada. Redirecionando para o painel de operações...');
-          window.location.href = '/app';
+          window.location.href = getAppUrl('/app');
         } else {
           alert('Erro no processamento: ' + (res.error || 'Verifique seus dados.'));
         }
@@ -227,8 +236,9 @@
           }
           const navAuth = document.getElementById('navAuthSection');
           if (navAuth) {
+            const appUrl = getAppUrl('/app');
             navAuth.innerHTML = `
-              <a href="/app" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition whitespace-nowrap">
+              <a href="${appUrl}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition whitespace-nowrap">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>Painel de ${user.name ? user.name.split(' ')[0] : 'Operações'}</span>
                 <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -287,10 +297,51 @@
   </script>
 
   <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      overflow-x: hidden !important;
+      width: 100%;
+      max-width: 100%;
+      scrollbar-width: none !important; /* Firefox */
+      -ms-overflow-style: none !important; /* IE e Edge */
+    }
+
     body {
       background-color: #090a0f;
       color: #f4f4f5;
       font-family: 'Inter', sans-serif;
+      overflow-x: hidden !important;
+      width: 100%;
+      max-width: 100%;
+      position: relative;
+      scrollbar-width: none !important; /* Firefox */
+      -ms-overflow-style: none !important; /* IE e Edge */
+    }
+
+    /* Oculta terminantemente qualquer barra de rolagem (vertical e horizontal) em navegadores WebKit/Chromium */
+    ::-webkit-scrollbar {
+      display: none !important;
+      width: 0px !important;
+      height: 0px !important;
+    }
+
+    ::-webkit-scrollbar-track {
+      display: none !important;
+      background: transparent !important;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      display: none !important;
+      background: transparent !important;
+    }
+
+    ::-webkit-scrollbar:horizontal {
+      display: none !important;
+      height: 0px !important;
+      width: 0px !important;
     }
 
     /* Retícula de linhas blueprint sutis */
@@ -378,12 +429,6 @@
       -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
     }
 
-    /* Scrollbar minimalista */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: #090a0f; }
-    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
-
     /* Estilos Executivos de Impressão / Exportação PDF */
     @media print {
       /* Oculta rigorosamente todos os elementos normais da página */
@@ -430,8 +475,8 @@
   <!-- ========================================================================= -->
   <!-- NAVBAR STICKY GLASS -->
   <!-- ========================================================================= -->
-  <header class="sticky top-0 z-50 glass-nav">
-    <div class="max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between border-x border-line">
+  <header class="sticky top-0 z-50 glass-nav w-full max-w-full overflow-hidden">
+    <div class="w-full max-w-6xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between border-x border-line">
       
       <!-- Marca OmniCite -->
       <a href="/" class="flex items-center gap-3 group flex-shrink-0">
@@ -444,15 +489,15 @@
         </div>
       </a>
 
-      <!-- Links de Navegação com Espaçamento Rigorosamente Igual e Distância Elegante da Marca -->
-      <nav class="hidden md:flex items-center justify-center ml-6 lg:ml-10 xl:ml-14 gap-4 lg:gap-6 text-xs font-mono uppercase tracking-wider text-muted hover:text-foreground whitespace-nowrap flex-shrink-0">
+      <!-- Links de Navegação com Espaçamento Limpo e Ajustado ao Espaço da Tela -->
+      <nav class="hidden lg:flex items-center justify-center mx-auto gap-3 xl:gap-5 text-xs font-mono uppercase tracking-wider text-muted hover:text-foreground whitespace-nowrap">
         <a href="#como-funciona" class="whitespace-nowrap hover:text-white transition py-1">Como Funciona</a>
         <a href="#recursos" class="whitespace-nowrap hover:text-white transition py-1">Plataforma</a>
         <a href="#scanner" class="whitespace-nowrap text-sky-400 hover:text-white font-semibold transition py-1 flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
           Auditoria Gratuita
         </a>
-        <a href="#comparativo" class="whitespace-nowrap hover:text-white transition py-1">Por que Escolher</a>
+        <a href="#comparativo" class="whitespace-nowrap hover:text-white transition py-1">Comparativo</a>
         <a href="#planos" class="whitespace-nowrap hover:text-white transition py-1">Planos</a>
         <a href="#integracoes" class="whitespace-nowrap hover:text-white transition py-1">Integrações</a>
         <a href="#faq" class="whitespace-nowrap hover:text-white transition py-1">FAQ</a>
@@ -827,7 +872,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO: GEO SCANNER INTERATIVO (LEAD MAGNET DE ALTA CONVERSÃO) -->
   <!-- ========================================================================= -->
-  <section id="scanner" class="relative border-b border-line blueprint-grid scroll-mt-20">
+  <section id="scanner" class="relative overflow-hidden border-b border-line blueprint-grid scroll-mt-20">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-16 pt-16 text-center sm:px-6 sm:pt-24">
       
       <!-- Retículas angulares de precisão técnica -->
@@ -1392,7 +1437,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO 2: A NOVA ERA DA INTERNET (ESTATÍSTICAS & ZERO-CLICK SEARCHES) -->
   <!-- ========================================================================= -->
-  <section id="nova-era" class="relative border-b border-line">
+  <section id="nova-era" class="relative overflow-hidden border-b border-line">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
       
       <!-- Retículas angulares -->
@@ -1473,7 +1518,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO 3: COMO FUNCIONA (O PIPELINE AUTÔNOMO EM 4 PASSOS) -->
   <!-- ========================================================================= -->
-  <section id="como-funciona" class="relative border-b border-line">
+  <section id="como-funciona" class="relative overflow-hidden border-b border-line">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
       
       <div class="mx-auto flex w-max items-center gap-3 font-mono text-[11px] uppercase tracking-wider mb-4">
@@ -1607,7 +1652,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO 4: OS 3 PILARES DA PLATAFORMA (FERRAMENTAS & RECURSOS) -->
   <!-- ========================================================================= -->
-  <section id="recursos" class="relative border-b border-line">
+  <section id="recursos" class="relative overflow-hidden border-b border-line">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
       
       <div class="mx-auto flex w-max items-center gap-3 font-mono text-[11px] uppercase tracking-wider mb-4">
@@ -1807,7 +1852,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO 5: O EFEITO COMPOSTO (GRÁFICOS DE CRESCIMENTO VS ANÚNCIOS PAGOS) -->
   <!-- ========================================================================= -->
-  <section id="efeito-composto" class="relative border-b border-line">
+  <section id="efeito-composto" class="relative overflow-hidden border-b border-line">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
       
       <div class="mx-auto flex w-max items-center gap-3 font-mono text-[11px] uppercase tracking-wider mb-4">
@@ -1931,7 +1976,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO 6: TABELA COMPARATIVA MATADORA (OMNICITE VS AGÊNCIA VS DIY) -->
   <!-- ========================================================================= -->
-  <section id="comparativo" class="relative border-b border-line">
+  <section id="comparativo" class="relative overflow-hidden border-b border-line">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
       
       <div class="mx-auto flex w-max items-center gap-3 font-mono text-[11px] uppercase tracking-wider mb-4">
@@ -2022,7 +2067,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO: PLANOS & INVESTIMENTO TRANSPARENTE -->
   <!-- ========================================================================= -->
-  <section id="planos" class="relative border-b border-line blueprint-grid">
+  <section id="planos" class="relative overflow-hidden border-b border-line blueprint-grid">
     <div class="relative mx-auto w-full max-w-6xl border-x border-line px-4 pb-12 pt-16 text-center sm:px-6 sm:pt-24">
       
       <!-- Retículas angulares de precisão técnica (Crosshairs) -->
@@ -2355,7 +2400,7 @@
   <!-- ========================================================================= -->
   <!-- SEÇÃO 8: PERGUNTAS FREQUENTES (ACCORDION INTERATIVO) -->
   <!-- ========================================================================= -->
-  <section id="faq" class="relative border-b border-line">
+  <section id="faq" class="relative overflow-hidden border-b border-line">
     <div class="relative mx-auto w-full max-w-4xl border-x border-line px-4 pb-16 pt-16 sm:px-8 sm:pt-24">
       
       <div class="text-center mb-12">
@@ -3018,8 +3063,9 @@
 
       // Atualiza link de relatório público e WhatsApp
       const reportSlug = data.slug || data.domain?.replace(/[^a-z0-9]/gi, '-');
-      const publicPath = data.publicUrl || `/relatorio/${reportSlug}`;
-      const fullReportUrl = window.location.origin + publicPath;
+      const isGhPages = window.location.hostname.includes('github.io');
+      const publicPath = isGhPages ? `relatorio.html?id=${encodeURIComponent(reportSlug)}` : (data.publicUrl || `/relatorio/${reportSlug}`);
+      const fullReportUrl = isGhPages ? (window.location.href.split('/').slice(0, -1).join('/') + '/' + publicPath) : (window.location.origin + publicPath);
       const lnkOpen = document.getElementById('lnkOpenPublicReport');
       if (lnkOpen) lnkOpen.href = publicPath;
 

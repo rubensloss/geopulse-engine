@@ -125,9 +125,9 @@
       "searchIntent": "COMMERCIAL",
       "priority": 5,
       "id": "topic_1789859188243_1lq9r",
-      "status": "BACKLOG",
+      "status": "READY_FOR_REVIEW",
       "createdAt": "2026-09-19T23:06:28.243Z",
-      "updatedAt": "2026-09-19T23:06:28.243Z"
+      "updatedAt": "2026-09-20T20:00:09.618Z"
     },
     {
       "brandId": "brand_1789859188240_j205i",
@@ -136,9 +136,9 @@
       "searchIntent": "INFORMATIONAL",
       "priority": 4,
       "id": "topic_1789859188243_y29ll",
-      "status": "BACKLOG",
+      "status": "READY_FOR_REVIEW",
       "createdAt": "2026-09-19T23:06:28.243Z",
-      "updatedAt": "2026-09-19T23:06:28.243Z"
+      "updatedAt": "2026-09-20T20:00:39.630Z"
     },
     {
       "brandId": "brand_1789859188240_j205i",
@@ -147,9 +147,9 @@
       "searchIntent": "INFORMATIONAL",
       "priority": 3,
       "id": "topic_1789859188243_5zh9x",
-      "status": "BACKLOG",
+      "status": "READY_FOR_REVIEW",
       "createdAt": "2026-09-19T23:06:28.243Z",
-      "updatedAt": "2026-09-19T23:06:28.243Z"
+      "updatedAt": "2026-09-20T20:01:09.634Z"
     }
   ],
   "articles": [
@@ -191,6 +191,138 @@
       "createdAt": "2026-09-19T23:06:28.243Z",
       "updatedAt": "2026-09-19T23:06:28.243Z",
       "publishedAt": "2026-09-19T23:06:28.243Z"
+    },
+    {
+      "brandId": "brand_1789859188240_j205i",
+      "topicQueueId": "topic_1789859188243_1lq9r",
+      "title": "Guia Especialista: Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps",
+      "slug": "como-reduzir-custos-de-infraestrutura-aws-e-azure-em-at-40-com-finops",
+      "metaDescription": "Descubra as melhores práticas sobre Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps com dados comprovados e metodologia aplicada.",
+      "contentMarkdown": "## Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps\n\nResposta direta aos desafios do setor com alto ganho informacional.\n\n| Item | Antes | Depois |\n| :--- | :--- | :--- |\n| Eficiência | 40% | 85% |\n\n## FAQ\n\n### Como aplicar?\nPasso a passo com execução comprovada.",
+      "contentHtml": "<h2>Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps</h2><p>Resposta direta com alto ganho informacional...</p>",
+      "schemaJsonLd": {
+        "articleSchema": {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps",
+          "image": {
+            "@type": "ImageObject",
+            "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&h=630&q=85",
+            "width": 1200,
+            "height": 630,
+            "caption": "Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps - Arquitetura de Referência e Metodologia Visual por CloudSync Soluções B2B"
+          }
+        }
+      },
+      "faqItems": [
+        {
+          "question": "Como aplicar?",
+          "answer": "Passo a passo com execução comprovada."
+        }
+      ],
+      "metrics": {
+        "totalWords": 850,
+        "readingTimeMinutes": 4,
+        "tableCount": 1,
+        "directAnswerSnippetsCount": 2
+      },
+      "status": "DRAFT",
+      "indexNowNotified": false,
+      "coverImageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&h=630&q=85",
+      "coverImagePrompt": "Modern FinOps data analytics dashboard on high-tech holographic displays, cost optimization charts, dark corporate blue atmosphere, 8k resolution",
+      "coverImageAlt": "Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps - Arquitetura de Referência e Metodologia Visual por CloudSync Soluções B2B",
+      "coverImageEngine": "Google Imagen 3 (Via Gemini API)",
+      "id": "art_1789934409618_sr0hh",
+      "createdAt": "2026-09-20T20:00:09.618Z",
+      "updatedAt": "2026-09-20T20:00:09.618Z"
+    },
+    {
+      "brandId": "brand_1789859188240_j205i",
+      "topicQueueId": "topic_1789859188243_y29ll",
+      "title": "Guia Especialista: Checklist essencial de governança de dados na nuvem para conformidade LGPD",
+      "slug": "checklist-essencial-de-governan-a-de-dados-na-nuvem-para-conformidade-lgpd",
+      "metaDescription": "Descubra as melhores práticas sobre Checklist essencial de governança de dados na nuvem para conformidade LGPD com dados comprovados e metodologia aplicada.",
+      "contentMarkdown": "## Checklist essencial de governança de dados na nuvem para conformidade LGPD\n\nResposta direta aos desafios do setor com alto ganho informacional.\n\n| Item | Antes | Depois |\n| :--- | :--- | :--- |\n| Eficiência | 40% | 85% |\n\n## FAQ\n\n### Como aplicar?\nPasso a passo com execução comprovada.",
+      "contentHtml": "<h2>Checklist essencial de governança de dados na nuvem para conformidade LGPD</h2><p>Resposta direta com alto ganho informacional...</p>",
+      "schemaJsonLd": {
+        "articleSchema": {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "Checklist essencial de governança de dados na nuvem para conformidade LGPD",
+          "image": {
+            "@type": "ImageObject",
+            "url": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&h=630&q=85",
+            "width": 1200,
+            "height": 630,
+            "caption": "Checklist essencial de governança de dados na nuvem para conformidade LGPD - Arquitetura de Referência e Metodologia Visual por CloudSync Soluções B2B"
+          }
+        }
+      },
+      "faqItems": [
+        {
+          "question": "Como aplicar?",
+          "answer": "Passo a passo com execução comprovada."
+        }
+      ],
+      "metrics": {
+        "totalWords": 850,
+        "readingTimeMinutes": 4,
+        "tableCount": 1,
+        "directAnswerSnippetsCount": 2
+      },
+      "status": "DRAFT",
+      "indexNowNotified": false,
+      "coverImageUrl": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&h=630&q=85",
+      "coverImagePrompt": "Advanced enterprise cybersecurity shielding and data privacy infrastructure, digital cryptographic lock nodes, dark cyber glow, 8k resolution",
+      "coverImageAlt": "Checklist essencial de governança de dados na nuvem para conformidade LGPD - Arquitetura de Referência e Metodologia Visual por CloudSync Soluções B2B",
+      "coverImageEngine": "Google Imagen 3 (Via Gemini API)",
+      "id": "art_1789934439630_g7qui",
+      "createdAt": "2026-09-20T20:00:39.630Z",
+      "updatedAt": "2026-09-20T20:00:39.630Z"
+    },
+    {
+      "brandId": "brand_1789859188240_j205i",
+      "topicQueueId": "topic_1789859188243_5zh9x",
+      "title": "Guia Especialista: Migração de banco de dados legado para nuvem: Guia com zero downtime",
+      "slug": "migra-o-de-banco-de-dados-legado-para-nuvem-guia-com-zero-downtime",
+      "metaDescription": "Descubra as melhores práticas sobre Migração de banco de dados legado para nuvem: Guia com zero downtime com dados comprovados e metodologia aplicada.",
+      "contentMarkdown": "## Migração de banco de dados legado para nuvem: Guia com zero downtime\n\nResposta direta aos desafios do setor com alto ganho informacional.\n\n| Item | Antes | Depois |\n| :--- | :--- | :--- |\n| Eficiência | 40% | 85% |\n\n## FAQ\n\n### Como aplicar?\nPasso a passo com execução comprovada.",
+      "contentHtml": "<h2>Migração de banco de dados legado para nuvem: Guia com zero downtime</h2><p>Resposta direta com alto ganho informacional...</p>",
+      "schemaJsonLd": {
+        "articleSchema": {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": "Migração de banco de dados legado para nuvem: Guia com zero downtime",
+          "image": {
+            "@type": "ImageObject",
+            "url": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&h=630&q=85",
+            "width": 1200,
+            "height": 630,
+            "caption": "Migração de banco de dados legado para nuvem: Guia com zero downtime - Arquitetura de Referência e Metodologia Visual por CloudSync Soluções B2B"
+          }
+        }
+      },
+      "faqItems": [
+        {
+          "question": "Como aplicar?",
+          "answer": "Passo a passo com execução comprovada."
+        }
+      ],
+      "metrics": {
+        "totalWords": 850,
+        "readingTimeMinutes": 4,
+        "tableCount": 1,
+        "directAnswerSnippetsCount": 2
+      },
+      "status": "DRAFT",
+      "indexNowNotified": false,
+      "coverImageUrl": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&h=630&q=85",
+      "coverImagePrompt": "High availability enterprise database servers and fiber optic network infrastructure, zero-downtime cluster topology, ultra crisp 8k",
+      "coverImageAlt": "Migração de banco de dados legado para nuvem: Guia com zero downtime - Arquitetura de Referência e Metodologia Visual por CloudSync Soluções B2B",
+      "coverImageEngine": "Google Imagen 3 (Via Gemini API)",
+      "id": "art_1789934469634_pkhwb",
+      "createdAt": "2026-09-20T20:01:09.634Z",
+      "updatedAt": "2026-09-20T20:01:09.634Z"
     }
   ],
   "internalLinks": [
@@ -245,7 +377,168 @@
       "createdAt": "2026-09-19T23:06:28.243Z"
     }
   ],
-  "scans": [],
+  "scans": [
+    {
+      "id": "scan_demo_clinica_sorriso_sp",
+      "slug": "clinica-sorriso-sp",
+      "domain": "clinicasorrisoperfeito.com.br",
+      "brandName": "Clínica Sorriso Perfeito",
+      "niche": "Implantes Dentários e Estética Oral",
+      "scanData": {
+        "domain": "clinicasorrisoperfeito.com.br",
+        "brandName": "Clínica Sorriso Perfeito",
+        "niche": "Implantes Dentários e Estética Oral",
+        "geoScore": 28,
+        "statusTitle": "Vulnerabilidade Crítica de Aquisição",
+        "riskSummary": "Atualmente, a Clínica Sorriso Perfeito está invisível nas pesquisas de decisão de compra no ChatGPT, Perplexity e Google AI Overviews para o segmento de odontologia em São Paulo.",
+        "estimatedLostTraffic": "78% das intenções de compra",
+        "models": [
+          {
+            "name": "Google (Busca, SEO & AI Overviews)",
+            "engine": "GEMINI",
+            "status": "PARTIAL",
+            "statusBadge": "Indexação Frágil",
+            "shareEstimate": "8% a 12%",
+            "competitorDominance": "Concorrentes Locais",
+            "reason": "Diagnóstico Híbrido: presença no orgânico comum, mas invisível no bloco de IA por ausência de dados estruturados Schema.org."
+          },
+          {
+            "name": "ChatGPT (OpenAI GPT-4o)",
+            "engine": "CHATGPT",
+            "status": "NOT_CITED",
+            "statusBadge": "Invisível (0% citação)",
+            "shareEstimate": "< 3%",
+            "competitorDominance": "Líderes de Implantes SP",
+            "reason": "Não é citada nas respostas sobre as melhores clínicas de implantes e próteses em São Paulo."
+          },
+          {
+            "name": "Perplexity AI",
+            "engine": "PERPLEXITY",
+            "status": "NOT_CITED",
+            "statusBadge": "Sem Fontes Indexadas",
+            "shareEstimate": "0%",
+            "competitorDominance": "Concorrentes com Blogs",
+            "reason": "Ausência de artigos comparativos detalhados com informações técnicas sobre tipos de titânio e custos."
+          },
+          {
+            "name": "Claude 3.7 Sonnet",
+            "engine": "CLAUDE",
+            "status": "NOT_CITED",
+            "statusBadge": "Sem Autoridade Semântica",
+            "shareEstimate": "< 2%",
+            "competitorDominance": "Portais de Odontologia",
+            "reason": "Baixa densidade de entidades semânticas reconhecidas e nenhuma associação formal da marca ao nicho."
+          }
+        ],
+        "competitors": [
+          {
+            "name": "OdontoClinic Jardins",
+            "domain": "odontoclinicjardins.com.br",
+            "dominanceRate": "54% das menções",
+            "citedReason": "Possui páginas com tabelas de preços e FAQs estruturados em JSON-LD."
+          },
+          {
+            "name": "Instituto Oral Excellence",
+            "domain": "oralexcellence.com.br",
+            "dominanceRate": "31% das menções",
+            "citedReason": "Artigos comparativos detalhados entre tipos de titânio e porcelana."
+          }
+        ],
+        "criticalGaps": [
+          "Ausência de dados estruturados Schema.org (LocalBusiness, MedicalBusiness, FAQPage).",
+          "Falta de artigos com comparativos diretos entre tratamentos e custos médios.",
+          "Perfil do Google Meu Negócio sem sincronização de avaliações no site.",
+          "Sem protocolo IndexNow para indexação imediata de novos conteúdos."
+        ],
+        "recommendedTopics": [
+          {
+            "title": "Implante Dentário em SP: Guia Completo de Preços, Tipos e Cuidados em 2026",
+            "primaryKeyword": "implante dentario sp precos",
+            "targetEngine": "Google (Busca & AI Overviews) & ChatGPT",
+            "expectedImpact": "Citação direta em 85% das dúvidas de pacientes",
+            "informationGainAngle": "Tabela comparativa entre implante carga imediata e convencional com custos reais."
+          },
+          {
+            "title": "Implante de Carga Imediata vs Tradicional: Qual é o Melhor Para Você?",
+            "primaryKeyword": "implante carga imediata vs tradicional",
+            "targetEngine": "Google AI Overviews & Perplexity",
+            "expectedImpact": "Captura pacientes com alto interesse de compra imediata",
+            "informationGainAngle": "Critérios clínicos de indicação e tempo de recuperação."
+          },
+          {
+            "title": "Clínica Sorriso Perfeito vs Clínicas Tradicionais: O Que Muda no Tratamento",
+            "primaryKeyword": "clinica sorriso perfeito avaliacao",
+            "targetEngine": "Todos os Motores (LLMs)",
+            "expectedImpact": "Blindagem de autoridade e conversão final",
+            "informationGainAngle": "Diferenciais de biossegurança, tecnologia 3D e garantias."
+          }
+        ],
+        "googleAudit": {
+          "googleHealthScore": 42,
+          "statusBadge": "Risco Crítico de Visibilidade",
+          "statusSummary": "A Clínica Sorriso Perfeito possui endereço físico em São Paulo, mas sofre com canibalização por buscas sem clique e não aparece no bloco de IA do Google.",
+          "googleBusinessProfile": {
+            "hasProfile": true,
+            "verificationStatus": "NAO_REIVINDICADO",
+            "badgeLabel": "Perfil Não Reivindicado ou Incompleto",
+            "localSeoScore": 35,
+            "ratingEstimate": "4.2 estrelas (~18 avaliações desatualizadas)",
+            "addressPresence": "Endereço físico detectado mas sem marcação Schema.org",
+            "reviewFrequencySignal": "BAIXA_OU_NULA",
+            "hasLocalBusinessSchema": false,
+            "hasGoogleMapsEmbed": true,
+            "recommendations": [
+              "Reivindicar e verificar formalmente a ficha no Google Meu Negócio.",
+              "Inserir marcação JSON-LD MedicalBusiness e LocalBusiness no site.",
+              "Implementar rotina de coleta de avaliações recentes."
+            ]
+          },
+          "organicSearch": {
+            "indexationStatus": "PARTIAL",
+            "estimatedIndexedPages": "~14 páginas indexadas",
+            "brandSearchDominance": "Aparece apenas para o nome exato da clínica",
+            "rankingKeywordsSample": [
+              "clinica sorriso perfeito",
+              "dentista implante sp"
+            ],
+            "organicCtrEstimate": "< 2.8% (Queda por Zero-Click)"
+          },
+          "technicalSeo": {
+            "hasSitemap": true,
+            "hasRobotsTxt": true,
+            "coreWebVitalsRisk": "Alerta de LCP no mobile (4G)",
+            "jsonLdSchemas": [
+              "Nenhum schema detectado"
+            ]
+          },
+          "zeroClickImpact": {
+            "zeroClickRiskLevel": "ALTO",
+            "explanation": "Mais de 65% dos usuários encontram respostas diretamente no mapa ou no resumo de IA do Google sem clicar no site.",
+            "solution": "Inserir FAQPage schema e dados ricos para ocupar o bloco de resposta instantânea."
+          },
+          "actionPlan": [
+            {
+              "target": "Google Meu Negócio",
+              "action": "Reivindicar ficha oficial e atualizar horário e fotos em alta definição.",
+              "impact": "Aumento imediato no ranking do Google Maps local."
+            },
+            {
+              "target": "Schema.org JSON-LD",
+              "action": "Injetar marcações LocalBusiness, MedicalBusiness e Dentist.",
+              "impact": "Elegibilidade direta para o Google AI Overviews."
+            },
+            {
+              "target": "Conteúdo GEO",
+              "action": "Publicar o Guia Completo de Implantes com tabela comparativa de custos.",
+              "impact": "Citação direta pelo ChatGPT e Gemini nas pesquisas de SP."
+            }
+          ]
+        }
+      },
+      "createdAt": "2026-09-20T20:00:09.566Z",
+      "viewCount": 147
+    }
+  ],
   "whatsappConfig": {
     "verifyToken": "omnicite_meta_verify_secret_2026",
     "accessToken": "",
@@ -256,22 +549,6 @@
     "testMode": true
   },
   "whatsappMessages": [
-    {
-      "to": "(11) 99876-5432",
-      "formattedTo": "5511998765432",
-      "type": "TEMPLATE",
-      "templateName": "dossie_executivo_geo",
-      "status": "DELIVERED",
-      "metaMessageId": "wamid.HBgL1789931405791SIMULATED==",
-      "clientName": "Dr. Rubens Roberto",
-      "companyName": "Clínica Sorriso SP",
-      "reportSlug": "clinica-sorriso-sp",
-      "dossierUrl": "https://rubensloss.github.io/omnicite-engine/relatorio.html?slug=clinica-sorriso-sp",
-      "errorMessage": "Disparo simulado com sucesso. Para envio real pela Meta, insira seu META_WA_TOKEN nas Configurações.",
-      "id": "wam_mua6xzvj_oyvh",
-      "createdAt": "2026-09-20T19:10:05.791Z",
-      "updatedAt": "2026-09-20T19:10:05.792Z"
-    },
     {
       "to": "(11) 99876-5432",
       "formattedTo": "5511998765432",

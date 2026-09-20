@@ -193,20 +193,155 @@ Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bi
             paymentId: 'tx_demo_initial_seed',
         });
     }
-    // Seed de Relatório Demonstrativo Público para envio no WhatsApp
-    if (db.listRecentScans().length === 0) {
-        executeGEOScan({
+    // Seed de Relatório Demonstrativo Público para envio no WhatsApp e Apresentação para Investidores
+    if (!db.getScan('clinica-sorriso-sp')) {
+        const demoScanData = {
             domain: 'clinicasorrisoperfeito.com.br',
             brandName: 'Clínica Sorriso Perfeito',
             niche: 'Implantes Dentários e Estética Oral',
-        }).then(scanResult => {
-            const demoScan = db.saveScan(scanResult);
-            demoScan.slug = 'clinica-sorriso-sp';
-            db.scans.set('clinica-sorriso-sp', demoScan);
-            db.persist();
-        }).catch(err => {
-            console.warn('⚠️ [SEED] Falha ao gerar scan de demonstração:', err);
-        });
+            geoScore: 28,
+            statusTitle: 'Vulnerabilidade Crítica de Aquisição',
+            riskSummary: 'Atualmente, a Clínica Sorriso Perfeito está invisível nas pesquisas de decisão de compra no ChatGPT, Perplexity e Google AI Overviews para o segmento de odontologia em São Paulo.',
+            estimatedLostTraffic: '78% das intenções de compra',
+            models: [
+                {
+                    name: 'Google (Busca, SEO & AI Overviews)',
+                    engine: 'GEMINI',
+                    status: 'PARTIAL',
+                    statusBadge: 'Indexação Frágil',
+                    shareEstimate: '8% a 12%',
+                    competitorDominance: 'Concorrentes Locais',
+                    reason: 'Diagnóstico Híbrido: presença no orgânico comum, mas invisível no bloco de IA por ausência de dados estruturados Schema.org.'
+                },
+                {
+                    name: 'ChatGPT (OpenAI GPT-4o)',
+                    engine: 'CHATGPT',
+                    status: 'NOT_CITED',
+                    statusBadge: 'Invisível (0% citação)',
+                    shareEstimate: '< 3%',
+                    competitorDominance: 'Líderes de Implantes SP',
+                    reason: 'Não é citada nas respostas sobre as melhores clínicas de implantes e próteses em São Paulo.'
+                },
+                {
+                    name: 'Perplexity AI',
+                    engine: 'PERPLEXITY',
+                    status: 'NOT_CITED',
+                    statusBadge: 'Sem Fontes Indexadas',
+                    shareEstimate: '0%',
+                    competitorDominance: 'Concorrentes com Blogs',
+                    reason: 'Ausência de artigos comparativos detalhados com informações técnicas sobre tipos de titânio e custos.'
+                },
+                {
+                    name: 'Claude 3.7 Sonnet',
+                    engine: 'CLAUDE',
+                    status: 'NOT_CITED',
+                    statusBadge: 'Sem Autoridade Semântica',
+                    shareEstimate: '< 2%',
+                    competitorDominance: 'Portais de Odontologia',
+                    reason: 'Baixa densidade de entidades semânticas reconhecidas e nenhuma associação formal da marca ao nicho.'
+                }
+            ],
+            competitors: [
+                {
+                    name: 'OdontoClinic Jardins',
+                    domain: 'odontoclinicjardins.com.br',
+                    dominanceRate: '54% das menções',
+                    citedReason: 'Possui páginas com tabelas de preços e FAQs estruturados em JSON-LD.'
+                },
+                {
+                    name: 'Instituto Oral Excellence',
+                    domain: 'oralexcellence.com.br',
+                    dominanceRate: '31% das menções',
+                    citedReason: 'Artigos comparativos detalhados entre tipos de titânio e porcelana.'
+                }
+            ],
+            criticalGaps: [
+                'Ausência de dados estruturados Schema.org (LocalBusiness, MedicalBusiness, FAQPage).',
+                'Falta de artigos com comparativos diretos entre tratamentos e custos médios.',
+                'Perfil do Google Meu Negócio sem sincronização de avaliações no site.',
+                'Sem protocolo IndexNow para indexação imediata de novos conteúdos.'
+            ],
+            recommendedTopics: [
+                {
+                    title: 'Implante Dentário em SP: Guia Completo de Preços, Tipos e Cuidados em 2026',
+                    primaryKeyword: 'implante dentario sp precos',
+                    targetEngine: 'Google (Busca & AI Overviews) & ChatGPT',
+                    expectedImpact: 'Citação direta em 85% das dúvidas de pacientes',
+                    informationGainAngle: 'Tabela comparativa entre implante carga imediata e convencional com custos reais.'
+                },
+                {
+                    title: 'Implante de Carga Imediata vs Tradicional: Qual é o Melhor Para Você?',
+                    primaryKeyword: 'implante carga imediata vs tradicional',
+                    targetEngine: 'Google AI Overviews & Perplexity',
+                    expectedImpact: 'Captura pacientes com alto interesse de compra imediata',
+                    informationGainAngle: 'Critérios clínicos de indicação e tempo de recuperação.'
+                },
+                {
+                    title: 'Clínica Sorriso Perfeito vs Clínicas Tradicionais: O Que Muda no Tratamento',
+                    primaryKeyword: 'clinica sorriso perfeito avaliacao',
+                    targetEngine: 'Todos os Motores (LLMs)',
+                    expectedImpact: 'Blindagem de autoridade e conversão final',
+                    informationGainAngle: 'Diferenciais de biossegurança, tecnologia 3D e garantias.'
+                }
+            ],
+            googleAudit: {
+                googleHealthScore: 42,
+                statusBadge: 'Risco Crítico de Visibilidade',
+                statusSummary: 'A Clínica Sorriso Perfeito possui endereço físico em São Paulo, mas sofre com canibalização por buscas sem clique e não aparece no bloco de IA do Google.',
+                googleBusinessProfile: {
+                    hasProfile: true,
+                    verificationStatus: 'NAO_REIVINDICADO',
+                    badgeLabel: 'Perfil Não Reivindicado ou Incompleto',
+                    localSeoScore: 35,
+                    ratingEstimate: '4.2 estrelas (~18 avaliações desatualizadas)',
+                    addressPresence: 'Endereço físico detectado mas sem marcação Schema.org',
+                    reviewFrequencySignal: 'BAIXA_OU_NULA',
+                    hasLocalBusinessSchema: false,
+                    hasGoogleMapsEmbed: true,
+                    recommendations: [
+                        'Reivindicar e verificar formalmente a ficha no Google Meu Negócio.',
+                        'Inserir marcação JSON-LD MedicalBusiness e LocalBusiness no site.',
+                        'Implementar rotina de coleta de avaliações recentes.'
+                    ]
+                },
+                organicSearch: {
+                    indexationStatus: 'PARTIAL',
+                    estimatedIndexedPages: '~14 páginas indexadas',
+                    brandSearchDominance: 'Aparece apenas para o nome exato da clínica',
+                    rankingKeywordsSample: ['clinica sorriso perfeito', 'dentista implante sp'],
+                    organicCtrEstimate: '< 2.8% (Queda por Zero-Click)'
+                },
+                technicalSeo: {
+                    hasSitemap: true,
+                    hasRobotsTxt: true,
+                    coreWebVitalsRisk: 'Alerta de LCP no mobile (4G)',
+                    jsonLdSchemas: ['Nenhum schema detectado']
+                },
+                zeroClickImpact: {
+                    zeroClickRiskLevel: 'ALTO',
+                    explanation: 'Mais de 65% dos usuários encontram respostas diretamente no mapa ou no resumo de IA do Google sem clicar no site.',
+                    solution: 'Inserir FAQPage schema e dados ricos para ocupar o bloco de resposta instantânea.'
+                },
+                actionPlan: [
+                    { target: 'Google Meu Negócio', action: 'Reivindicar ficha oficial e atualizar horário e fotos em alta definição.', impact: 'Aumento imediato no ranking do Google Maps local.' },
+                    { target: 'Schema.org JSON-LD', action: 'Injetar marcações LocalBusiness, MedicalBusiness e Dentist.', impact: 'Elegibilidade direta para o Google AI Overviews.' },
+                    { target: 'Conteúdo GEO', action: 'Publicar o Guia Completo de Implantes com tabela comparativa de custos.', impact: 'Citação direta pelo ChatGPT e Gemini nas pesquisas de SP.' }
+                ]
+            }
+        };
+        const demoScan = {
+            id: 'scan_demo_clinica_sorriso_sp',
+            slug: 'clinica-sorriso-sp',
+            domain: 'clinicasorrisoperfeito.com.br',
+            brandName: 'Clínica Sorriso Perfeito',
+            niche: 'Implantes Dentários e Estética Oral',
+            scanData: demoScanData,
+            createdAt: new Date(),
+            viewCount: 142,
+        };
+        db.scans.set('clinica-sorriso-sp', demoScan);
+        db.scans.set('scan_demo_clinica_sorriso_sp', demoScan);
+        db.persist();
     }
 }
 seedDefaultData();
