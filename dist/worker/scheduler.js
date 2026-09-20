@@ -10,11 +10,12 @@ export class AutonomousScheduler {
     timer = null;
     activeJobsCount = 0;
     activeBrandJobs = new Set(); // Controle de concorrência por marca
+    executionHistory = [];
     options;
     constructor(options = {}) {
         this.options = {
             concurrency: options.concurrency ?? 2,
-            pollIntervalMs: options.pollIntervalMs ?? 3000,
+            pollIntervalMs: options.pollIntervalMs ?? 30000,
             maxRetries: options.maxRetries ?? 3,
             useRedis: options.useRedis ?? false,
             redisUrl: options.redisUrl ?? (process.env.REDIS_URL || 'redis://localhost:6379'),
@@ -119,6 +120,20 @@ export class AutonomousScheduler {
         // Executa em background sem bloquear o tick do scheduler
         processContentJob(job)
             .then((result) => {
+            const brand = db.getBrand(job.brandId);
+            this.executionHistory.unshift({
+                id: `exec_${Date.now().toString(36)}`,
+                topic: job.topic,
+                brandId: job.brandId,
+                brandName: brand ? brand.name : 'Marca',
+                durationMs: result.durationMs,
+                status: result.success ? 'SUCCESS' : 'FAILED',
+                executedAt: new Date(),
+                error: result.error,
+            });
+            if (this.executionHistory.length > 20) {
+                this.executionHistory.pop();
+            }
             if (result.success) {
                 console.log(`🎉 [SCHEDULER CONCLUÍDO] Job finalizado em ${result.durationMs}ms para a marca ${job.brandId}`);
             }
@@ -134,11 +149,57 @@ export class AutonomousScheduler {
             this.activeBrandJobs.delete(job.brandId);
         });
     }
+    /**
+     * Força uma execução imediata (ótimo para testes ao vivo e demonstrações a investidores)
+     */
+    async triggerNow(brandId) {
+        if (!this.isRunning) {
+            this.start();
+        }
+        // Se a marca não tiver pauta pendente, o piloto automático gera uma pauta de alta relevância GEO
+        if (brandId) {
+            const pending = db.listPendingTopics(brandId);
+            if (pending.length === 0) {
+                const brand = db.getBrand(brandId);
+                if (brand) {
+                    const autoTopic = db.addTopicToQueue({
+                        brandId,
+                        topic: `Como escolher o melhor especialista em ${brand.name}: Guia Comparativo 2026`,
+                        primaryKeyword: `melhor especialista ${brand.name.toLowerCase()} custo beneficio`,
+                        searchIntent: 'COMMERCIAL',
+                        priority: 5,
+                    });
+                    console.log(`✨ [SCHEDULER AUTOPILOT] Pauta gerada automaticamente para ${brand.name}: ${autoTopic.topic}`);
+                }
+            }
+        }
+        const eligible = this.findNextEligibleTopics();
+        let dispatched = 0;
+        for (const job of eligible) {
+            if (this.activeJobsCount >= this.options.concurrency)
+                break;
+            if (brandId && job.brandId !== brandId)
+                continue;
+            if (this.activeBrandJobs.has(job.brandId))
+                continue;
+            this.dispatchJob(job);
+            dispatched++;
+        }
+        return {
+            dispatched,
+            message: dispatched > 0
+                ? `${dispatched} pauta(s) enviada(s) para produção autônoma com IndexNow.`
+                : 'Ciclo verificado: Nenhuma pauta elegível ou limite de concorrência ativo.'
+        };
+    }
     getStatus() {
         return {
             isRunning: this.isRunning,
             activeJobsCount: this.activeJobsCount,
             activeBrands: Array.from(this.activeBrandJobs),
+            concurrency: this.options.concurrency,
+            pollIntervalMs: this.options.pollIntervalMs,
+            history: this.executionHistory,
         };
     }
 }

@@ -5,6 +5,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { db } from './db/index.js';
 import { processContentJob } from './worker/index.js';
+import { scheduler } from './worker/scheduler.js';
 import { generateCoverImageMetadata } from './worker/content-processor.js';
 import { publishArticleToCMS } from './publishers/index.js';
 import { executeGEOScan } from './services/scanner.js';
@@ -783,6 +784,33 @@ app.get('/api/settings/backup', (req, res) => {
   }
 });
 
+// -----------------------------------------------------------------------------
+// WORKER CRON AUTÔNOMO 24/7 & MONITOR DE EXECUÇÃO
+// -----------------------------------------------------------------------------
+app.get('/api/worker/status', (req, res) => {
+  res.json({ success: true, data: scheduler.getStatus() });
+});
+
+app.post('/api/worker/toggle', (req, res) => {
+  const status = scheduler.getStatus();
+  if (status.isRunning) {
+    scheduler.stop();
+  } else {
+    scheduler.start();
+  }
+  res.json({ success: true, isRunning: !status.isRunning });
+});
+
+app.post('/api/worker/trigger-now', async (req, res) => {
+  try {
+    const { brandId } = req.body;
+    const result = await scheduler.triggerNow(brandId);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Inicia servidor
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n================================================================`);
@@ -790,4 +818,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 Apresentação Comercial / Landing: http://localhost:${PORT}`);
   console.log(`🚀 Painel de Operações / Dashboard:   http://localhost:${PORT}/app`);
   console.log(`================================================================\n`);
+
+  // Inicia o motor autônomo em segundo plano (24/7)
+  scheduler.start();
 });
