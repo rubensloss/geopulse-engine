@@ -168,13 +168,13 @@ Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bi
     }
     // Seed de Usuário Inicial para Demonstrações a Investidores
     if (db.listUsers().length === 0) {
-        const org = db.listOrganizations()[0] || db.createOrganization('OmniCite Ventures', 'omnicite-ventures');
+        const org = db.listOrganizations()[0] || db.createOrganization('GeoPulse Ventures', 'geopulse-ventures');
         const demoUser = db.createUser({
             organizationId: org.id,
             name: 'Rubens Investidor',
-            email: 'investidor@omnicite.com.br',
+            email: 'investidor@geopulse.ai',
             passwordHash: hashPassword('admin123'),
-            companyName: 'OmniCite Global Ventures',
+            companyName: 'GeoPulse Global Ventures',
             phone: '(11) 99999-8888',
             role: 'OWNER',
             planTier: 'EXCELLENCE_CYCLE',
@@ -500,7 +500,7 @@ app.post('/api/articles/generate-cover', (req, res) => {
         }
         const titleToUse = topic || article?.title || 'Estratégia Empresarial na Nuvem';
         const keywordToUse = primaryKeyword || article?.slug || 'tecnologia inovacao nuvem';
-        const brandNameToUse = brandName || 'OmniCite Enterprise';
+        const brandNameToUse = brandName || 'GeoPulse Enterprise';
         const generated = generateCoverImageMetadata(titleToUse, keywordToUse, brandNameToUse);
         if (customPrompt) {
             generated.coverImagePrompt = customPrompt;
@@ -765,14 +765,14 @@ app.get('/api/settings', (req, res) => {
                 defaultPostStatus: cmsList[0].defaultPostStatus,
             } : null,
             indexNow: {
-                host: (brand?.websiteUrl || 'https://omnicite.com.br').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+                host: (brand?.websiteUrl || 'https://geopulse.ai').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
                 key: process.env.INDEXNOW_KEY || 'omnicite-indexnow-production-key-2026',
                 autoPing: true,
             },
             payment: {
                 gateway: process.env.PAYMENT_GATEWAY || 'SIMULATOR',
-                pixKey: process.env.PIX_KEY || 'contato@omnicite.com.br',
-                pixReceiver: 'OmniCite Tecnologias Ltda',
+                pixKey: process.env.PIX_KEY || 'contato@geopulse.ai',
+                pixReceiver: 'GeoPulse Tecnologias Ltda',
                 mode: 'SANDBOX_VIP',
             }
         }
@@ -825,9 +825,9 @@ app.post('/api/settings/test-indexnow', async (req, res) => {
             success: true,
             message: 'Notificação IndexNow enviada com sucesso para Bing e Copilot!',
             data: {
-                host: host || 'omnicite.com.br',
+                host: host || 'geopulse.ai',
                 key: key || 'indexnow-key',
-                url: url || 'https://omnicite.com.br/artigo-geo',
+                url: url || 'https://geopulse.ai/artigo-geo',
                 httpCode: 200,
                 enginesNotified: ['Bing Search', 'Microsoft Copilot', 'Yandex', 'Seznam.cz'],
             }
@@ -840,7 +840,7 @@ app.post('/api/settings/test-indexnow', async (req, res) => {
 app.get('/api/settings/backup', (req, res) => {
     const backupFile = path.resolve(process.cwd(), 'data', 'db.json');
     if (fs.existsSync(backupFile)) {
-        res.download(backupFile, `omnicite_backup_${Date.now()}.json`);
+        res.download(backupFile, `geopulse_backup_${Date.now()}.json`);
     }
     else {
         res.status(404).json({ success: false, error: 'Arquivo de dados ainda não criado.' });
@@ -977,7 +977,7 @@ app.post('/api/worker/trigger-now', async (req, res) => {
 // Inicia servidor
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n================================================================`);
-    console.log(`✨ OMNICITE PLATFORM INICIADA COM SUCESSO!`);
+    console.log(`✨ GEOPULSE PLATFORM INICIADA COM SUCESSO!`);
     console.log(`🌐 Apresentação Comercial / Landing: http://localhost:${PORT}`);
     console.log(`🚀 Painel de Operações / Dashboard:   http://localhost:${PORT}/app`);
     console.log(`================================================================\n`);

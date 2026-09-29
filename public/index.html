@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniCite Engine | Painel de Controle GEO & SEO</title>
+  <link rel="icon" type="image/jpeg" href="/assets/geopulse-logo.jpg">
+  <title>GeoPulse Engine | Painel de Controle GEO & SEO</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -73,11 +74,11 @@
       <!-- Logo & Marca Atual -->
       <div class="flex items-center gap-6">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-sky-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+          <div class="w-8 h-8 rounded-lg overflow-hidden border border-sky-500/40 shadow-lg shadow-sky-500/20 flex items-center justify-center shrink-0 bg-surface-900">
+            <img src="/assets/geopulse-logo.jpg" alt="GeoPulse" class="w-full h-full object-cover">
           </div>
           <div>
-            <span class="font-bold text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">OmniCite</span>
+            <span class="font-bold text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">GeoPulse</span>
             <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 ml-1.5">GEO Engine</span>
           </div>
         </div>
@@ -685,7 +686,7 @@
               </span>
             </div>
             <div>
-              <h4 class="text-base font-bold text-white">Pilar 5: Motor Autônomo GEO (OmniCite Engine)</h4>
+              <h4 class="text-base font-bold text-white">Pilar 5: Motor Autônomo GEO (GeoPulse Engine)</h4>
               <p class="text-xs text-slate-300 mt-1 leading-relaxed">
                 Geração contínua de conteúdos com Information Gain e indexação em tempo real que forçam o ChatGPT, Perplexity, Claude e Gemini a citarem a sua empresa como autoridade absoluta do mercado.
               </p>
@@ -868,7 +869,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-slate-300 mb-1 font-medium">Usuário / Identificador</label>
-                <input type="text" id="cfgCmsUser" value="admin_omnicite" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
+                <input type="text" id="cfgCmsUser" value="admin_geopulse" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-indigo-500 transition">
               </div>
               <div>
                 <label class="block text-slate-300 mb-1 font-medium">Application Password / Token</label>
@@ -910,7 +911,7 @@
           <div class="space-y-3 text-xs">
             <div>
               <label class="block text-slate-300 mb-1 font-medium">Chave PIX da Empresa (Recebedor)</label>
-              <input type="text" id="cfgPixKey" value="financeiro@omnicite.com.br" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
+              <input type="text" id="cfgPixKey" value="financeiro@geopulse.ai" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500 transition">
               <p class="text-[10px] text-slate-400 mt-1">Utilizada para geração automática do QR Code dinâmico no checkout.</p>
             </div>
 
@@ -986,7 +987,7 @@
                 </div>
                 <div>
                   <span class="text-slate-400 block mb-0.5">Token de Verificação (Verify Token):</span>
-                  <input type="text" id="cfgWaVerifyToken" readonly value="omnicite_meta_verify_secret_2026" class="w-full bg-surface-900 border border-surface-border rounded px-2.5 py-1.5 text-amber-300 font-mono text-[10px]">
+                  <input type="text" id="cfgWaVerifyToken" readonly value="geopulse_meta_verify_secret_2026" class="w-full bg-surface-900 border border-surface-border rounded px-2.5 py-1.5 text-amber-300 font-mono text-[10px]">
                 </div>
               </div>
             </div>
@@ -2008,7 +2009,7 @@
                   <tr class="bg-surface-800 text-slate-200">
                     <th class="p-2.5 text-left">Pilar Técnico</th>
                     <th class="p-2.5 text-left">Cenário Tradicional</th>
-                    <th class="p-2.5 text-left">Com OmniCite GEO Engine</th>
+                    <th class="p-2.5 text-left">Com GeoPulse GEO Engine</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-surface-border">
@@ -2330,7 +2331,7 @@
             productDescription: productDescription || `Soluções corporativas de ${name}`,
             targetAudience: targetAudience || 'Compradores e decisores corporativos',
             toneOfVoice: toneOfVoice || 'Profissional, autoridade e consultivo',
-            ctaTargetUrl: websiteUrl || 'https://omnicite.com.br',
+            ctaTargetUrl: websiteUrl || 'https://geopulse.ai',
             ctaText: 'Falar com Especialista',
             isActive: true,
           })
@@ -2996,7 +2997,7 @@
           feedback.classList.remove('hidden');
           if (res.ok && json.success) {
             feedback.className = 'p-3 rounded-lg border text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-300 flex items-center gap-2';
-            feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>Conectado à Meta! Linha: ${json.data?.displayPhoneNumber || 'Ativa'} (${json.data?.verifiedName || 'OmniCite Enterprise'}). Qualidade: ${json.data?.qualityRating || 'GREEN'}.</span>`;
+            feedback.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>Conectado à Meta! Linha: ${json.data?.displayPhoneNumber || 'Ativa'} (${json.data?.verifiedName || 'GeoPulse Enterprise'}). Qualidade: ${json.data?.qualityRating || 'GREEN'}.</span>`;
             showToast('✓ Conexão com a Meta Graph API validada com sucesso!', 'success');
           } else {
             feedback.className = 'p-3 rounded-lg border text-xs bg-amber-500/10 border-amber-500/30 text-amber-300 flex items-center gap-2';

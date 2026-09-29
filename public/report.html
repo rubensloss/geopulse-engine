@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dossiê Oficial de Visibilidade em IA (GEO) | OmniCite</title>
+  <link rel="icon" type="image/jpeg" href="/assets/geopulse-logo.jpg">
+  <title>Dossiê Oficial de Visibilidade em IA (GEO) | GeoPulse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -52,11 +53,11 @@
   <header class="no-print sticky top-0 z-40 bg-[#07090e]/90 backdrop-blur-xl border-b border-border/80 px-4 py-3 sm:px-8">
     <div class="max-w-5xl mx-auto flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-sky-500/20">
-          Ω
+        <div class="w-8 h-8 rounded-lg overflow-hidden border border-sky-500/40 shadow-lg shadow-sky-500/20 flex items-center justify-center shrink-0">
+          <img src="/assets/geopulse-logo.jpg" alt="GeoPulse" class="w-full h-full object-cover">
         </div>
         <div>
-          <span class="font-bold text-white text-base tracking-tight">OmniCite</span>
+          <span class="font-bold text-white text-base tracking-tight">GeoPulse</span>
           <span class="text-[10px] block font-mono text-sky-400 tracking-wider uppercase">GEO Engine • Enterprise</span>
         </div>
       </a>
@@ -259,7 +260,7 @@
           Como Colocar Sua Empresa no Topo das IAs em até 14 Dias
         </h2>
         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-          O <strong>OmniCite GEO Engine</strong> implementa o ecossistema do <em>Ciclo de Excelência Digital</em>, gerando autoridade semântica com ganho informacional e indexação em minutos via protocolo IndexNow.
+          O <strong>GeoPulse GEO Engine</strong> implementa o ecossistema do <em>Ciclo de Excelência Digital</em>, gerando autoridade semântica com ganho informacional e indexação em minutos via protocolo IndexNow.
         </p>
       </div>
 
@@ -435,7 +436,7 @@
       document.getElementById('brandTitle').textContent = data.brandName || data.domain;
       document.getElementById('domainBadge').textContent = data.domain;
       document.getElementById('nicheBadge').textContent = data.niche || 'Geral';
-      document.title = 'Dossiê GEO Oficial: ' + (data.brandName || data.domain) + ' | OmniCite';
+      document.title = 'Dossiê GEO Oficial: ' + (data.brandName || data.domain) + ' | GeoPulse';
 
       // Score
       const score = data.geoScore || 28;
@@ -538,7 +539,7 @@
     function contactOnWhatsAppClosing() {
       const brand = reportData?.brandName || reportData?.domain || 'minha empresa';
       const url = window.location.href;
-      const msg = `Olá Rubens! Vi o diagnóstico de visibilidade em IA da *${brand}* no OmniCite (${url}) e quero implementar o plano de recuperação GEO para colocar nossa marca nas recomendações do ChatGPT e Perplexity!`;
+      const msg = `Olá Rubens! Vi o diagnóstico de visibilidade em IA da *${brand}* no GeoPulse (${url}) e quero implementar o plano de recuperação GEO para colocar nossa marca nas recomendações do ChatGPT e Perplexity!`;
       window.open('https://api.whatsapp.com/send?phone=5511999998888&text=' + encodeURIComponent(msg), '_blank');
     }
 

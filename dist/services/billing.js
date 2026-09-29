@@ -44,7 +44,7 @@ export const AVAILABLE_PLANS = [
         billingPeriod: '/único ou mensal',
         highlightCrown: true,
         features: [
-            '👑 Joia da Coroa: Licença PRO completa da Plataforma GEO OmniCite',
+            '👑 Joia da Coroa: Licença PRO completa da Plataforma GEO GeoPulse',
             '📍 Pilar 1: Configuração e Otimização Profissional do Google Meu Negócio / Maps',
             '🌐 Pilar 2: Site Moderno, Imersivo e Ultra-rápido com Schemas JSON-LD',
             '🤖 Pilar 3: Agente de IA Conversacional treinado para Atendimento 24/7',
@@ -117,7 +117,7 @@ export function processCheckout(input) {
     });
     if (input.paymentMethod === 'PIX') {
         // Simula payload real de PIX Banco Central (BR Code)
-        const pixCopiaECola = `00020126580014br.gov.bcb.pix0136${transactionId}520400005303986540${plan.price}.005802BR5916OMNICITE ENGINE6009SAO PAULO62070503***6304E1D2`;
+        const pixCopiaECola = `00020126580014br.gov.bcb.pix0136${transactionId}520400005303986540${plan.price}.005802BR5916GEOPULSE ENGINE6009SAO PAULO62070503***6304E1D2`;
         return {
             success: true,
             transactionId,

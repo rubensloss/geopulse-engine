@@ -17,9 +17,9 @@
     {
       "organizationId": "org_1789859188240_cfn0c",
       "name": "Rubens Investidor",
-      "email": "investidor@omnicite.com.br",
+      "email": "investidor@geopulse.ai",
       "passwordHash": "7e36aaa75ba5c375eb8480e009d07789:a67eadc49c41bbeadbe16cc8c8714d7d3594a14ec9067e1bd911ddc911a6f97ef40f11277bae962a5f009b6d303c93fe038dfc132bb522403a9d6aef1fd1ac0f",
-      "companyName": "OmniCite Global Ventures",
+      "companyName": "GeoPulse Global Ventures",
       "phone": "(11) 99999-8888",
       "role": "OWNER",
       "planTier": "EXCELLENCE_CYCLE",
@@ -540,7 +540,7 @@
     }
   ],
   "whatsappConfig": {
-    "verifyToken": "omnicite_meta_verify_secret_2026",
+    "verifyToken": "geopulse_meta_verify_secret_2026",
     "accessToken": "",
     "phoneNumberId": "",
     "businessAccountId": "",

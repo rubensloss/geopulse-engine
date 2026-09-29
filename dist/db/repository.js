@@ -20,7 +20,7 @@ export class EnterpriseRepository {
     geoMonitors = [];
     scans = new Map();
     whatsappConfig = {
-        verifyToken: process.env.META_WA_VERIFY_TOKEN || 'omnicite_meta_verify_secret_2026',
+        verifyToken: process.env.META_WA_VERIFY_TOKEN || 'geopulse_meta_verify_secret_2026',
         accessToken: process.env.META_WA_TOKEN || '',
         phoneNumberId: process.env.META_WA_PHONE_NUMBER_ID || '',
         businessAccountId: process.env.META_WA_BUSINESS_ACCOUNT_ID || '',

@@ -1083,7 +1083,7 @@ Retorne SOMENTE o JSON puro, sem blocos markdown extras.
 
     const searchResponse = await generateWithSearchGrounding(
       prompt,
-      'Você é o auditor-chefe de GEO (Generative Engine Optimization) da OmniCite. Retorne exclusivamente JSON válido.'
+      'Você é o auditor-chefe de GEO (Generative Engine Optimization) da GeoPulse. Retorne exclusivamente JSON válido.'
     );
 
     const rawClean = searchResponse.text

@@ -34,7 +34,7 @@ export class WhatsAppCloudApiService {
       accessToken: config.accessToken || process.env.META_WA_TOKEN || '',
       phoneNumberId: config.phoneNumberId || process.env.META_WA_PHONE_NUMBER_ID || '',
       businessAccountId: config.businessAccountId || process.env.META_WA_BUSINESS_ACCOUNT_ID || '',
-      verifyToken: config.verifyToken || process.env.META_WA_VERIFY_TOKEN || 'omnicite_meta_verify_secret_2026',
+      verifyToken: config.verifyToken || process.env.META_WA_VERIFY_TOKEN || 'geopulse_meta_verify_secret_2026',
       templateName: config.templateName || 'dossie_executivo_geo',
       testMode: config.testMode !== undefined ? config.testMode : !config.accessToken,
     };
