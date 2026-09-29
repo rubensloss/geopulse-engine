@@ -166,7 +166,7 @@ export class WhatsAppCloudApiService {
         const scoreText = options.score ? `${options.score}/100` : '28/100 (Crítico)';
         const templateName = config.templateName || 'dossie_executivo_geo';
         // Links de alta disponibilidade
-        const dossierUrl = `https://rubensloss.github.io/omnicite-engine/relatorio.html?slug=${options.reportSlug}`;
+        const dossierUrl = `https://rubensloss.github.io/geopulse-engine/relatorio.html?slug=${options.reportSlug}`;
         // Payload oficial no formato da Meta Cloud API v20.0
         const metaPayload = {
             messaging_product: 'whatsapp',

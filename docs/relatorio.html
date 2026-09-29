@@ -9,7 +9,7 @@
       const originalFetch = window.fetch;
       window.fetch = function(input, init) {
         if (typeof input === 'string' && input.startsWith('/api/')) {
-          input = 'https://omnicite-engine-production.up.railway.app' + input;
+          input = 'https://geopulse-engine-production.up.railway.app' + input;
         }
         return originalFetch(input, init);
       };
