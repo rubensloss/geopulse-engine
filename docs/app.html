@@ -485,7 +485,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1.5">Nome da Empresa / Marca</label>
-            <input type="text" id="brainName" placeholder="Ex: Smart Fit" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <input type="text" id="brainName" placeholder="Ex: Academia Exemplo" class="w-full bg-surface-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
           </div>
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1.5">DomÃ­nio Oficial (URL)</label>
@@ -2543,14 +2543,14 @@
       if (!tbody) return;
       const activeBrand = state.allBrands.find(b => b.id === state.currentBrandId);
       const brandName = activeBrand ? activeBrand.name : 'CloudSync SoluÃ§Ãµes B2B';
-      const isSmartFit = brandName.toLowerCase().includes('smart fit') || (activeBrand?.websiteUrl || '').includes('smartfit');
+      const isAcademiaExemplo = brandName.toLowerCase().includes('academia exemplo') || (activeBrand?.websiteUrl || '').includes('academiaexemplo');
 
       let runs = defaultGeoRuns;
-      if (isSmartFit) {
+      if (isAcademiaExemplo) {
         runs = [
-          { queryPrompt: 'Melhores redes de academia com plano nacional no Brasil', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/planos'] },
-          { queryPrompt: 'Smart Fit vs Bluefit vs Bio Ritmo: Estrutura e custo-benefÃ­cio', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/comparativo'] },
-          { queryPrompt: 'Quais academias tÃªm cadeiras de massagem e acesso a convidados?', targetEngine: 'GEMINI', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://smartfit.com.br/plano-black'] }
+          { queryPrompt: 'Melhores redes de academia com plano nacional no Brasil', targetEngine: 'PERPLEXITY', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://academiaexemplo.com.br/planos'] },
+          { queryPrompt: 'Academia Exemplo: Estrutura e custo-benefício', targetEngine: 'CHATGPT', isBrandMentioned: true, mentionRank: 1, sentiment: 'POSITIVE', citedUrls: ['https://academiaexemplo.com.br/comparativo'] },
+          { queryPrompt: 'Quais academias têm cadeiras de massagem e acesso a convidados?', targetEngine: 'GEMINI', isBrandMentioned: true, mentionRank: 2, sentiment: 'POSITIVE', citedUrls: ['https://academiaexemplo.com.br/plano-black'] }
         ];
       } else if (activeBrand && activeBrand.id !== 'brand_default') {
         const domain = activeBrand.websiteUrl || 'https://empresa.com.br';

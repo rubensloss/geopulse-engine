@@ -3,9 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/jpeg" href="/assets/geopulse-logo.jpg">
+  <script>
+    if (window.location.hostname.includes('github.io')) {
+      const originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        if (typeof input === 'string' && input.startsWith('/api/')) {
+          input = 'https://omnicite-engine-production.up.railway.app' + input;
+        }
+        return originalFetch(input, init);
+      };
+      window.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a[href="/app"]').forEach(a => a.href = 'app.html');
+        document.querySelectorAll('a[href="/"]').forEach(a => a.href = 'index.html');
+        document.querySelectorAll('a[href="/landing"]').forEach(a => a.href = 'index.html');
+      });
+    }
+  </script>
+
+  <link rel="icon" type="image/jpeg" href="assets/geopulse-logo.jpg">
   <title>GeoPulse | Plataforma Autônoma de GEO & Recomendações em IA</title>
-  <meta name="description" content="Seja a marca recomendada pelo ChatGPT, Gemini, Perplexity e Google. Construa autoridade e atraia contratos qualificados no piloto automático com o GeoPulse GEO Engine.">
+  <meta name="description" content="Seja a marca recomendada pelo ChatGPT, Gemini, Perplexity e Google. Construa autoridade e atraia contratos qualificados no piloto automático com o GeoPulse.">
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -40,43 +57,17 @@
 
     function openCheckoutModal(planId) {
       currentSelectedPlan = planId || 'PRO';
-      const m = document.getElementById('checkoutModal');
-      if (!m) return;
-
-      const badge = document.getElementById('checkoutPlanBadge');
-      const name = document.getElementById('checkoutPlanName');
-      const tagline = document.getElementById('checkoutPlanTagline');
-      const price = document.getElementById('checkoutPlanPrice');
-      const banner = document.getElementById('checkoutPlanBanner');
-
+      let planName = 'Plano Pro';
+      let planPrice = 'R$ 597/mês';
       if (planId === 'STARTER') {
-        if (badge) badge.textContent = 'Plano Starter';
-        if (name) name.textContent = 'GEO Starter';
-        if (tagline) tagline.textContent = '1 Domínio, 10 pautas automáticas e auditoria contínua.';
-        if (price) price.innerHTML = 'R$ 197<span class="text-xs font-normal text-muted">/mês</span>';
-        if (banner) banner.className = 'p-4 rounded-xl border border-sky-500/30 bg-sky-500/[0.05] mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+        planName = 'Plano Starter';
+        planPrice = 'R$ 297/mês';
       } else if (planId === 'EXCELLENCE_CYCLE') {
-        if (badge) {
-          badge.textContent = '👑 Combo Ecossistema VIP';
-          badge.className = 'font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
-        }
-        if (name) name.textContent = '👑 Ciclo de Excelência Digital';
-        if (tagline) tagline.textContent = 'A Joia da Coroa (Plataforma GEO Pro) + Google Meu Negócio + Site Imersivo + Agente IA + CRM!';
-        if (price) price.innerHTML = 'R$ 2.497<span class="text-xs font-normal text-amber-400">/VIP</span>';
-        if (banner) banner.className = 'p-4 rounded-xl border border-amber-500/40 bg-amber-500/[0.06] mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg shadow-amber-500/10';
-      } else {
-        if (badge) {
-          badge.textContent = 'Mais Escolhido • Pro';
-          badge.className = 'font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-400';
-        }
-        if (name) name.textContent = 'GEO Pro Autônomo';
-        if (tagline) tagline.textContent = 'Publicação automática via CMS, marcas ilimitadas e IndexNow.';
-        if (price) price.innerHTML = 'R$ 497<span class="text-xs font-normal text-muted">/mês</span>';
-        if (banner) banner.className = 'p-4 rounded-xl border border-sky-500/30 bg-sky-500/[0.05] mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+        planName = 'Ciclo de Excelência Digital';
+        planPrice = 'R$ 2.497/mês';
       }
-
-      m.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
+      const msg = encodeURIComponent(`Olá! Quero contratar o GeoPulse (${planName} - ${planPrice}).`);
+      window.open(`https://wa.me/5527988140076?text=${msg}`, '_blank');
     }
 
     function closeCheckoutModal() {
@@ -483,7 +474,7 @@
       <!-- Marca GeoPulse -->
       <a href="/" class="flex items-center gap-3 group flex-shrink-0">
         <div class="w-8 h-8 rounded-lg overflow-hidden border border-sky-500/40 shadow-lg shadow-sky-500/25 flex items-center justify-center group-hover:scale-105 transition flex-shrink-0 bg-surface">
-          <img src="/assets/geopulse-logo.jpg" alt="GeoPulse Logo" class="w-full h-full object-cover">
+          <img src="assets/geopulse-logo.jpg" alt="GeoPulse Logo" class="w-full h-full object-cover">
         </div>
         <div class="flex items-center gap-2 whitespace-nowrap">
           <span class="font-display font-bold text-lg tracking-normal text-white">Geo<span class="text-sky-400">Pulse</span></span>
@@ -515,17 +506,12 @@
         </div>
 
         <div id="navAuthSection" class="flex items-center gap-2">
-          <button onclick="openLoginModal()" class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-line bg-surface/60 hover:bg-surface transition whitespace-nowrap">
-            <i data-lucide="user" class="w-3.5 h-3.5 text-sky-400"></i>
-            <span id="navUserLabel">Entrar</span>
-          </button>
-
-          <button onclick="openCheckoutModal('PRO')" class="hidden sm:inline-flex beam-btn rounded-lg p-[1px] items-center flex-shrink-0">
+          <a href="https://wa.me/5527988140076?text=Ol%C3%A1!%20Gostaria%20de%20conversar%20sobre%20o%20GeoPulse." target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex beam-btn rounded-lg p-[1px] items-center flex-shrink-0">
             <span class="beam-btn-inner px-3.5 py-2 rounded-[7px] text-xs font-semibold text-white flex items-center gap-1.5 whitespace-nowrap">
-              <i data-lucide="sparkles" class="w-3 h-3 text-sky-400"></i>
-              Assinar Plano
+              <i data-lucide="message-circle" class="w-3 h-3 text-emerald-400"></i>
+              Contratar no WhatsApp
             </span>
-          </button>
+          </a>
         </div>
 
         <!-- Botão Menu Mobile (Hambúrguer) -->
@@ -584,10 +570,10 @@
 
     <!-- Botões de Ação Mobile -->
     <div class="mt-auto space-y-3 pt-6">
-      <button onclick="toggleMobileMenu(); openLoginModal();" class="w-full py-3 px-4 rounded-xl border border-line bg-surface text-sm font-semibold text-white flex items-center justify-center gap-2">
-        <i data-lucide="user" class="w-4 h-4 text-sky-400"></i>
-        Entrar na Minha Conta
-      </button>
+      <a href="https://wa.me/5527988140076?text=Ol%C3%A1!%20Gostaria%20de%20conversar%20sobre%20o%20GeoPulse." target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-xl border border-line bg-surface text-sm font-semibold text-white flex items-center justify-center gap-2">
+        <i data-lucide="message-circle" class="w-4 h-4 text-emerald-400"></i>
+        Falar no WhatsApp: (27) 98814-0076
+      </a>
       <button onclick="toggleMobileMenu(); openCheckoutModal('EXCELLENCE_CYCLE');" class="beam-btn rounded-xl p-[1px] w-full block text-center">
         <span class="beam-btn-inner px-6 py-3.5 rounded-[11px] text-sm font-bold text-white flex items-center justify-center gap-2">
           👑 Ciclo de Excelência Digital
@@ -959,8 +945,8 @@
             <!-- Chips de Exemplos Rápidos -->
             <div class="flex flex-wrap items-center gap-2 pt-1">
               <span class="text-[11px] font-mono text-muted">Auditoria em 1 toque:</span>
-              <button type="button" onclick="fillScanExample('smartfit.com.br', 'Rede de Academias e Fitness'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-[10px] font-mono text-amber-300 font-bold transition flex items-center gap-1 cursor-pointer">
-                <span>⭐ Smart Fit (Fitness)</span>
+              <button type="button" onclick="fillScanExample('academiaexemplo.com.br', 'Rede de Academias e Fitness'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-[10px] font-mono text-amber-300 font-bold transition flex items-center gap-1 cursor-pointer">
+                <span>⭐ Academia Exemplo (Fitness)</span>
               </button>
               <button type="button" onclick="fillScanExample('cloudsync.com.br', 'Software de Governança na Nuvem'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-[10px] font-mono text-sky-300 transition flex items-center gap-1 cursor-pointer">
                 <span>SaaS B2B</span>
@@ -981,8 +967,8 @@
 
               <button type="submit" id="btnRunScan" class="w-full sm:w-auto beam-btn rounded-xl p-[1px] inline-flex items-center justify-center">
                 <span class="beam-btn-inner px-6 py-3 rounded-[11px] text-xs font-bold text-white flex items-center justify-center gap-2 whitespace-nowrap">
-                  <i data-lucide="sparkles" class="w-3.5 h-3.5 text-sky-400"></i>
-                  Escanear Visibilidade nas IAs
+                  <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  Pedir minha auditoria pelo WhatsApp
                   <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
                 </span>
               </button>
@@ -2167,7 +2153,7 @@
 
         <div class="mt-8 pt-6 border-t border-line">
           <a onclick="openCheckoutModal('STARTER')" class="w-full py-3 px-4 rounded-xl border border-line bg-surface/60 hover:bg-surface-2 text-xs font-semibold text-white transition flex items-center justify-center gap-2 cursor-pointer">
-            Assinar Plano Starter
+            Contratar pelo WhatsApp
             <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
           </a>
         </div>
@@ -2250,7 +2236,7 @@
         <div class="mt-8 pt-6 border-t border-sky-500/30">
           <a onclick="openCheckoutModal('PRO')" class="beam-btn rounded-xl p-[1px] w-full block text-center cursor-pointer">
             <span class="beam-btn-inner px-6 py-3 rounded-[11px] text-xs font-bold text-white flex items-center justify-center gap-2">
-              Assinar Plano Pro
+              Contratar pelo WhatsApp
               <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-sky-400"></i>
             </span>
           </a>
@@ -2319,7 +2305,7 @@
 
         <div class="mt-8 pt-6 border-t border-line">
           <a onclick="openCheckoutModal('EXCELLENCE_CYCLE')" class="w-full py-3 px-4 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-xs font-bold text-amber-300 transition flex items-center justify-center gap-2 cursor-pointer">
-            👑 Contratar Ciclo de Excelência VIP
+            👑 Contratar pelo WhatsApp
             <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
           </a>
         </div>
@@ -2508,15 +2494,19 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6 border-x border-line">
       <div class="flex items-center gap-2.5">
         <div class="w-6 h-6 rounded-md overflow-hidden border border-sky-500/40 flex items-center justify-center shrink-0">
-          <img src="/assets/geopulse-logo.jpg" alt="GeoPulse" class="w-full h-full object-cover">
+          <img src="assets/geopulse-logo.jpg" alt="GeoPulse" class="w-full h-full object-cover">
         </div>
         <span class="font-display font-bold text-white">Geo<span class="text-sky-400">Pulse</span></span>
         <span class="text-slate-600">|</span>
-        <span>© 2026 GeoPulse GEO Engine. Todos os direitos reservados.</span>
+        <span>© 2026 GeoPulse · Uma solução <a href="https://creativealways.com.br/solucoes/" target="_blank" class="text-sky-400 hover:underline">Creative Always</a></span>
       </div>
 
-      <div class="flex items-center gap-6">
-        <a href="/app" class="hover:text-white transition">Plataforma</a>
+      <div class="flex flex-wrap items-center gap-6">
+        <a href="https://creativealways.com.br/solucoes/" target="_blank" class="hover:text-white transition">Soluções</a>
+        <a href="https://wa.me/5527988140076" target="_blank" class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 font-mono">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+          (27) 98814-0076
+        </a>
         <a href="#como-funciona" class="hover:text-white transition">Metodologia GEO</a>
         <a href="#faq" class="hover:text-white transition">FAQ</a>
       </div>
@@ -2527,12 +2517,12 @@
   <div class="fixed bottom-0 inset-x-0 z-30 md:hidden p-3 bg-[#090a0f]/92 backdrop-blur-xl border-t border-line/80 flex items-center justify-between gap-3 shadow-2xl">
     <div class="flex flex-col">
       <span class="text-[10px] font-mono text-muted uppercase">Pronto para dominar o GEO?</span>
-      <span class="text-xs font-bold text-white">Geo<span class="text-sky-400">Pulse</span> GEO Engine</span>
+      <span class="text-xs font-bold text-white">Geo<span class="text-sky-400">Pulse</span></span>
     </div>
-    <a href="/app" class="beam-btn rounded-xl p-[1px] inline-flex">
+    <a href="https://wa.me/5527988140076?text=Ol%C3%A1!%20Quero%20contratar%20o%20GeoPulse" target="_blank" class="beam-btn rounded-xl p-[1px] inline-flex">
       <span class="beam-btn-inner px-4 py-2.5 rounded-[11px] text-xs font-bold text-white flex items-center gap-1.5">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-sky-400"></i>
-        Acessar Painel
+        <i data-lucide="message-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+        WhatsApp
         <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-sky-400"></i>
       </span>
     </a>
@@ -2621,7 +2611,7 @@
       if (domainInput) domainInput.focus();
     }
 
-    async function runGEOScan(event) {
+    function runGEOScan(event) {
       if (event) event.preventDefault();
 
       const domainInput = document.getElementById('scanDomain');
@@ -2630,154 +2620,9 @@
       const domain = domainInput ? domainInput.value.trim() : '';
       const niche = nicheInput ? nicheInput.value.trim() : '';
 
-      if (!domain) return;
-
-      const formState = document.getElementById('scannerFormState');
-      const loadingState = document.getElementById('scannerLoadingState');
-      const resultState = document.getElementById('scannerResultState');
-      const progressBar = document.getElementById('scanProgressBar');
-      const percentText = document.getElementById('scanPercentText');
-      const stageText = document.getElementById('scanLoadingStageText');
-
-      // Alterna para tela de loading
-      if (formState) formState.classList.add('hidden');
-      if (resultState) resultState.classList.add('hidden');
-      if (loadingState) loadingState.classList.remove('hidden');
-
-      // Simulação sequencial da telemetria
-      let progress = 10;
-      if (progressBar) progressBar.style.width = `${progress}%`;
-      if (percentText) percentText.textContent = `${progress}% concluído`;
-
-      const stages = [
-        { pct: 30, text: 'Simulando consultas de intenção de compra no Google (Busca & AI Overviews) e ChatGPT...', stepId: 'logStep2' },
-        { pct: 60, text: 'Auditando citações e fontes no Perplexity AI, Claude e Gemini...', stepId: 'logStep3' },
-        { pct: 85, text: 'Mapeando concorrentes citados e calculando gaps de citação...', stepId: 'logStep4' }
-      ];
-
-      // Dispara a chamada da API em paralelo
-      const apiPromise = fetch('/api/scanner/audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain, niche })
-      }).then(r => r.json());
-
-      // Animação progressiva
-      for (const stage of stages) {
-        await new Promise(r => setTimeout(r, 650));
-        progress = stage.pct;
-        if (progressBar) progressBar.style.width = `${progress}%`;
-        if (percentText) percentText.textContent = `${progress}% concluído`;
-        if (stageText) stageText.textContent = stage.text;
-
-        const prevStep = document.getElementById(stage.stepId);
-        if (prevStep) {
-          prevStep.className = 'flex items-center gap-2 text-sky-300';
-          prevStep.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> <span>${prevStep.textContent.trim()}</span>`;
-        }
-      }
-
-      let scanData = null;
-      try {
-        const response = await apiPromise;
-        if (response && response.success) {
-          scanData = response.data;
-          scanData.publicUrl = response.publicUrl;
-          scanData.slug = response.slug;
-        }
-      } catch (err) {
-        console.warn('Erro ao obter dados do scanner da API:', err);
-      }
-
-      // Se falhar ou estiver offline, usamos fallback de dados
-      if (!scanData) {
-        scanData = {
-          domain: domain,
-          brandName: domain.split('.')[0] || 'Empresa',
-          niche: niche || 'Serviços B2B',
-          geoScore: 23,
-          statusTitle: 'Vulnerabilidade Crítica de Aquisição',
-          riskSummary: `Atualmente, ${domain} está invisível nas pesquisas de decisão de compra no Google AI Overviews, ChatGPT e Perplexity para o segmento "${niche}".`,
-          estimatedLostTraffic: '78% das intenções de compra',
-          models: [
-            { name: 'Google (Busca, SEO & AI Overviews)', statusBadge: 'Indexação Frágil', shareEstimate: '8% a 12%', competitorDominance: 'Concorrentes', reason: 'Diagnóstico Híbrido: presença no orgânico comum, mas invisível no bloco de IA por ausência de dados estruturados Schema.org.' },
-            { name: 'ChatGPT (OpenAI GPT-4o)', statusBadge: 'Invisível (0% citação)', shareEstimate: '< 3%', competitorDominance: 'Concorrentes Diretos', reason: 'Não é citado no sumário executivo de recomendações.' },
-            { name: 'Perplexity AI', statusBadge: 'Sem Fontes Indexadas', shareEstimate: '0%', competitorDominance: 'Líderes de Mercado', reason: 'Páginas sem densidade semântica para citação direta.' },
-            { name: 'Claude 3.7 Sonnet', statusBadge: 'Sem Autoridade Semântica', shareEstimate: '< 2%', competitorDominance: 'Concorrentes', reason: 'Baixa associação entre marca e o nicho.' }
-          ],
-          competitors: [
-            { name: 'Líder Consolidado do Segmento', dominanceRate: '58% das menções', citedReason: 'Possui páginas com tabelas e schemas FAQ indexados.' },
-            { name: 'Plataforma Referência Concorrente', dominanceRate: '27% das menções', citedReason: 'Artigos comparativos diretos que os LLMs leem como verdade.' }
-          ],
-          criticalGaps: [
-            'Ausência de dados estruturados Schema.org (JSON-LD) para reconhecimento da marca no Google e IAs.',
-            'Zero tabelas comparativas diretas ("Sua Marca vs Alternativas") formatadas para citação.',
-            'Conteúdo antigo sem respostas diretas às dores do decisor de compra.',
-            'Sem protocolo de indexação em tempo real (IndexNow).'
-          ],
-          recommendedTopics: [
-            { title: `Guia Comparativo: Como escolher ${niche} em 2026 (Benchmark e Custos)`, targetEngine: 'Google (Busca & AI Overviews) & ChatGPT', expectedImpact: 'Gera citação direta em 85% das perguntas comerciais', informationGainAngle: 'Tabela de benchmark com prós, contras e matriz de decisão.' },
-            { title: `Quanto custa contratar ${niche}? Análise real de ROI e armadilhas`, targetEngine: 'Google AI Overviews & Perplexity', expectedImpact: 'Captura compradores em estágio final de decisão', informationGainAngle: 'Simulador de custos e checklist anti-cobranças ocultas.' },
-            { title: `${domain} vs Alternativas Tradicionais: O que muda na prática`, targetEngine: 'Todos os Motores (Google + LLMs)', expectedImpact: 'Blindagem de marca contra concorrentes', informationGainAngle: 'Diferenciação técnica explícita com casos de uso.' }
-          ],
-          googleAudit: {
-            googleHealthScore: 38,
-            statusBadge: 'Risco Crítico de Visibilidade',
-            statusSummary: `O domínio ${domain} apresenta indexação básica, mas sofre com canibalização por buscas sem clique (Zero-Click) e ausência de entidades ricas.`,
-            googleBusinessProfile: {
-              hasProfile: false,
-              badgeLabel: 'Perfil Não Detectado ou Incompleto',
-              localSeoScore: 32,
-              ratingEstimate: 'Sem avaliações sincronizadas no site',
-              addressPresence: 'Endereço físico não estruturado via Schema.org',
-              recommendations: [
-                'Reivindicar e verificar ficha oficial no Google Meu Negócio / Maps.',
-                'Adicionar endereço e telefone com marcação LocalBusiness (JSON-LD).',
-                'Implementar estratégia ativa de solicitação de avaliações 5 estrelas.'
-              ]
-            },
-            organicSearch: {
-              indexedPagesEstimate: '~12 a 45 páginas estimadas',
-              mobileFriendlyStatus: 'Otimizado para Mobile (Viewport configurado)',
-              richSnippetsEnabled: false,
-              organicCtrEstimate: '< 2.4% (Queda por Zero-Click)'
-            },
-            technicalSeo: {
-              hasSitemap: true,
-              hasRobotsTxt: true,
-              coreWebVitalsRisk: 'Alerta de LCP e CLS em conexões 4G',
-              jsonLdSchemas: ['Nenhum schema detectado']
-            },
-            zeroClickImpact: {
-              zeroClickRiskLevel: 'ALTO',
-              explanation: 'Mais de 62% das pesquisas no Google terminam sem clique devido aos resumos automáticos e blocos de resposta direta.',
-              solution: 'Implementar FAQPage e HowTo schemas para capturar posição zero no Google.'
-            },
-            actionPlan: [
-              'Criar e verificar imediatamente o perfil no Google Meu Negócio.',
-              'Injetar JSON-LD Organization e LocalBusiness no cabeçalho do site.',
-              'Criar páginas de FAQ estruturado para capturar os blocos do Google AI Overviews.'
-            ]
-          }
-        };
-      }
-
-      // Finaliza a barra em 100%
-      if (progressBar) progressBar.style.width = '100%';
-      if (percentText) percentText.textContent = '100% concluído';
-      await new Promise(r => setTimeout(r, 350));
-
-      // Renderiza os dados no resultado
-      renderScanResults(scanData);
-
-      // Alterna para tela de resultado
-      if (loadingState) loadingState.classList.add('hidden');
-      if (resultState) resultState.classList.remove('hidden');
-
-      // Atualiza ícones Lucide
-      if (window.lucide && window.lucide.createIcons) {
-        lucide.createIcons();
-      }
+      const targetSite = domain || 'meu site';
+      const msg = `Olá! Quero a auditoria GEO do meu site: ${targetSite}${niche ? ' (Nicho: ' + niche + ')' : ''}`;
+      window.open(`https://wa.me/5527988140076?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function renderScanResults(data) {
@@ -3607,245 +3452,38 @@
   <div id="executivePrintDossier" class="hidden"></div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL DE LOGIN (Autenticação Segura & Demonstração Rápida) -->
-  <!-- ========================================================================= -->
-  <div id="loginModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="relative w-full max-w-md rounded-2xl border border-line bg-[#0d0f18] p-6 sm:p-8 shadow-2xl">
-      <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg border border-line/60 bg-surface/50">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
-
-      <div class="flex items-center gap-2.5 mb-2">
-        <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-        </div>
-        <h3 class="text-lg font-bold text-white">Acessar GeoPulse</h3>
-      </div>
-      <p class="text-xs text-muted mb-6 leading-relaxed">
-        Entre com sua conta corporativa para gerenciar suas pautas e monitoramento GEO.
-      </p>
-
-      <form id="loginForm" onsubmit="submitLogin(event)" class="space-y-4">
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">E-mail Corporativo</label>
-          <input type="email" id="loginEmail" required placeholder="voce@empresa.com.br" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-sky-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">Senha</label>
-          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-sky-500 transition">
-        </div>
-
-        <div id="loginError" class="hidden text-xs text-rose-400 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20"></div>
-
-        <button type="submit" id="btnLoginSubmit" class="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
-          <span>Entrar na Plataforma</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </button>
-      </form>
-
-      <!-- Atalho de Demonstração para o Investidor -->
-      <div class="mt-5 pt-4 border-t border-line">
-        <button onclick="quickDemoLogin()" class="w-full py-2.5 px-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] hover:bg-amber-500/10 text-amber-300 text-xs font-mono transition flex items-center justify-center gap-2">
-          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
-          <span>Acesso Rápido com Conta VIP de Demonstração</span>
-        </button>
-        <p class="text-[10px] text-center text-muted mt-2">Usa credenciais predefinidas para apresentação instantânea.</p>
-      </div>
-
-      <div class="mt-4 text-center">
-        <span class="text-xs text-muted">Ainda não possui conta? </span>
-        <button onclick="closeLoginModal(); openRegisterModal();" class="text-xs text-sky-400 hover:underline font-semibold">Cadastre-se aqui</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- MODAL DE CADASTRO -->
-  <!-- ========================================================================= -->
-  <div id="registerModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="relative w-full max-w-md rounded-2xl border border-line bg-[#0d0f18] p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <button onclick="closeRegisterModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg border border-line/60 bg-surface/50">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
-
-      <div class="flex items-center gap-2.5 mb-2">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-          <i data-lucide="user-plus" class="w-4 h-4"></i>
-        </div>
-        <h3 class="text-lg font-bold text-white">Criar Nova Conta</h3>
-      </div>
-      <p class="text-xs text-muted mb-5 leading-relaxed">
-        Cadastre sua empresa e comece a dominar as respostas de IA e o Google hoje.
-      </p>
-
-      <form id="registerForm" onsubmit="submitRegister(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">Seu Nome Completo</label>
-          <input type="text" id="regName" required placeholder="Ex: Roberto Silva" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">Nome da Empresa</label>
-          <input type="text" id="regCompany" required placeholder="Ex: Nexus Corp" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">E-mail Profissional</label>
-          <input type="email" id="regEmail" required placeholder="roberto@nexuscorp.com.br" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">WhatsApp / Telefone</label>
-          <input type="tel" id="regPhone" placeholder="(11) 99999-8888" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-mono text-muted uppercase mb-1">Crie uma Senha</label>
-          <input type="password" id="regPassword" required placeholder="Mínimo 6 caracteres" class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-        </div>
-
-        <div id="registerError" class="hidden text-xs text-rose-400 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20"></div>
-
-        <button type="submit" id="btnRegisterSubmit" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
-          <span>Criar Conta e Acessar</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </button>
-      </form>
-
-      <div class="mt-4 text-center">
-        <span class="text-xs text-muted">Já possui conta? </span>
-        <button onclick="closeRegisterModal(); openLoginModal();" class="text-xs text-sky-400 hover:underline font-semibold">Fazer login</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- MODAL DE CHECKOUT TRANSPARENTE (PIX & CARTÃO) -->
+  <!-- MODAL DE ATENDIMENTO COMERCIAL WHATSAPP -->
   <!-- ========================================================================= -->
   <div id="checkoutModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="relative w-full max-w-xl rounded-2xl border border-line bg-[#0d0f18] p-6 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto">
+    <div class="relative w-full max-w-md rounded-2xl border border-line bg-[#0d0f18] p-6 sm:p-8 shadow-2xl">
       <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg border border-line/60 bg-surface/50">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
 
-      <!-- Cabeçalho do Plano Selecionado -->
-      <div id="checkoutPlanBanner" class="p-4 rounded-xl border border-sky-500/30 bg-sky-500/[0.05] mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <span class="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-400" id="checkoutPlanBadge">Plano Pro</span>
-          <h4 class="text-base font-bold text-white mt-1" id="checkoutPlanName">GEO Pro Autônomo</h4>
-          <p class="text-xs text-slate-400 mt-0.5" id="checkoutPlanTagline">Publicação automática, marcas ilimitadas e IndexNow.</p>
+      <div class="flex items-center gap-2.5 mb-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+          <i data-lucide="message-circle" class="w-4 h-4"></i>
         </div>
-        <div class="sm:text-right">
-          <div class="text-2xl font-extrabold text-white font-mono" id="checkoutPlanPrice">R$ 497<span class="text-xs font-normal text-muted">/mês</span></div>
-          <span class="text-[10px] text-emerald-400 font-mono flex items-center gap-1 sm:justify-end">
-            <i data-lucide="shield-check" class="w-3 h-3"></i> Ativação Imediata
-          </span>
+        <h3 class="text-lg font-bold text-white">Contratar GeoPulse</h3>
+      </div>
+      <p class="text-xs text-muted mb-5 leading-relaxed">
+        Fale diretamente com nossa equipe comercial para ativar seu plano com onboarding assistido.
+      </p>
+
+      <div class="p-4 rounded-xl border border-line bg-surface/60 mb-5">
+        <div class="flex items-center justify-between text-xs font-mono text-slate-300 mb-1">
+          <span>WhatsApp Comercial:</span>
+          <span class="text-emerald-400 font-bold">(27) 98814-0076</span>
+        </div>
+        <div class="text-[11px] text-muted">
+          Ativação imediata e suporte dedicado com especialistas.
         </div>
       </div>
 
-      <!-- Formulário de Checkout -->
-      <form id="checkoutForm" onsubmit="submitCheckout(event)">
-        <!-- Dados do Comprador -->
-        <div class="space-y-3 mb-5">
-          <h5 class="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-1.5">
-            <i data-lucide="user-check" class="w-3.5 h-3.5 text-sky-400"></i>
-            1. Dados de Faturamento
-          </h5>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-[10px] font-mono text-muted uppercase mb-1">Nome Completo</label>
-              <input type="text" id="chkName" required placeholder="Seu nome" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-            </div>
-            <div>
-              <label class="block text-[10px] font-mono text-muted uppercase mb-1">E-mail Profissional</label>
-              <input type="email" id="chkEmail" required placeholder="seu@email.com" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-            </div>
-            <div>
-              <label class="block text-[10px] font-mono text-muted uppercase mb-1">Empresa</label>
-              <input type="text" id="chkCompany" required placeholder="Nome da empresa" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-            </div>
-            <div>
-              <label class="block text-[10px] font-mono text-muted uppercase mb-1">WhatsApp</label>
-              <input type="tel" id="chkPhone" required placeholder="(11) 99999-8888" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-            </div>
-          </div>
-        </div>
-
-        <!-- Seleção do Método de Pagamento -->
-        <div class="space-y-3 mb-5">
-          <h5 class="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-1.5">
-            <i data-lucide="credit-card" class="w-3.5 h-3.5 text-sky-400"></i>
-            2. Forma de Pagamento
-          </h5>
-
-          <div class="grid grid-cols-2 gap-2 p-1 rounded-xl border border-line bg-surface">
-            <button type="button" id="tabBtnPix" onclick="selectPaymentTab('PIX')" class="py-2.5 px-4 rounded-lg text-xs font-mono font-bold transition flex items-center justify-center gap-2 bg-sky-500 text-white shadow">
-              <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
-              PIX Instantâneo
-            </button>
-            <button type="button" id="tabBtnCard" onclick="selectPaymentTab('CARD')" class="py-2.5 px-4 rounded-lg text-xs font-mono text-muted hover:text-white transition flex items-center justify-center gap-2">
-              <i data-lucide="credit-card" class="w-3.5 h-3.5"></i>
-              Cartão de Crédito
-            </button>
-          </div>
-
-          <!-- Conteúdo da Aba PIX -->
-          <div id="paymentContentPix" class="p-4 rounded-xl border border-line bg-surface/40 flex flex-col items-center text-center">
-            <div class="w-32 h-32 p-2 bg-white rounded-xl shadow-lg mb-3 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="w-full h-full">
-                <rect width="120" height="120" fill="#ffffff"/>
-                <rect x="15" y="15" width="30" height="30" fill="#0f172a"/>
-                <rect x="22" y="22" width="16" height="16" fill="#ffffff"/>
-                <rect x="75" y="15" width="30" height="30" fill="#0f172a"/>
-                <rect x="82" y="22" width="16" height="16" fill="#ffffff"/>
-                <rect x="15" y="75" width="30" height="30" fill="#0f172a"/>
-                <rect x="22" y="82" width="16" height="16" fill="#ffffff"/>
-                <rect x="55" y="25" width="10" height="70" fill="#0284c7"/>
-                <rect x="70" y="65" width="35" height="10" fill="#0284c7"/>
-                <rect x="85" y="85" width="20" height="20" fill="#0284c7"/>
-              </svg>
-            </div>
-            <span class="text-xs font-bold text-white">Escaneie o QR Code no app do seu banco</span>
-            <span class="text-[11px] text-muted mt-0.5">Aprovação em segundos e liberação instantânea de acesso.</span>
-
-            <div class="mt-3 w-full flex items-center gap-2">
-              <input type="text" readonly id="pixCodeInput" value="00020126580014br.gov.bcb.pix0136tx_omnicite_demo_real520400005303986540497.005802BR5916GEOPULSE ENGINE6009SAO PAULO" class="w-full px-3 py-1.5 rounded-lg border border-line bg-surface text-[11px] font-mono text-slate-300">
-              <button type="button" onclick="copyPixCode()" class="px-3 py-1.5 rounded-lg bg-surface border border-line hover:border-sky-500 text-xs font-mono text-sky-400 whitespace-nowrap">
-                Copiar
-              </button>
-            </div>
-
-            <!-- Botão de Simulação Instantânea para Encantar o Investidor -->
-            <button type="button" onclick="confirmInstantPayment()" class="mt-4 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-bold font-mono transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
-              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-              Simular Confirmação do PIX & Acessar Imediatamente
-            </button>
-          </div>
-
-          <!-- Conteúdo da Aba Cartão -->
-          <div id="paymentContentCard" class="hidden p-4 rounded-xl border border-line bg-surface/40 space-y-3">
-            <div>
-              <label class="block text-[10px] font-mono text-muted uppercase mb-1">Número do Cartão</label>
-              <input type="text" id="chkCardNum" placeholder="4532 •••• •••• 8892" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[10px] font-mono text-muted uppercase mb-1">Validade</label>
-                <input type="text" id="chkCardExp" placeholder="MM/AA" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-              </div>
-              <div>
-                <label class="block text-[10px] font-mono text-muted uppercase mb-1">CVV</label>
-                <input type="text" id="chkCardCvv" placeholder="123" class="w-full px-3 py-2 rounded-xl border border-line bg-surface text-xs text-white focus:outline-none focus:border-sky-500">
-              </div>
-            </div>
-            <button type="button" onclick="confirmInstantPayment()" class="w-full py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
-              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-              Pagar com Cartão & Acessar Agora
-            </button>
-          </div>
-        </div>
-      </form>
+      <a id="btnModalWhatsapp" href="https://wa.me/5527988140076?text=Ol%C3%A1!%20Quero%20contratar%20o%20GeoPulse" target="_blank" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-bold font-mono transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+        <i data-lucide="message-circle" class="w-4 h-4"></i>
+        <span>Falar no WhatsApp (27) 98814-0076</span>
+      </a>
     </div>
   </div>
 

@@ -144,7 +144,7 @@ export function extractBrandName(domain: string, providedBrand?: string): string
 
 /**
  * Base de conhecimento de Marcas Líderes Nacionais/Globais.
- * Permite que marcas de autoridade consolidada (como Smart Fit, Nubank, Totvs, etc.)
+ * Permite que marcas de autoridade consolidada (como Academia Exemplo, Nubank, Totvs, etc.)
  * recebam avaliações condizentes com seu tamanho real de mercado.
  */
 interface MajorBrandProfile {
@@ -163,13 +163,13 @@ interface MajorBrandProfile {
 }
 
 const MAJOR_BRANDS_DB: Record<string, MajorBrandProfile> = {
-  smartfit: {
-    brandName: 'Smart Fit',
+  academiaexemplo: {
+    brandName: 'Academia Exemplo',
     niche: 'Rede de Academias e Fitness',
     geoScore: 84,
     statusTitle: 'Líder Consolidado com Oportunidade de Cauda Longa',
     statusSeverity: 'GOOD',
-    riskSummary: 'A Smart Fit é a marca nº 1 citada no Brasil pelo ChatGPT e Gemini para pesquisas gerais sobre academias. No entanto, perde até 16% do tráfego qualificado em consultas comparativas diretas ("Smart Fit vs Bluefit") e buscas de custo-benefício por unidade.',
+    riskSummary: 'A Academia Exemplo é a marca nº 1 citada no Brasil pelo ChatGPT e Gemini para pesquisas gerais sobre academias. No entanto, perde até 16% do tráfego qualificado em consultas comparativas diretas ("Academia Exemplo vs Bluefit") e buscas de custo-benefício por unidade.',
     estimatedLostTraffic: '14% a 18% em termos comparativos de nicho',
     googleAudit: {
       googleHealthScore: 92,
@@ -193,8 +193,8 @@ const MAJOR_BRANDS_DB: Record<string, MajorBrandProfile> = {
       organicSearch: {
         indexationStatus: 'INDEXED_HEALTHY',
         estimatedIndexedPages: '140.000+ URLs indexadas',
-        brandSearchDominance: '1º Lugar Absoluto para o nome da marca ("smart fit", "smartfit")',
-        rankingKeywordsSample: ['smart fit planos', 'smart fit perto de mim', 'academia 24h sp', 'plano black smart fit', 'mensalidade smartfit'],
+        brandSearchDominance: '1º Lugar Absoluto para o nome da marca ("Academia Exemplo", "academiaexemplo")',
+        rankingKeywordsSample: ['Academia Exemplo planos', 'Academia Exemplo perto de mim', 'academia 24h sp', 'plano black Academia Exemplo', 'mensalidade academiaexemplo'],
         organicCtrEstimate: 'Alto (CTR de 48% em termos de marca), com perda de 22% em buscas de "quanto custa" para os resumos do Google',
       },
       technicalSeo: {
@@ -218,7 +218,7 @@ const MAJOR_BRANDS_DB: Record<string, MajorBrandProfile> = {
       zeroClickAnalysis: {
         zeroClickRisk: 'MÉDIO',
         riskPercentage: '28% das buscas do nicho',
-        explanation: 'O Google exibe resumos de preços do Plano Black e horários de pico diretamente no topo dos resultados móveis. Adicionar Schema FAQPage nos comparativos garante que a Smart Fit permaneça como fonte oficial citada nesses resumos.',
+        explanation: 'O Google exibe resumos de preços do Plano Black e horários de pico diretamente no topo dos resultados móveis. Adicionar Schema FAQPage nos comparativos garante que a Academia Exemplo permaneça como fonte oficial citada nesses resumos.',
       },
       actionPlan: [
         {
@@ -232,7 +232,7 @@ const MAJOR_BRANDS_DB: Record<string, MajorBrandProfile> = {
           impact: 'Reduz dúvidas na recepção das unidades e aumenta visitas espontâneas em horários de menor fluxo.',
         },
         {
-          action: 'Criar páginas de cauda longa com tabelas de benchmark ("Smart Fit vs Concorrentes")',
+          action: 'Criar páginas de cauda longa com tabelas de benchmark ("Academia Exemplo vs Concorrentes")',
           target: 'Google AI Overviews & Snippets',
           impact: 'Captura o comprador indeciso antes que ele navegue para sites de terceiros.',
         },
@@ -293,11 +293,11 @@ const MAJOR_BRANDS_DB: Record<string, MajorBrandProfile> = {
         name: 'TotalPass / Wellhub (Gympass)',
         domain: 'totalpass.com.br',
         dominanceRate: '32% em planos corporativos',
-        citedReason: 'Agregadores capturam o decisor de RH nas IAs antes que ele chegue aos planos diretos da Smart Fit.',
+        citedReason: 'Agregadores capturam o decisor de RH nas IAs antes que ele chegue aos planos diretos da Academia Exemplo.',
       },
     ],
     criticalGaps: [
-      'Ausência de páginas com tabelas comparativas explícitas ("Smart Fit vs Alternativas") no formato estruturado que os LLMs extraem.',
+      'Ausência de páginas com tabelas comparativas explícitas ("Academia Exemplo vs Alternativas") no formato estruturado que os LLMs extraem.',
       'Agregadores como TotalPass e Wellhub dominam respostas sobre benefícios corporativos de academia.',
       'Gaps em pesquisas conversacionais de cauda longa (ex: "qual plano vale mais a pena para viajar, Black ou Bluefit?").',
       'Páginas locais de unidades possuem baixa densidade de respostas rápidas sobre horários de pico e modalidades.',
@@ -305,21 +305,21 @@ const MAJOR_BRANDS_DB: Record<string, MajorBrandProfile> = {
     recommendedTopics: [
       {
         title: 'Plano Black vs Plano Smart: Comparativo detalhado de benefícios, custos e cancelamento em 2026',
-        primaryKeyword: 'smart fit plano black vale a pena',
+        primaryKeyword: 'Academia Exemplo plano black vale a pena',
         targetEngine: 'Perplexity & ChatGPT Search',
         expectedImpact: 'Garante 90%+ de fechamentos em decisões entre os próprios planos da marca',
         informationGainAngle: 'Matriz comparativa detalhando acesso entre unidades, cadeira de massagem e custo anual real.',
       },
       {
-        title: 'Smart Fit vs Bluefit: Análise imparcial de mensalidades, equipamentos e funcionamento 24h',
-        primaryKeyword: 'smart fit ou bluefit qual a melhor',
+        title: 'Academia Exemplo vs Bluefit: Análise imparcial de mensalidades, equipamentos e funcionamento 24h',
+        primaryKeyword: 'Academia Exemplo ou bluefit qual a melhor',
         targetEngine: 'ChatGPT & Google AI Overviews',
         expectedImpact: 'Retém clientes indecisos que pesquisam concorrentes diretos',
         informationGainAngle: 'Tabela de benchmark com densidade semântica neutra e critérios técnicos de treino.',
       },
       {
-        title: 'Como treinar na Smart Fit via TotalPass ou plano corporativo: Regras e como ativar',
-        primaryKeyword: 'smart fit totalpass como funciona',
+        title: 'Como treinar na Academia Exemplo via TotalPass ou plano corporativo: Regras e como ativar',
+        primaryKeyword: 'Academia Exemplo totalpass como funciona',
         targetEngine: 'Todos os LLMs (Gemini, Claude, GPT-4o)',
         expectedImpact: 'Blindagem contra perda de alunos corporativos para academias parceiras',
         informationGainAngle: 'Guia definitivo de ativação corporativa com FAQ estruturado em JSON-LD.',
@@ -913,7 +913,7 @@ async function generateSmartAnalysis(req: ScanRequest): Promise<ScanResult> {
 
   if (lowerNiche.includes('academia') || lowerNiche.includes('fitness') || lowerNiche.includes('treino')) {
     competitors = [
-      { name: 'Smart Fit', domain: 'smartfit.com.br', dominanceRate: '58% das menções', citedReason: 'Maior rede da América Latina, monopoliza buscas gerais de academia com 1.400+ unidades.' },
+      { name: 'Academia Exemplo', domain: 'academiaexemplo.com.br', dominanceRate: '58% das menções', citedReason: 'Maior rede da América Latina, monopoliza buscas gerais de academia com 1.400+ unidades.' },
       { name: 'Bluefit', domain: 'bluefit.com.br', dominanceRate: '24% das menções', citedReason: 'Forte presença em consultas comparativas de funcionamento 24h e planos flexíveis.' },
     ];
   } else if (lowerNiche.includes('erp') || lowerNiche.includes('financ') || lowerNiche.includes('gestão')) {
@@ -1115,3 +1115,4 @@ Retorne SOMENTE o JSON puro, sem blocos markdown extras.
     return generateSmartAnalysis({ domain, niche, brandName });
   }
 }
+
