@@ -5,32 +5,32 @@ export const AVAILABLE_PLANS = [
         id: 'STARTER',
         name: 'GEO Starter',
         tagline: 'Para PMEs e profissionais que desejam iniciar a captura de citações em IA',
-        price: 197,
-        formattedPrice: 'R$ 197',
+        price: 297,
+        formattedPrice: 'R$ 297',
         billingPeriod: '/mês',
         features: [
             '1 Domínio / Marca monitorada',
             'Diagnóstico Híbrido Contínuo (Google + IAs)',
-            '10 Pautas Otimizadas com IA Gemini Pro por mês',
-            'Monitoramento semanal de citações (ChatGPT & Perplexity)',
+            '10 Pautas Otimizadas com IA por mês',
+            'Monitoramento semanal de citações (ChatGPT, Gemini, Perplexity, Claude)',
             'Exportação de Dossiê Executivo em PDF ilimitada'
         ],
         ctaLabel: 'Assinar Plano Starter'
     },
     {
         id: 'PRO',
-        name: 'GEO Pro Autônomo',
+        name: 'GEO Pro',
         tagline: 'Para empresas em crescimento e agências que exigem publicação automática',
-        price: 497,
-        formattedPrice: 'R$ 497',
+        price: 597,
+        formattedPrice: 'R$ 597',
         billingPeriod: '/mês',
         popular: true,
         features: [
             'Até 5 Marcas / Clientes simultâneos',
             'Pautas Ilimitadas com IA e Information Gain',
-            'Publicação Automática via CMS (WordPress / Ghost)',
+            'Publicação Automática via CMS (WordPress / Webflow)',
             'Protocolo IndexNow (Indexação em tempo real no Bing e Copilot)',
-            'Monitoramento diário de Share of Model com alertas',
+            'Monitoramento semanal de Share of Model com alertas',
             'Suporte prioritário e onboarding guiado'
         ],
         ctaLabel: 'Assinar Plano Pro'
@@ -41,7 +41,7 @@ export const AVAILABLE_PLANS = [
         tagline: 'O Ecossistema Completo Chave-na-Mão: A Joia da Coroa + Os 4 Pilares Executados',
         price: 2497,
         formattedPrice: 'R$ 2.497',
-        billingPeriod: '/único ou mensal',
+        billingPeriod: '/mês',
         highlightCrown: true,
         features: [
             '👑 Joia da Coroa: Licença PRO completa da Plataforma GEO GeoPulse',

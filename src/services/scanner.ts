@@ -1,7 +1,11 @@
 import dotenv from 'dotenv';
 import { generateWithSearchGrounding } from './gemini.js';
+import { runHonestMultiLlmAudit, toModelPresenceList } from './multiLlmAuditor.js';
 
 dotenv.config();
+
+// Cache de resultado de auditoria por 24h (Controle de Custo — Seção 2.4 da Especificação)
+const SCAN_24H_CACHE = new Map<string, { result: ScanResult; expiresAt: number; costUsd: number }>();
 
 export interface ScanRequest {
   domain: string;
@@ -1042,9 +1046,28 @@ export async function executeGEOScan(req: ScanRequest): Promise<ScanResult> {
   const niche = req.niche.trim() || 'Serviços e Soluções B2B';
   const brandName = extractBrandName(domain, req.brandName);
 
+  // 1. Verificação de Cache de 24h (Controle de Custo)
+  const cached = SCAN_24H_CACHE.get(domain);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.result;
+  }
+
+  // 2. Auditoria Honesta Multi-LLM (OpenAI, Gemini, Perplexity, Claude)
+  const honestAudit = await runHonestMultiLlmAudit(domain, brandName, niche);
+
   // Se não houver chave do Gemini configurada, usamos o motor técnico inteligente
   if (!process.env.GEMINI_API_KEY) {
-    return generateSmartAnalysis({ domain, niche, brandName });
+    const fallback = await generateSmartAnalysis({ domain, niche, brandName });
+    if (honestAudit.queriedModels.length > 0) {
+      fallback.models = toModelPresenceList(honestAudit.queriedModels);
+      fallback.geoScore = honestAudit.averageGeoScore;
+    }
+    SCAN_24H_CACHE.set(domain, {
+      result: fallback,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      costUsd: honestAudit.totalCostUsd,
+    });
+    return fallback;
   }
 
   try {
@@ -1094,25 +1117,52 @@ Retorne SOMENTE o JSON puro, sem blocos markdown extras.
     const parsed = JSON.parse(rawClean);
     const fallback = await generateSmartAnalysis({ domain, niche, brandName });
 
-    return {
+    // Se temos modelos consultados de verdade, exibe estritamente eles
+    const finalModels =
+      honestAudit.queriedModels.length > 0
+        ? toModelPresenceList(honestAudit.queriedModels)
+        : fallback.models;
+
+    const finalGeoScore =
+      honestAudit.queriedModels.length > 0
+        ? honestAudit.averageGeoScore
+        : typeof parsed.geoScore === 'number'
+        ? parsed.geoScore
+        : fallback.geoScore;
+
+    const finalResult: ScanResult = {
       domain,
       brandName,
       niche,
-      geoScore: typeof parsed.geoScore === 'number' ? parsed.geoScore : fallback.geoScore,
+      geoScore: finalGeoScore,
       statusTitle: parsed.statusTitle || fallback.statusTitle,
       statusSeverity: fallback.statusSeverity,
       riskSummary: parsed.riskSummary || fallback.riskSummary,
-      estimatedLostTraffic: `${100 - (parsed.geoScore || fallback.geoScore)}% das intenções nas IAs`,
+      estimatedLostTraffic: `${100 - finalGeoScore}% das intenções nas IAs`,
       googleAudit: fallback.googleAudit,
-      models: fallback.models,
+      models: finalModels,
       competitors: parsed.competitors?.length ? parsed.competitors : fallback.competitors,
       criticalGaps: parsed.criticalGaps?.length ? parsed.criticalGaps : fallback.criticalGaps,
       recommendedTopics: parsed.recommendedTopics?.length ? parsed.recommendedTopics : fallback.recommendedTopics,
       analyzedAt: new Date().toISOString(),
     };
+
+    // Salva no cache por 24h
+    SCAN_24H_CACHE.set(domain, {
+      result: finalResult,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      costUsd: honestAudit.totalCostUsd,
+    });
+
+    return finalResult;
   } catch (error) {
     console.error('Falha ao usar Gemini Search para o scanner, usando análise inteligente de fallback:', error);
-    return generateSmartAnalysis({ domain, niche, brandName });
+    const fallback = await generateSmartAnalysis({ domain, niche, brandName });
+    if (honestAudit.queriedModels.length > 0) {
+      fallback.models = toModelPresenceList(honestAudit.queriedModels);
+      fallback.geoScore = honestAudit.averageGeoScore;
+    }
+    return fallback;
   }
 }
 
