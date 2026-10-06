@@ -10,7 +10,7 @@
     "dev:enterprise": "tsx src/demo-enterprise.ts",
     "dev:worker": "tsx src/demo-worker.ts",
     "dev:server": "tsx src/server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js"
   },
   "dependencies": {

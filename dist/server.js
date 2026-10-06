@@ -20,6 +20,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR, { index: false }));
 // -----------------------------------------------------------------------------
+// HEALTH CHECK
+// -----------------------------------------------------------------------------
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        service: 'GeoPulse Engine API',
+        brand: 'Creative Always',
+        version: '1.0.0',
+        ecosystem: 'https://creativealways.com.br/solucoes/',
+        storage: 'operational',
+        timestamp: new Date().toISOString()
+    });
+});
+// -----------------------------------------------------------------------------
 // ROTAS DE PÁGINAS VISUAIS
 // -----------------------------------------------------------------------------
 // Apresentação Comercial / Landing Page de Conversão
