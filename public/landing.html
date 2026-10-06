@@ -28,32 +28,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     // =========================================================================
-    // SISTEMA DE AUTH, CHECKOUT E SESSÃO
+    // SISTEMA DE CONTRATAÇÃO & WHATSAPP
     // =========================================================================
     let currentSelectedPlan = 'PRO';
-    let currentPaymentMethod = 'PIX';
-
-    function openLoginModal() {
-      const m = document.getElementById('loginModal');
-      if (m) m.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function closeLoginModal() {
-      const m = document.getElementById('loginModal');
-      if (m) m.classList.add('hidden');
-    }
-
-    function openRegisterModal() {
-      const m = document.getElementById('registerModal');
-      if (m) m.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function closeRegisterModal() {
-      const m = document.getElementById('registerModal');
-      if (m) m.classList.add('hidden');
-    }
 
     function openCheckoutModal(planId) {
       currentSelectedPlan = planId || 'PRO';
@@ -75,145 +52,12 @@
       if (m) m.classList.add('hidden');
     }
 
-    function selectPaymentTab(method) {
-      currentPaymentMethod = method;
-      const btnPix = document.getElementById('tabBtnPix');
-      const btnCard = document.getElementById('tabBtnCard');
-      const contentPix = document.getElementById('paymentContentPix');
-      const contentCard = document.getElementById('paymentContentCard');
-
-      if (method === 'PIX') {
-        if (btnPix) btnPix.className = 'py-2.5 px-4 rounded-lg text-xs font-mono font-bold transition flex items-center justify-center gap-2 bg-sky-500 text-white shadow';
-        if (btnCard) btnCard.className = 'py-2.5 px-4 rounded-lg text-xs font-mono text-muted hover:text-white transition flex items-center justify-center gap-2';
-        if (contentPix) contentPix.classList.remove('hidden');
-        if (contentCard) contentCard.classList.add('hidden');
-      } else {
-        if (btnCard) btnCard.className = 'py-2.5 px-4 rounded-lg text-xs font-mono font-bold transition flex items-center justify-center gap-2 bg-sky-500 text-white shadow';
-        if (btnPix) btnPix.className = 'py-2.5 px-4 rounded-lg text-xs font-mono text-muted hover:text-white transition flex items-center justify-center gap-2';
-        if (contentCard) contentCard.classList.remove('hidden');
-        if (contentPix) contentPix.classList.add('hidden');
-      }
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function copyPixCode() {
-      const input = document.getElementById('pixCodeInput');
-      if (input) {
-        input.select();
-        navigator.clipboard.writeText(input.value);
-        alert('Código PIX Copia e Cola copiado para a área de transferência!');
-      }
-    }
-
     function getAppUrl(path = '/app') {
       if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
         if (path.startsWith('/app?')) return 'app.html?' + path.slice(5);
         return 'app.html';
       }
       return path;
-    }
-
-    async function submitLogin(event) {
-      if (event) event.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value;
-      const errEl = document.getElementById('loginError');
-
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        }).then(r => r.json());
-
-        if (res.success && res.data) {
-          localStorage.setItem('omnicite_token', res.data.token);
-          localStorage.setItem('omnicite_user', JSON.stringify(res.data.user));
-          window.location.href = getAppUrl('/app');
-        } else {
-          if (errEl) {
-            errEl.textContent = res.error || 'Credenciais inválidas.';
-            errEl.classList.remove('hidden');
-          }
-        }
-      } catch (err) {
-        if (errEl) {
-          errEl.textContent = 'Erro ao conectar com o servidor.';
-          errEl.classList.remove('hidden');
-        }
-      }
-    }
-
-    async function quickDemoLogin() {
-      const emailInput = document.getElementById('loginEmail');
-      const passwordInput = document.getElementById('loginPassword');
-      if (emailInput) emailInput.value = 'investidor@geopulse.ai';
-      if (passwordInput) passwordInput.value = 'admin123';
-      await submitLogin();
-    }
-
-    async function submitRegister(event) {
-      if (event) event.preventDefault();
-      const name = document.getElementById('regName').value.trim();
-      const companyName = document.getElementById('regCompany').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const phone = document.getElementById('regPhone').value.trim();
-      const password = document.getElementById('regPassword').value;
-      const errEl = document.getElementById('registerError');
-
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, companyName, email, phone, password, planTier: 'PRO' })
-        }).then(r => r.json());
-
-        if (res.success && res.data) {
-          localStorage.setItem('omnicite_token', res.data.token);
-          localStorage.setItem('omnicite_user', JSON.stringify(res.data.user));
-          window.location.href = getAppUrl('/app');
-        } else {
-          if (errEl) {
-            errEl.textContent = res.error || 'Erro ao registrar conta.';
-            errEl.classList.remove('hidden');
-          }
-        }
-      } catch (err) {
-        if (errEl) {
-          errEl.textContent = 'Erro de comunicação com o servidor.';
-          errEl.classList.remove('hidden');
-        }
-      }
-    }
-
-    async function confirmInstantPayment() {
-      const name = document.getElementById('chkName').value.trim() || 'Rubens Investidor';
-      const email = document.getElementById('chkEmail').value.trim() || 'investidor@geopulse.ai';
-      const companyName = document.getElementById('chkCompany').value.trim() || 'GeoPulse Ventures';
-      const phone = document.getElementById('chkPhone').value.trim() || '(11) 99999-8888';
-
-      try {
-        const res = await fetch('/api/billing/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            planId: currentSelectedPlan,
-            paymentMethod: currentPaymentMethod,
-            customer: { name, email, companyName, phone }
-          })
-        }).then(r => r.json());
-
-        if (res.success && res.data) {
-          localStorage.setItem('omnicite_token', res.data.token);
-          localStorage.setItem('omnicite_user', JSON.stringify(res.data.user));
-          alert('🎉 Pagamento Aprovado com Sucesso! Sua conta foi ativada. Redirecionando para o painel de operações...');
-          window.location.href = getAppUrl('/app');
-        } else {
-          alert('Erro no processamento: ' + (res.error || 'Verifique seus dados.'));
-        }
-      } catch (err) {
-        alert('Erro ao processar pagamento.');
-      }
     }
 
     function checkUserSession() {
@@ -678,7 +522,7 @@
               <div>
                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                   Radar de Citações & Autoridade GEO
-                  <span class="text-xs font-mono font-normal px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">CloudSync B2B</span>
+                  <span class="text-xs font-mono font-normal px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">Nuvem Exemplo B2B</span>
                 </h3>
                 <p class="text-xs text-muted mt-1">
                   Sua marca conquistou <strong class="text-white"><span data-counter="184">0</span> nós de autoridade</strong> e gerou <strong class="text-emerald-400"><span data-counter="128" data-suffix="k">0k</span> impressões qualificadas</strong> em prompts decisórios no último mês.
@@ -895,7 +739,7 @@
             <span class="h-2.5 w-2.5 rounded-full bg-emerald-500/80"></span>
             <span class="ml-2 font-mono text-xs text-slate-400 flex items-center gap-1.5">
               <i data-lucide="radar" class="w-3.5 h-3.5 text-sky-400"></i>
-              GeoPulse GEO Scanner v2.5 • Auditoria de Inteligência de Mercado
+              GeoPulse v2.5 • Auditoria de Inteligência de Mercado
             </span>
           </div>
           <div class="hidden sm:flex items-center gap-2 font-mono text-[10px] text-muted">
@@ -948,13 +792,13 @@
               <button type="button" onclick="fillScanExample('academiaexemplo.com.br', 'Rede de Academias e Fitness'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-[10px] font-mono text-amber-300 font-bold transition flex items-center gap-1 cursor-pointer">
                 <span>⭐ Academia Exemplo (Fitness)</span>
               </button>
-              <button type="button" onclick="fillScanExample('cloudsync.com.br', 'Software de Governança na Nuvem'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-[10px] font-mono text-sky-300 transition flex items-center gap-1 cursor-pointer">
+              <button type="button" onclick="fillScanExample('nuvemexemplo.com.br', 'Software de Governança na Nuvem'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-[10px] font-mono text-sky-300 transition flex items-center gap-1 cursor-pointer">
                 <span>SaaS B2B</span>
               </button>
-              <button type="button" onclick="fillScanExample('jansenlog.com.br', 'Transporte e Logística Rodoviária'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-line bg-surface/60 hover:bg-surface-2 text-[10px] font-mono text-slate-300 hover:text-white transition cursor-pointer">
+              <button type="button" onclick="fillScanExample('transportadoraexemplo.com.br', 'Transporte e Logística Rodoviária'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-line bg-surface/60 hover:bg-surface-2 text-[10px] font-mono text-slate-300 hover:text-white transition cursor-pointer">
                 <span>Logística</span>
               </button>
-              <button type="button" onclick="fillScanExample('lextech.adv.br', 'Software Jurídico para Advogados'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-line bg-surface/60 hover:bg-surface-2 text-[10px] font-mono text-slate-300 hover:text-white transition cursor-pointer">
+              <button type="button" onclick="fillScanExample('advocaciaexemplo.adv.br', 'Software Jurídico para Advogados'); runGEOScan();" class="px-2.5 py-1 rounded-md border border-line bg-surface/60 hover:bg-surface-2 text-[10px] font-mono text-slate-300 hover:text-white transition cursor-pointer">
                 <span>Direito</span>
               </button>
             </div>
@@ -1997,7 +1841,7 @@
         <thead>
           <tr class="border-b border-line bg-surface/80 font-mono text-xs">
             <th class="p-4 sm:p-5 text-muted font-normal">Critério de Avaliação</th>
-            <th class="p-4 sm:p-5 text-sky-400 font-bold bg-sky-500/[0.06] border-x border-line">GeoPulse Engine</th>
+            <th class="p-4 sm:p-5 text-sky-400 font-bold bg-sky-500/[0.06] border-x border-line">GeoPulse</th>
             <th class="p-4 sm:p-5 text-muted font-normal text-center">Agência Tradicional</th>
             <th class="p-4 sm:p-5 text-muted font-normal text-center">Equipe Interna (In-House)</th>
           </tr>
@@ -3202,7 +3046,7 @@
 
           <!-- Rodapé do Relatório -->
           <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 7.5pt; color: #94a3b8; font-family: monospace;">
-            <span>GeoPulse Engine v2.5 • Auditoria de Otimização para Motores Generativos (GEO) & Google</span>
+            <span>GeoPulse v2.5 • Auditoria de Otimização para Motores Generativos (GEO) & Google</span>
             <span>Documento Confidencial • Relatório Executivo</span>
           </div>
 

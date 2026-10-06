@@ -3,7 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/jpeg" href="/assets/geopulse-logo.jpg">
+  <link rel="icon" type="image/jpeg" href="assets/geopulse-logo.jpg">
+  <script>
+    if (window.location.hostname.includes('github.io')) {
+      const originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        if (typeof input === 'string' && input.startsWith('/api/')) {
+          input = 'https://geopulse-engine-production.up.railway.app' + input;
+        }
+        return originalFetch(input, init);
+      };
+      window.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a[href="/"]').forEach(a => a.href = 'index.html');
+        document.querySelectorAll('a[href="/#scanner"]').forEach(a => a.href = 'index.html#scanner');
+        document.querySelectorAll('a[href="/#precos"]').forEach(a => a.href = 'index.html#precos');
+      });
+    }
+  </script>
   <title>Dossiê Oficial de Visibilidade em IA (GEO) | GeoPulse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +76,7 @@
     <div class="max-w-5xl mx-auto flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg overflow-hidden border border-sky-500/40 shadow-lg shadow-sky-500/20 flex items-center justify-center shrink-0">
-          <img src="/assets/geopulse-logo.jpg" alt="GeoPulse" class="w-full h-full object-cover">
+          <img src="assets/geopulse-logo.jpg" alt="GeoPulse" class="w-full h-full object-cover">
         </div>
         <div>
           <span class="font-bold text-white text-base tracking-tight">GeoPulse</span>
@@ -266,7 +282,7 @@
           Como Colocar Sua Empresa no Topo das IAs em até 14 Dias
         </h2>
         <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-          O <strong>GeoPulse GEO Engine</strong> implementa o ecossistema do <em>Ciclo de Excelência Digital</em>, gerando autoridade semântica com ganho informacional e indexação em minutos via protocolo IndexNow.
+          O <strong>GeoPulse</strong> implementa o ecossistema do <em>Ciclo de Excelência Digital</em>, gerando autoridade semântica com ganho informacional e indexação em minutos via protocolo IndexNow.
         </p>
       </div>
 
