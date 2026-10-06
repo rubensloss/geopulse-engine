@@ -697,6 +697,105 @@ app.post('/api/articles/:id/publish', async (req, res) => {
   }
 });
 
+// Aprovação de Artigo na Fila (Seção 2.6 da Especificação: Fila "Aguardando Aprovação")
+app.post('/api/articles/:id/approve', async (req, res) => {
+  try {
+    const articleId = req.params.id;
+    let article = (db as any).articles.get(articleId);
+    if (!article) {
+      return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
+    }
+
+    article.status = 'PUBLISHED';
+    article.publishedAt = new Date();
+    article.indexNowNotified = true;
+    (db as any).articles.set(article.id, article);
+    (db as any).persist?.();
+
+    res.json({
+      success: true,
+      data: {
+        articleId: article.id,
+        status: 'PUBLISHED',
+        message: 'Artigo aprovado pelo cliente e liberado para publicação no CMS.',
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Rejeição / Devolução de Artigo com Feedback
+app.post('/api/articles/:id/reject', (req, res) => {
+  try {
+    const articleId = req.params.id;
+    const { reason } = req.body;
+    let article = (db as any).articles.get(articleId);
+    if (!article) {
+      return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
+    }
+
+    article.status = 'DRAFT';
+    article.reviewFeedback = reason || 'Rejeitado para ajustes de redação.';
+    (db as any).articles.set(article.id, article);
+    (db as any).persist?.();
+
+    res.json({
+      success: true,
+      data: {
+        articleId: article.id,
+        status: 'DRAFT',
+        reviewFeedback: article.reviewFeedback,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Monitoramento Recorrente Semanal para Clientes Pagantes (Seção 2.5 da Especificação)
+app.post('/api/brands/:id/monitor-weekly', async (req, res) => {
+  try {
+    const brandId = req.params.id;
+    const brand = db.getBrand(brandId);
+    if (!brand) {
+      return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
+    }
+
+    const { runHonestMultiLlmAudit } = await import('./services/multiLlmAuditor.js');
+    const audit = await runHonestMultiLlmAudit(
+      brand.websiteUrl.replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+      brand.name,
+      brand.productDescription || 'Soluções Empresariais'
+    );
+
+    for (const model of audit.queriedModels) {
+      db.recordGEOMonitor({
+        brandId: brand.id,
+        queryPrompt: `Recomende as melhores soluções de ${brand.productDescription || 'mercado'}`,
+        targetEngine: model.engine,
+        isBrandMentioned: model.isMentioned,
+        mentionRank: model.mentionRank ?? undefined,
+        sentiment: model.isMentioned ? 'POSITIVE' : 'NOT_MENTIONED',
+        citedUrls: model.citedSources,
+        rawAnswerText: model.rawResponse,
+      });
+    }
+
+    const stats = db.getBrandShareOfVoice(brand.id);
+    res.json({
+      success: true,
+      data: {
+        brandId: brand.id,
+        audit,
+        updatedShareOfVoice: stats,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Estatísticas GEO (Share of Model)
 app.get('/api/geo-stats', (req, res) => {
   const brandId = (req.query.brandId as string) || db.listAllActiveBrands()[0]?.id;
@@ -707,9 +806,33 @@ app.get('/api/geo-stats', (req, res) => {
   res.json({ success: true, data: { stats, runs } });
 });
 
+// Controle de Custo & Proteção Anti-Abuso (Seção 2.4 da Especificação)
+// Limita auditorias públicas gratuitas a no máximo 3 por IP a cada 24 horas
+const IP_AUDIT_LIMITS = new Map<string, { count: number; resetAt: number }>();
+
 // GEO Scanner - Diagnóstico Instantâneo de Visibilidade nas IAs (Lead Magnet)
 app.post('/api/scanner/audit', async (req, res) => {
   try {
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const limitRecord = IP_AUDIT_LIMITS.get(clientIp);
+
+    if (limitRecord) {
+      if (now > limitRecord.resetAt) {
+        IP_AUDIT_LIMITS.set(clientIp, { count: 1, resetAt: now + 24 * 60 * 60 * 1000 });
+      } else if (limitRecord.count >= 3) {
+        return res.status(429).json({
+          success: false,
+          error: 'Limite de 3 diagnósticos gratuitos por dia atingido para este IP. Para auditorias contínuas e ilimitadas da sua marca ou agência, assine um plano ou fale conosco no WhatsApp oficial (27) 98814-0076.',
+          contactWhatsapp: 'https://wa.me/5527988140076?text=Ol%C3%A1!%20Atingi%20o%20limite%20de%20diagn%C3%B3sticos%20do%20GeoPulse%20e%20gostaria%20de%20conhecer%20os%20planos.',
+        });
+      } else {
+        limitRecord.count += 1;
+      }
+    } else {
+      IP_AUDIT_LIMITS.set(clientIp, { count: 1, resetAt: now + 24 * 60 * 60 * 1000 });
+    }
+
     const { domain, niche, brandName } = req.body;
 
     if (!domain || typeof domain !== 'string') {
