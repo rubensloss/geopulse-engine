@@ -12,7 +12,7 @@
     "dev:server": "tsx src/server.ts",
     "build": "prisma generate && tsc",
     "test": "tsx test/rodada4.test.ts",
-    "start": "node dist/server.js"
+    "start": "npx prisma migrate deploy || npx prisma db push; node dist/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
