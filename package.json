@@ -11,8 +11,8 @@
     "dev:worker": "tsx src/demo-worker.ts",
     "dev:server": "tsx src/server.ts",
     "build": "prisma generate && tsc",
-    "test": "tsx test/rodada4.test.ts",
-    "start": "npx prisma migrate deploy || npx prisma db push; node dist/server.js"
+    "test": "tsx test/rodada5.test.ts",
+    "start": "npx prisma migrate deploy && node dist/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",

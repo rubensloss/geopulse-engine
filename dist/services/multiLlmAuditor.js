@@ -24,28 +24,40 @@ function getGeminiClient() {
  * Consulta de verdade os modelos oficiais (OpenAI, Gemini, Perplexity, Anthropic)
  * Conforme Regra 2.3: "Se um modelo não for consultado, ele não aparece no relatório."
  */
+export function buildNicheAuditPrompts(niche) {
+    return [
+        `Quais são as principais empresas, líderes e mais recomendadas no segmento de ${niche} no Brasil? Cite as principais marcas e referências de mercado.`,
+        `Qual é a melhor empresa ou prestadora de serviço para contratar em ${niche} no Brasil? Destaque as soluções mais confiáveis e avaliadas.`,
+        `Quem são as maiores referências e especialistas com autoridade em ${niche} no Brasil? Compare quem mais se sobressai no setor.`,
+    ];
+}
+/**
+ * Consulta de verdade os modelos oficiais (OpenAI, Gemini, Perplexity, Anthropic)
+ * Executa 3 perguntas representativas do nicho por modelo para mensurar presença factual ("citado em X de 3 respostas").
+ * Conforme Regra: "Se um modelo não for consultado, ele não aparece no relatório."
+ */
 export async function runHonestMultiLlmAudit(domain, brandName, niche) {
-    const prompt = `Quais são as principais, mais recomendadas e líderes empresas no segmento de ${niche} no Brasil? Cite as principais marcas, pontos fortes e fontes de referência.`;
+    const prompts = buildNicheAuditPrompts(niche);
     const modelsToQuery = [];
     // 1. ChatGPT (OpenAI)
     const openai = getOpenAIClient();
     if (openai) {
-        modelsToQuery.push(queryOpenAiModel(openai, prompt, domain, brandName, niche));
+        modelsToQuery.push(queryOpenAiModel(openai, prompts, domain, brandName, niche));
     }
     // 2. Google Gemini
     const gemini = getGeminiClient();
     if (gemini) {
-        modelsToQuery.push(queryGeminiModel(gemini, prompt, domain, brandName, niche));
+        modelsToQuery.push(queryGeminiModel(gemini, prompts, domain, brandName, niche));
     }
     // 3. Perplexity (Sonar)
     const perplexity = getPerplexityClient();
     if (perplexity) {
-        modelsToQuery.push(queryPerplexityModel(perplexity, prompt, domain, brandName, niche));
+        modelsToQuery.push(queryPerplexityModel(perplexity, prompts, domain, brandName, niche));
     }
     // 4. Claude (Anthropic)
     const anthropic = getAnthropicClient();
     if (anthropic) {
-        modelsToQuery.push(queryClaudeModel(anthropic, prompt, domain, brandName, niche));
+        modelsToQuery.push(queryClaudeModel(anthropic, prompts, domain, brandName, niche));
     }
     // Executa todas as consultas em paralelo
     const results = await Promise.all(modelsToQuery);
@@ -69,30 +81,43 @@ export async function runHonestMultiLlmAudit(domain, brandName, niche) {
         analyzedAt: new Date().toISOString(),
     };
 }
-async function queryOpenAiModel(client, prompt, domain, brandName, _niche) {
+async function queryOpenAiModel(client, prompts, domain, brandName, _niche) {
     const modelName = process.env.OPENAI_MODEL || 'gpt-4o';
     try {
-        const res = await client.chat.completions.create({
+        const responses = await Promise.all(prompts.map(prompt => client.chat.completions.create({
             model: modelName,
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 600,
             temperature: 0.3,
-        });
-        const text = res.choices[0]?.message?.content || '';
-        const analysis = analyzeModelResponseText(text, domain, brandName);
+        })));
+        const texts = responses.map(r => r.choices[0]?.message?.content || '');
+        const analyses = texts.map(t => analyzeModelResponseText(t, domain, brandName));
+        const mentionsCount = analyses.filter(a => a.isMentioned).length;
+        const allCompetitors = Array.from(new Set(analyses
+            .flatMap(a => a.competitors.split(',').map(c => c.trim()))
+            .filter(c => c.length >= 2 && !c.toLowerCase().includes(brandName.toLowerCase()))));
+        const allCitedUrls = Array.from(new Set(analyses.flatMap(a => a.citedUrls)));
+        const status = mentionsCount >= 2 ? 'STRONG' : mentionsCount === 1 ? 'PARTIAL' : 'NOT_CITED';
+        const statusBadge = mentionsCount >= 2
+            ? `Forte Presença (${mentionsCount}/3 citações)`
+            : mentionsCount === 1
+                ? `Presença Parcial (1/3 citação)`
+                : `Não Citado (0/3 respostas)`;
         return {
             engine: 'CHATGPT',
             name: `ChatGPT (OpenAI ${modelName})`,
-            isMentioned: analysis.isMentioned,
-            mentionRank: analysis.rank,
-            status: analysis.status,
-            statusBadge: analysis.badge,
-            shareEstimate: analysis.share,
-            competitorDominance: analysis.competitors,
-            reason: analysis.reason,
-            rawResponse: text,
-            citedSources: analysis.citedUrls,
-            costUsd: 0.0008,
+            isMentioned: mentionsCount > 0,
+            mentionRank: analyses.find(a => a.rank !== null)?.rank || null,
+            status,
+            statusBadge,
+            shareEstimate: `Citado em ${mentionsCount} de 3 respostas`,
+            competitorDominance: allCompetitors.slice(0, 5).join(', '),
+            reason: mentionsCount > 0
+                ? `A marca ${brandName} foi recomendada em ${mentionsCount} de 3 perguntas técnicas do segmento.`
+                : `A marca ${brandName} não figurou nas respostas para as 3 consultas de mercado avaliadas.`,
+            rawResponse: texts.join('\n\n---\n\n'),
+            citedSources: allCitedUrls,
+            costUsd: 0.0024,
         };
     }
     catch (err) {
@@ -100,28 +125,41 @@ async function queryOpenAiModel(client, prompt, domain, brandName, _niche) {
         return null;
     }
 }
-async function queryGeminiModel(client, prompt, domain, brandName, _niche) {
+async function queryGeminiModel(client, prompts, domain, brandName, _niche) {
     const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     try {
-        const res = await client.models.generateContent({
+        const responses = await Promise.all(prompts.map(prompt => client.models.generateContent({
             model: modelName,
             contents: prompt,
-        });
-        const text = res.text || '';
-        const analysis = analyzeModelResponseText(text, domain, brandName);
+        })));
+        const texts = responses.map(r => r.text || '');
+        const analyses = texts.map(t => analyzeModelResponseText(t, domain, brandName));
+        const mentionsCount = analyses.filter(a => a.isMentioned).length;
+        const allCompetitors = Array.from(new Set(analyses
+            .flatMap(a => a.competitors.split(',').map(c => c.trim()))
+            .filter(c => c.length >= 2 && !c.toLowerCase().includes(brandName.toLowerCase()))));
+        const allCitedUrls = Array.from(new Set(analyses.flatMap(a => a.citedUrls)));
+        const status = mentionsCount >= 2 ? 'STRONG' : mentionsCount === 1 ? 'PARTIAL' : 'NOT_CITED';
+        const statusBadge = mentionsCount >= 2
+            ? `Forte Presença (${mentionsCount}/3 citações)`
+            : mentionsCount === 1
+                ? `Presença Parcial (1/3 citação)`
+                : `Não Citado (0/3 respostas)`;
         return {
             engine: 'GEMINI',
             name: `Google Gemini (${modelName})`,
-            isMentioned: analysis.isMentioned,
-            mentionRank: analysis.rank,
-            status: analysis.status,
-            statusBadge: analysis.badge,
-            shareEstimate: analysis.share,
-            competitorDominance: analysis.competitors,
-            reason: analysis.reason,
-            rawResponse: text,
-            citedSources: analysis.citedUrls,
-            costUsd: 0.0005,
+            isMentioned: mentionsCount > 0,
+            mentionRank: analyses.find(a => a.rank !== null)?.rank || null,
+            status,
+            statusBadge,
+            shareEstimate: `Citado em ${mentionsCount} de 3 respostas`,
+            competitorDominance: allCompetitors.slice(0, 5).join(', '),
+            reason: mentionsCount > 0
+                ? `A marca ${brandName} foi citada em ${mentionsCount} de 3 perguntas consultadas no Gemini.`
+                : `A marca ${brandName} não figurou nas respostas do Gemini para as 3 consultas de mercado avaliadas.`,
+            rawResponse: texts.join('\n\n---\n\n'),
+            citedSources: allCitedUrls,
+            costUsd: 0.0015,
         };
     }
     catch (err) {
@@ -129,30 +167,43 @@ async function queryGeminiModel(client, prompt, domain, brandName, _niche) {
         return null;
     }
 }
-async function queryPerplexityModel(client, prompt, domain, brandName, _niche) {
+async function queryPerplexityModel(client, prompts, domain, brandName, _niche) {
     const modelName = process.env.PERPLEXITY_MODEL || 'sonar';
     try {
-        const res = await client.chat.completions.create({
+        const responses = await Promise.all(prompts.map(prompt => client.chat.completions.create({
             model: modelName,
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 600,
-        });
-        const text = res.choices[0]?.message?.content || '';
-        const citations = res.citations || [];
-        const analysis = analyzeModelResponseText(text, domain, brandName);
+        })));
+        const texts = responses.map(r => r.choices[0]?.message?.content || '');
+        const citations = responses.flatMap(r => r.citations || []);
+        const analyses = texts.map(t => analyzeModelResponseText(t, domain, brandName));
+        const mentionsCount = analyses.filter(a => a.isMentioned).length;
+        const allCompetitors = Array.from(new Set(analyses
+            .flatMap(a => a.competitors.split(',').map(c => c.trim()))
+            .filter(c => c.length >= 2 && !c.toLowerCase().includes(brandName.toLowerCase()))));
+        const allCitedUrls = Array.from(new Set([...citations, ...analyses.flatMap(a => a.citedUrls)]));
+        const status = mentionsCount >= 2 ? 'STRONG' : mentionsCount === 1 ? 'PARTIAL' : 'NOT_CITED';
+        const statusBadge = mentionsCount >= 2
+            ? `Forte Presença (${mentionsCount}/3 citações)`
+            : mentionsCount === 1
+                ? `Presença Parcial (1/3 citação)`
+                : `Não Citado (0/3 respostas)`;
         return {
             engine: 'PERPLEXITY',
             name: `Perplexity AI (${modelName})`,
-            isMentioned: analysis.isMentioned,
-            mentionRank: analysis.rank,
-            status: analysis.status,
-            statusBadge: analysis.badge,
-            shareEstimate: analysis.share,
-            competitorDominance: analysis.competitors,
-            reason: analysis.reason,
-            rawResponse: text,
-            citedSources: citations,
-            costUsd: 0.0015,
+            isMentioned: mentionsCount > 0,
+            mentionRank: analyses.find(a => a.rank !== null)?.rank || null,
+            status,
+            statusBadge,
+            shareEstimate: `Citado em ${mentionsCount} de 3 respostas`,
+            competitorDominance: allCompetitors.slice(0, 5).join(', '),
+            reason: mentionsCount > 0
+                ? `Perplexity citou a marca ${brandName} em ${mentionsCount} de 3 perguntas de busca e síntese.`
+                : `Perplexity não citou ${brandName} nas 3 perguntas realizadas sobre o setor.`,
+            rawResponse: texts.join('\n\n---\n\n'),
+            citedSources: allCitedUrls,
+            costUsd: 0.0045,
         };
     }
     catch (err) {
@@ -160,29 +211,42 @@ async function queryPerplexityModel(client, prompt, domain, brandName, _niche) {
         return null;
     }
 }
-async function queryClaudeModel(client, prompt, domain, brandName, _niche) {
+async function queryClaudeModel(client, prompts, domain, brandName, _niche) {
     const modelName = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
     try {
-        const res = await client.messages.create({
+        const responses = await Promise.all(prompts.map(prompt => client.messages.create({
             model: modelName,
             max_tokens: 600,
             messages: [{ role: 'user', content: prompt }],
-        });
-        const text = res.content[0]?.type === 'text' ? res.content[0].text : '';
-        const analysis = analyzeModelResponseText(text, domain, brandName);
+        })));
+        const texts = responses.map(r => (r.content[0]?.type === 'text' ? r.content[0].text : ''));
+        const analyses = texts.map(t => analyzeModelResponseText(t, domain, brandName));
+        const mentionsCount = analyses.filter(a => a.isMentioned).length;
+        const allCompetitors = Array.from(new Set(analyses
+            .flatMap(a => a.competitors.split(',').map(c => c.trim()))
+            .filter(c => c.length >= 2 && !c.toLowerCase().includes(brandName.toLowerCase()))));
+        const allCitedUrls = Array.from(new Set(analyses.flatMap(a => a.citedUrls)));
+        const status = mentionsCount >= 2 ? 'STRONG' : mentionsCount === 1 ? 'PARTIAL' : 'NOT_CITED';
+        const statusBadge = mentionsCount >= 2
+            ? `Forte Presença (${mentionsCount}/3 citações)`
+            : mentionsCount === 1
+                ? `Presença Parcial (1/3 citação)`
+                : `Não Citado (0/3 respostas)`;
         return {
             engine: 'CLAUDE',
             name: `Claude (Anthropic ${modelName})`,
-            isMentioned: analysis.isMentioned,
-            mentionRank: analysis.rank,
-            status: analysis.status,
-            statusBadge: analysis.badge,
-            shareEstimate: analysis.share,
-            competitorDominance: analysis.competitors,
-            reason: analysis.reason,
-            rawResponse: text,
-            citedSources: analysis.citedUrls,
-            costUsd: 0.001,
+            isMentioned: mentionsCount > 0,
+            mentionRank: analyses.find(a => a.rank !== null)?.rank || null,
+            status,
+            statusBadge,
+            shareEstimate: `Citado em ${mentionsCount} de 3 respostas`,
+            competitorDominance: allCompetitors.slice(0, 5).join(', '),
+            reason: mentionsCount > 0
+                ? `Claude recomendou ${brandName} em ${mentionsCount} de 3 perguntas avaliadas.`
+                : `Claude não citou ${brandName} nas 3 consultas do nicho.`,
+            rawResponse: texts.join('\n\n---\n\n'),
+            citedSources: allCitedUrls,
+            costUsd: 0.003,
         };
     }
     catch (err) {
@@ -272,7 +336,7 @@ function analyzeModelResponseText(text, domain, brandName) {
                 status: 'STRONG',
                 badge: `Líder Citado (#${calculatedRank})`,
                 share: `Citado em posição de destaque (#${calculatedRank})`,
-                competitors: realCompetitors.length > 0 ? realCompetitors.slice(0, 3).join(', ') : 'Sem outros líderes citados',
+                competitors: realCompetitors.length > 0 ? realCompetitors.slice(0, 3).join(', ') : '',
                 reason: `A marca ${brandName} é mencionada como uma das primeiras recomendações da IA.`,
                 citedUrls,
             };
@@ -284,7 +348,7 @@ function analyzeModelResponseText(text, domain, brandName) {
                 status: 'PARTIAL',
                 badge: `Menção Identificada (#${calculatedRank})`,
                 share: `Citado na resposta (#${calculatedRank})`,
-                competitors: realCompetitors.length > 0 ? realCompetitors.slice(0, 3).join(', ') : 'Concorrentes citados no mesmo nicho',
+                competitors: realCompetitors.length > 0 ? realCompetitors.slice(0, 3).join(', ') : '',
                 reason: `A marca ${brandName} foi citada, precedida por outros concorrentes recomendados.`,
                 citedUrls,
             };
@@ -296,7 +360,7 @@ function analyzeModelResponseText(text, domain, brandName) {
         status: 'NOT_CITED',
         badge: 'Não Citado nesta Consulta',
         share: '0 menções registradas na resposta do modelo',
-        competitors: realCompetitors.length > 0 ? realCompetitors.slice(0, 5).join(', ') : 'Nenhum concorrente específico extraído',
+        competitors: realCompetitors.length > 0 ? realCompetitors.slice(0, 5).join(', ') : '',
         reason: realCompetitors.length > 0
             ? `A marca ${brandName} não apareceu nas recomendações do modelo para esta pergunta. Empresas citadas: ${realCompetitors.slice(0, 3).join(', ')}.`
             : `Nenhuma citação de ${brandName} ou do domínio ${domain} foi encontrada na resposta do modelo para o nicho consultado.`,

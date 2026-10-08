@@ -15,6 +15,7 @@ enum UserRole {
   ADMIN
   EDITOR
   VIEWER
+  PLATFORM_ADMIN
 }
 
 enum CMSPlatform {

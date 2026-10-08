@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 import { db } from '../db/index.js';
-import type { StoredUser, PlanTier } from '../db/types.js';
+import type { StoredUser, PlanTier, UserRole } from '../db/types.js';
 
 export function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -82,7 +82,15 @@ export async function registerUser(input: {
     .replace(/-+/g, '-');
   const org = await db.createOrganization(input.companyName, slug);
 
-  // Cria usuário
+  // Cria usuário: ignora qualquer planTier enviado pelo cliente; conta nasce sempre no plano gratuito (FREE_TRIAL)
+  // O papel PLATFORM_ADMIN só é atribuído via variável PLATFORM_ADMIN_EMAILS, nunca pelo cadastro comum
+  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  const isEnvAdmin = adminEmails.includes(input.email.toLowerCase().trim());
+  const initialRole: UserRole = isEnvAdmin ? 'PLATFORM_ADMIN' : 'OWNER';
+
   const user = await db.createUser({
     organizationId: org.id,
     name: input.name,
@@ -90,9 +98,9 @@ export async function registerUser(input: {
     passwordHash: hashPassword(input.password),
     companyName: input.companyName,
     phone: input.phone,
-    role: 'OWNER',
-    planTier: input.planTier || 'FREE_TRIAL',
-    subscriptionStatus: input.planTier && input.planTier !== 'FREE_TRIAL' ? 'ACTIVE' : 'TRIAL',
+    role: initialRole,
+    planTier: 'FREE_TRIAL',
+    subscriptionStatus: 'TRIAL',
   });
 
   // Cria marca padrão
@@ -167,16 +175,47 @@ export function optionalAuthMiddleware(req: AuthenticatedRequest, _res: Response
   next();
 }
 
+export function isPlatformAdmin(user?: TokenPayload | StoredUser | null): boolean {
+  if (!user) return false;
+  if (user.role === 'PLATFORM_ADMIN') return true;
+  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+    return true;
+  }
+  return false;
+}
+
+export function requirePlatformAdminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ success: false, error: 'Acesso não autorizado. Faça login para continuar.' });
+    return;
+  }
+
+  if (!isPlatformAdmin(req.user)) {
+    res.status(403).json({
+      success: false,
+      error: 'Acesso restrito a administradores da plataforma Creative Always (PLATFORM_ADMIN).',
+    });
+    return;
+  }
+
+  next();
+}
+
 export function requireOwnerMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ success: false, error: 'Acesso não autorizado. Faça login para continuar.' });
     return;
   }
 
-  if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN') {
-    res.status(403).json({ success: false, error: 'Acesso restrito a administradores da plataforma (papel OWNER).' });
+  if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN' && req.user.role !== 'PLATFORM_ADMIN') {
+    res.status(403).json({ success: false, error: 'Acesso restrito ao proprietário da organização.' });
     return;
   }
 
   next();
 }
+

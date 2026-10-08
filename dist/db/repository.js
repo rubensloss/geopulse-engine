@@ -258,11 +258,15 @@ export class EnterpriseRepository {
     // ---------------------------------------------------------------------------
     async createOrganization(name, slug) {
         const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        let finalSlug = slug;
         try {
-            const record = await prisma.organization.upsert({
-                where: { slug },
-                update: { name },
-                create: { id: orgId, name, slug },
+            let counter = 1;
+            while (await prisma.organization.findUnique({ where: { slug: finalSlug } })) {
+                counter++;
+                finalSlug = `${slug}-${counter}`;
+            }
+            const record = await prisma.organization.create({
+                data: { id: orgId, name, slug: finalSlug },
             });
             const org = {
                 id: record.id,
@@ -278,7 +282,14 @@ export class EnterpriseRepository {
             if (process.env.NODE_ENV === 'production') {
                 throw new Error(`Falha ao gravar organização no PostgreSQL: ${err?.message}`);
             }
-            const org = { id: orgId, name, slug, createdAt: new Date() };
+            let memSlug = slug;
+            let counter = 1;
+            const existingSlugs = new Set(Array.from(this.organizations.values()).map(o => o.slug));
+            while (existingSlugs.has(memSlug)) {
+                counter++;
+                memSlug = `${slug}-${counter}`;
+            }
+            const org = { id: orgId, name, slug: memSlug, createdAt: new Date() };
             this.organizations.set(org.id, org);
             this.persist();
             return org;

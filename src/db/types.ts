@@ -1,6 +1,6 @@
 import type { CMSPlatform } from '../publishers/types.js';
 
-export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER';
+export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER' | 'PLATFORM_ADMIN';
 export type { CMSPlatform };
 export type PostStatus = 'DRAFT' | 'PUBLISHED';
 export type SearchIntent = 'INFORMATIONAL' | 'COMMERCIAL' | 'TRANSACTIONAL';

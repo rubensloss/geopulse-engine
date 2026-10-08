@@ -9,7 +9,7 @@ import { scheduler } from './worker/scheduler.js';
 import { generateCoverImageMetadata } from './worker/content-processor.js';
 import { publishArticleToCMS } from './publishers/index.js';
 import { executeGEOScan } from './services/scanner.js';
-import { registerUser, loginUser, authMiddleware, requireOwnerMiddleware, } from './services/auth.js';
+import { registerUser, loginUser, authMiddleware, requirePlatformAdminMiddleware, isPlatformAdmin, } from './services/auth.js';
 import { AVAILABLE_PLANS, processCheckout } from './services/billing.js';
 import { whatsappCloudApi } from './services/whatsappCloudApi.js';
 dotenv.config();
@@ -42,15 +42,30 @@ async function cleanupProductionLegacyData() {
         try {
             await prisma.user.deleteMany({
                 where: {
-                    email: { in: ['investidor@geopulse.ai', 'carlos@venturecapital.com'] },
+                    OR: [
+                        { email: { in: ['investidor@geopulse.ai', 'carlos@venturecapital.com'] } },
+                        { email: { startsWith: 'teste.prod.' } },
+                        { email: { contains: 'teste.prod' } },
+                    ],
                 },
             });
             await prisma.brand.deleteMany({
                 where: {
-                    websiteUrl: { contains: 'cloudsync.com.br' },
+                    OR: [
+                        { websiteUrl: { contains: 'cloudsync.com.br' } },
+                        { websiteUrl: { contains: 'org-prod-teste' } },
+                    ],
                 },
             });
-            console.log('🧹 [Produção] Limpeza de dados de demonstração concluída.');
+            await prisma.organization.deleteMany({
+                where: {
+                    OR: [
+                        { name: { contains: 'Prod Teste' } },
+                        { slug: { contains: 'org-prod-teste' } },
+                    ],
+                },
+            });
+            console.log('🧹 [Produção] Limpeza de dados de demonstração e testes concluída.');
         }
         catch (err) {
             console.warn('ℹ️ [Produção] Verificação de limpeza legacy:', err?.message);
@@ -342,6 +357,13 @@ app.post('/api/topics', async (req, res) => {
 });
 app.post('/api/topics/:id/generate', async (req, res) => {
     try {
+        // Contas em FREE_TRIAL não podem gerar artigos por IA (apenas auditorias e visualizações)
+        if (req.user?.planTier === 'FREE_TRIAL' && !isPlatformAdmin(req.user)) {
+            return res.status(403).json({
+                success: false,
+                error: 'A geração autônoma de conteúdo por IA exige um plano ativo. Solicite a ativação comercial via WhatsApp oficial.',
+            });
+        }
         const topicId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
         const userBrands = await db.listBrandsByOrg(req.user.organizationId);
         const userBrandIds = new Set(userBrands.map((b) => b.id));
@@ -389,6 +411,12 @@ app.get('/api/articles', async (req, res) => {
 });
 app.post('/api/articles/generate-cover', async (req, res) => {
     try {
+        if (req.user?.planTier === 'FREE_TRIAL' && !isPlatformAdmin(req.user)) {
+            return res.status(403).json({
+                success: false,
+                error: 'A geração autônoma de mídia por IA exige um plano ativo. Solicite a ativação comercial via WhatsApp oficial.',
+            });
+        }
         const { articleId, topic, primaryKeyword, brandName, engine, customPrompt } = req.body;
         const userBrands = await db.listBrandsByOrg(req.user.organizationId);
         let article = null;
@@ -778,9 +806,9 @@ app.post('/api/onboarding/from-scan', async (req, res) => {
     }
 });
 // -----------------------------------------------------------------------------
-// CONFIGURAÇÕES & ADMINISTRAÇÃO (Apenas OWNER / ADMIN)
+// CONFIGURAÇÕES & ADMINISTRAÇÃO (Apenas PLATFORM_ADMIN)
 // -----------------------------------------------------------------------------
-app.get('/api/settings', requireOwnerMiddleware, async (req, res) => {
+app.get('/api/settings', requirePlatformAdminMiddleware, async (req, res) => {
     try {
         const geminiKey = process.env.GEMINI_API_KEY;
         const maskedGemini = geminiKey ? geminiKey.substring(0, 6) + '••••••••••••' + geminiKey.slice(-4) : '';
@@ -814,7 +842,7 @@ app.get('/api/settings', requireOwnerMiddleware, async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-app.post('/api/settings/test-gemini', requireOwnerMiddleware, async (req, res) => {
+app.post('/api/settings/test-gemini', requirePlatformAdminMiddleware, async (req, res) => {
     const key = req.body.apiKey || process.env.GEMINI_API_KEY;
     if (!key) {
         return res.status(400).json({ success: false, error: 'Nenhuma chave Gemini informada.' });
@@ -833,7 +861,7 @@ app.post('/api/settings/test-gemini', requireOwnerMiddleware, async (req, res) =
         res.status(500).json({ success: false, error: 'Erro de rede ao conectar com a API do Google: ' + err.message });
     }
 });
-app.post('/api/settings/test-indexnow', requireOwnerMiddleware, async (req, res) => {
+app.post('/api/settings/test-indexnow', requirePlatformAdminMiddleware, async (req, res) => {
     try {
         const { host, key, url } = req.body;
         if (!host || !key || !url) {
@@ -893,8 +921,8 @@ app.post('/api/whatsapp/webhook', (req, res) => {
         return res.status(200).json({ success: false, error: err.message });
     }
 });
-// 3. Obter Configurações do WhatsApp (Restrito a OWNER)
-app.get('/api/whatsapp/config', requireOwnerMiddleware, (req, res) => {
+// 3. Obter Configurações do WhatsApp (Restrito a PLATFORM_ADMIN)
+app.get('/api/whatsapp/config', requirePlatformAdminMiddleware, (req, res) => {
     const config = whatsappCloudApi.getConfig();
     const maskedToken = config.accessToken
         ? `${config.accessToken.substring(0, 6)}...${config.accessToken.substring(config.accessToken.length - 4)}`
@@ -909,8 +937,8 @@ app.get('/api/whatsapp/config', requireOwnerMiddleware, (req, res) => {
         },
     });
 });
-// 4. Salvar Configurações do WhatsApp (Restrito a OWNER)
-app.post('/api/whatsapp/config', requireOwnerMiddleware, (req, res) => {
+// 4. Salvar Configurações do WhatsApp (Restrito a PLATFORM_ADMIN)
+app.post('/api/whatsapp/config', requirePlatformAdminMiddleware, (req, res) => {
     try {
         const { accessToken, phoneNumberId, businessAccountId, verifyToken, templateName, isEnabled, testMode } = req.body;
         const updated = whatsappCloudApi.saveConfig({
@@ -928,8 +956,8 @@ app.post('/api/whatsapp/config', requireOwnerMiddleware, (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-// 5. Testar Conexão com Meta Graph API (Restrito a OWNER)
-app.post('/api/whatsapp/test-connection', requireOwnerMiddleware, async (_req, res) => {
+// 5. Testar Conexão com Meta Graph API (Restrito a PLATFORM_ADMIN)
+app.post('/api/whatsapp/test-connection', requirePlatformAdminMiddleware, async (_req, res) => {
     try {
         const result = await whatsappCloudApi.testConnection();
         res.json(result);
@@ -938,7 +966,7 @@ app.post('/api/whatsapp/test-connection', requireOwnerMiddleware, async (_req, r
         res.status(500).json({ success: false, error: err.message });
     }
 });
-// 6. Disparar Dossiê Executivo via Template Oficial (Autenticado)
+// 6. Disparar Dossiê Executivo via Template Oficial (Restrito a PLATFORM_ADMIN)
 app.post('/api/whatsapp/send-dossier', async (req, res) => {
     try {
         const { to, clientName, companyName, reportSlug, score, customNotes } = req.body;
@@ -948,6 +976,14 @@ app.post('/api/whatsapp/send-dossier', async (req, res) => {
         if (!reportSlug) {
             return res.status(400).json({ success: false, error: 'O slug do relatório é obrigatório.' });
         }
+        // Apenas PLATFORM_ADMIN pode enviar mensagens pelo WhatsApp oficial da plataforma
+        if (!isPlatformAdmin(req.user)) {
+            return res.status(403).json({
+                success: false,
+                error: 'Envio de mensagens oficiais pelo WhatsApp restrito a administradores da plataforma Creative Always.',
+            });
+        }
+        console.log(`📲 [WhatsApp Send Dossier] Disparo oficial autorizado por userId=${req.user.userId} (email=${req.user.email}) para ${to} (slug=${reportSlug})`);
         const result = await whatsappCloudApi.sendDossierReport({
             to,
             clientName,
@@ -969,12 +1005,12 @@ app.get('/api/whatsapp/messages', (req, res) => {
     res.json({ success: true, data: messages });
 });
 // -----------------------------------------------------------------------------
-// WORKER CRON AUTÔNOMO (Restrito a OWNER / ADMIN)
+// WORKER CRON AUTÔNOMO (Restrito a PLATFORM_ADMIN)
 // -----------------------------------------------------------------------------
-app.get('/api/worker/status', requireOwnerMiddleware, (_req, res) => {
+app.get('/api/worker/status', requirePlatformAdminMiddleware, (_req, res) => {
     res.json({ success: true, data: scheduler.getStatus() });
 });
-app.post('/api/worker/toggle', requireOwnerMiddleware, (_req, res) => {
+app.post('/api/worker/toggle', requirePlatformAdminMiddleware, (_req, res) => {
     const status = scheduler.getStatus();
     if (status.isRunning) {
         scheduler.stop();
@@ -984,7 +1020,7 @@ app.post('/api/worker/toggle', requireOwnerMiddleware, (_req, res) => {
     }
     res.json({ success: true, isRunning: !status.isRunning });
 });
-app.post('/api/worker/trigger-now', requireOwnerMiddleware, async (req, res) => {
+app.post('/api/worker/trigger-now', requirePlatformAdminMiddleware, async (req, res) => {
     try {
         const { brandId } = req.body;
         const result = await scheduler.triggerNow(brandId);

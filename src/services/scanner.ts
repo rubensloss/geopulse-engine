@@ -25,7 +25,7 @@ export interface ModelPresence {
 
 export interface CompetitorLead {
   name: string;
-  domain: string;
+  domain?: string;
   dominanceRate: string;
   citedReason: string;
 }
@@ -40,12 +40,12 @@ export interface TopicRecommendation {
 
 export interface GoogleBusinessProfileAudit {
   hasProfile: boolean;
-  verificationStatus: 'VERIFICADO_ATIVO' | 'REDE_MULTI_UNIDADES' | 'NAO_REIVINDICADO' | 'NAO_ENCONTRADO';
+  verificationStatus: 'SINAIS_LOCAIS_NO_SITE' | 'VERIFICADO_ATIVO' | 'REDE_MULTI_UNIDADES' | 'NAO_REIVINDICADO' | 'NAO_ENCONTRADO';
   badgeLabel: string;
   ratingEstimate: string;
   localSeoScore: number;
   addressPresence: string;
-  reviewFrequencySignal: 'ALTA' | 'MODERADA' | 'BAIXA_OU_NULA';
+  reviewFrequencySignal: 'NAO_VERIFICADO' | 'ALTA' | 'MODERADA' | 'BAIXA_OU_NULA';
   hasLocalBusinessSchema: boolean;
   hasGoogleMapsEmbed: boolean;
   recommendations: string[];
@@ -82,7 +82,7 @@ export interface GooglePresenceDiagnosis {
     googleReviewsSignal: string;
   };
   zeroClickAnalysis: {
-    zeroClickRisk: 'ALTO' | 'MÉDIO' | 'BAIXO';
+    zeroClickRisk: 'ALTO' | 'MÉDIO' | 'BAIXO' | 'não medido' | string;
     riskPercentage: string;
     explanation: string;
   };
@@ -146,48 +146,10 @@ export function extractBrandName(domain: string, providedBrand?: string): string
     .replace(/\b\w/g, char => char.toUpperCase());
 }
 
-/**
- * Valida se o domínio solicitado é seguro contra SSRF (Server-Side Request Forgery).
- * Bloqueia localhost, endereços IP locais/privados e redes internas do Railway/Docker.
- */
-export function isSsrfTarget(target: string): boolean {
-  const host = (target || '').toLowerCase().trim().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+// Re-exporta funções de proteção SSRF a partir do módulo central de segurança
+export { isSsrfTarget, isSsrfTargetAsync, safeFetch } from '../security/ssrfProtection.js';
+import { isSsrfTargetAsync, safeFetch } from '../security/ssrfProtection.js';
 
-  if (!host) return true;
-
-  // Localhost e domínios internos
-  if (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '::1' ||
-    host === '0.0.0.0' ||
-    host.endsWith('.localhost') ||
-    host.endsWith('.local') ||
-    host.endsWith('.internal') ||
-    host.endsWith('.railway.internal')
-  ) {
-    return true;
-  }
-
-  // Checagem de IPs privados (IPv4)
-  const ipParts = host.split('.').map(Number);
-  if (ipParts.length === 4 && ipParts.every(p => !isNaN(p) && p >= 0 && p <= 255)) {
-    // 127.0.0.0/8 (Loopback)
-    if (ipParts[0] === 127) return true;
-    // 10.0.0.0/8 (Rede privada)
-    if (ipParts[0] === 10) return true;
-    // 172.16.0.0/12 (Rede privada 172.16.0.0 - 172.31.255.255)
-    if (ipParts[0] === 172 && ipParts[1] >= 16 && ipParts[1] <= 31) return true;
-    // 192.168.0.0/16 (Rede privada)
-    if (ipParts[0] === 192 && ipParts[1] === 168) return true;
-    // 169.254.0.0/16 (Link-local / Cloud metadata)
-    if (ipParts[0] === 169 && ipParts[1] === 254) return true;
-    // 0.0.0.0/8
-    if (ipParts[0] === 0) return true;
-  }
-
-  return false;
-}
 
 /**
  * Realiza uma auditoria técnica em tempo real no domínio (HTML, Schemas, Metatags, Google Maps)
@@ -210,7 +172,7 @@ export async function inspectLiveDomain(domain: string): Promise<{
   hasPhoneOrContact: boolean;
   blockedAiCrawlers?: string[];
 }> {
-  if (isSsrfTarget(domain)) {
+  if (await isSsrfTargetAsync(domain)) {
     const err: any = new Error('Acesso bloqueado por segurança: endereço interno ou não permitido para escaneamento.');
     err.statusCode = 400;
     throw err;
@@ -247,14 +209,13 @@ export async function inspectLiveDomain(domain: string): Promise<{
 
   for (const url of tryUrls) {
     try {
-      const res = await fetch(url, {
+      const res = await safeFetch(url, {
         signal: AbortSignal.timeout(6000),
         headers: {
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         },
-        redirect: 'follow',
       });
       if (res.status < 500) {
         response = res;
@@ -262,7 +223,7 @@ export async function inspectLiveDomain(domain: string): Promise<{
         break;
       }
     } catch {
-      // continua para o próximo alvo
+      // continua para o próximo alvo seguro
     }
   }
 
@@ -365,10 +326,10 @@ export async function inspectLiveDomain(domain: string): Promise<{
       // Erro ao ler corpo da resposta
     }
 
-    // Inspeção factual de robots.txt para bots de IA (GPTBot, PerplexityBot, Google-Extended, ClaudeBot)
+    // Inspeção factual de robots.txt com safeFetch
     try {
       const robotsUrl = `https://${clean}/robots.txt`;
-      const robotsRes = await fetch(robotsUrl, {
+      const robotsRes = await safeFetch(robotsUrl, {
         signal: AbortSignal.timeout(4000),
         headers: { 'User-Agent': 'Mozilla/5.0' },
       });
@@ -405,38 +366,42 @@ export function generateGooglePresenceDiagnosis(
   tech: Awaited<ReturnType<typeof inspectLiveDomain>>,
   geoScore: number
 ): GooglePresenceDiagnosis {
-  let googleScore = 32;
-  if (tech.isOnline) googleScore += 18;
-  if (tech.hasHttps) googleScore += 10;
-  if (tech.isMobileResponsive) googleScore += 8;
-  if (tech.title && tech.title.length > 8) googleScore += 10;
-  if (tech.metaDesc && tech.metaDesc.length > 20) googleScore += 8;
-  if (tech.hasJsonLd) googleScore += 10;
-  if (tech.detectedSchemas.length >= 2) googleScore += 6;
-  if (tech.hasGoogleMapsEmbed || tech.hasLocalBusinessSchema || tech.hasAddressDetected) googleScore += 8;
-
-  googleScore = Math.max(20, Math.min(googleScore, 85));
-
   const hasLocalSignals = tech.hasGoogleMapsEmbed || tech.hasLocalBusinessSchema || tech.hasAddressDetected;
+
+  // Checklist técnico objetivo e factual
+  const checklistItems = [
+    { label: 'Disponibilidade Online', passed: tech.isOnline },
+    { label: 'Segurança HTTPS', passed: tech.hasHttps },
+    { label: 'Responsividade Mobile', passed: tech.isMobileResponsive },
+    { label: 'Título Otimizado (>8 carac.)', passed: !!(tech.title && tech.title.length > 8) },
+    { label: 'Meta Description (>20 carac.)', passed: !!(tech.metaDesc && tech.metaDesc.length > 20) },
+    { label: 'Estrutura Schema.org (JSON-LD)', passed: tech.hasJsonLd },
+    { label: 'Múltiplos Schemas Técnicos', passed: tech.detectedSchemas.length >= 2 },
+    { label: 'Sinais Locais (Maps / Endereço)', passed: hasLocalSignals },
+  ];
+
+  const passedCount = checklistItems.filter(i => i.passed).length;
+  const totalCount = checklistItems.length;
+  const googleScore = Math.round((passedCount / totalCount) * 100);
 
   let gmbVerificationStatus: GoogleBusinessProfileAudit['verificationStatus'] = 'NAO_ENCONTRADO';
   let gmbBadge = 'Sinais Locais Não Detectados no Código do Site';
   let gmbRating = 'Não verificado (requer Google Places API)';
-  let gmbLocalScore = 30;
+  let gmbLocalScore = 20;
   let gmbAddress = 'Endereço físico não referenciado no código ou mapa embed';
-  let gmbReviewSignal: GoogleBusinessProfileAudit['reviewFrequencySignal'] = 'BAIXA_OU_NULA';
+  let gmbReviewSignal: GoogleBusinessProfileAudit['reviewFrequencySignal'] = 'NAO_VERIFICADO';
   const gmbRecommendations: string[] = [];
 
   if (hasLocalSignals) {
-    gmbVerificationStatus = 'VERIFICADO_ATIVO';
-    gmbBadge = 'Link ou Embed do Google Maps Identificado no Site';
-    gmbRating = 'Não verificado via API oficial de avaliações';
-    gmbLocalScore = 65;
+    gmbVerificationStatus = 'SINAIS_LOCAIS_NO_SITE';
+    gmbBadge = 'Sinais Locais Identificados no Código do Site';
+    gmbRating = 'Não verificado via Google Places API';
+    gmbLocalScore = 50;
     gmbAddress = 'Endereço físico ou embed de mapa detectado nas páginas';
-    gmbReviewSignal = 'MODERADA';
+    gmbReviewSignal = 'NAO_VERIFICADO';
     gmbRecommendations.push(
       'Vincular formalmente o Perfil de Empresa (Google Meu Negócio) com Schema LocalBusiness.',
-      'Acompanhar avaliações e avaliações recebidas na ficha do Maps.'
+      'Acompanhar avaliações e reputação recebidas na ficha do Maps.'
     );
   } else {
     gmbRecommendations.push(
@@ -445,12 +410,7 @@ export function generateGooglePresenceDiagnosis(
     );
   }
 
-  let statusBadge = 'Presença Técnica Básica';
-  if (googleScore >= 70) {
-    statusBadge = 'Base Técnica Estruturada com Schemas Detectados';
-  } else if (googleScore >= 45) {
-    statusBadge = 'Indexado com Gaps Técnicos de Metadados e Schemas';
-  }
+  const statusBadge = `Checklist Técnico: ${passedCount} de ${totalCount} itens atendidos`;
 
   const statusSummary = tech.hasJsonLd
     ? `O domínio ${domain} possui metadados Schema.org no código, com potencial para Rich Snippets se complementado com FAQs e tabelas.`
@@ -499,16 +459,16 @@ export function generateGooglePresenceDiagnosis(
     entityAndLocal: {
       knowledgeGraph: 'Não verificado (requer Search API)',
       knowledgeGraphReason: `Verificação de Painel de Conhecimento oficial requer consulta à Google Knowledge Graph API.`,
-      googleMapsPresence: hasLocalSignals ? 'LOCAL_OTIMIZADO' : 'SEM_PERFIL',
+      googleMapsPresence: hasLocalSignals ? 'SINAIS_LOCAIS_NO_SITE' : 'SEM_PERFIL',
       googleMapsReason: hasLocalSignals
         ? 'Sinal de mapa ou endereço identificado no HTML.'
         : 'Ausência de mapa ou ficha local estruturada detectada no site.',
       googleReviewsSignal: 'Requer integração com Google Places API para consulta oficial de avaliações.',
     },
     zeroClickAnalysis: {
-      zeroClickRisk: 'MÉDIO',
-      riskPercentage: 'Estimativa contextual por formato',
-      explanation: `Em ${niche}, respostas diretas de IA e painéis rápidos reduzem cliques caso o site não seja citado como fonte de referência.`,
+      zeroClickRisk: 'não medido',
+      riskPercentage: 'Não medido (requer integração com Google Search Console)',
+      explanation: `Em ${niche}, a medição de pesquisas zero-click depende da integração com métricas oficiais de impressões e cliques do Search Console.`,
     },
     actionPlan: [
       {
@@ -579,11 +539,25 @@ export async function executeGEOScan(req: ScanRequest): Promise<ScanResult> {
           compName.length >= 2 &&
           !competitors.some(c => c.name.toLowerCase() === compName.toLowerCase()) &&
           !compName.toLowerCase().includes('sem outros') &&
-          !compName.toLowerCase().includes('nenhum concorrente')
+          !compName.toLowerCase().includes('nenhum concorrente') &&
+          !compName.toLowerCase().includes('concorrentes citados')
         ) {
+          // Só associa domínio se a IA tiver explicitamente retornado uma URL válida
+          const citedUrl = m.citedSources?.find(u =>
+            u.toLowerCase().includes(compName.toLowerCase().replace(/[^a-z0-9]/g, ''))
+          );
+          let realDomain: string | undefined = undefined;
+          if (citedUrl) {
+            try {
+              realDomain = new URL(citedUrl).hostname.replace(/^www\./, '');
+            } catch {
+              // URL inválida, mantém undefined
+            }
+          }
+
           competitors.push({
             name: compName,
-            domain: `${compName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com.br`,
+            domain: realDomain,
             dominanceRate: m.shareEstimate || 'Menção na consulta',
             citedReason: `Citado como referência no modelo ${m.name}.`,
           });
