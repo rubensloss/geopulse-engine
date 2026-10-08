@@ -9,10 +9,17 @@ const AUTH_TAG_LENGTH = 16;
 
 /**
  * Obtém ou deriva a chave de 32 bytes a partir da variável de ambiente ENCRYPTION_KEY.
- * Se não estiver configurada, gera um aviso e deriva de um fallback seguro em desenvolvimento.
+ * Em produção, lança erro fatal se não estiver configurada.
  */
 function getMasterKey(): Buffer {
-  const secret = process.env.ENCRYPTION_KEY || 'default-dev-secret-key-change-in-production-32b';
+  const secret = process.env.ENCRYPTION_KEY;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('ERRO FATAL DE SEGURANÇA: ENCRYPTION_KEY não configurada em ambiente de produção!');
+    }
+    console.warn('⚠️ [SEGURANÇA] ENCRYPTION_KEY ausente em desenvolvimento. Usando chave temporária local.');
+    return crypto.createHash('sha256').update('geopulse-dev-encryption-key-local-only-32b').digest();
+  }
   // Garante exatamente 32 bytes através de SHA-256
   return crypto.createHash('sha256').update(secret).digest();
 }

@@ -1,9 +1,20 @@
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 import { db } from '../db/index.js';
 import type { StoredUser, PlanTier } from '../db/types.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'geopulse-secret-key-geo-2026-ciclo-excelencia-secure';
+export function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('ERRO FATAL DE SEGURANÇA: JWT_SECRET não configurado em ambiente de produção!');
+    }
+    console.warn('⚠️ [SEGURANÇA] JWT_SECRET ausente em desenvolvimento. Usando segredo temporário local.');
+    return 'geopulse-dev-jwt-secret-do-not-use-in-production-32b';
+  }
+  return secret;
+}
 
 export interface TokenPayload {
   userId: string;
@@ -11,8 +22,8 @@ export interface TokenPayload {
   role: string;
   planTier: PlanTier;
   email: string;
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 }
 
 export function hashPassword(password: string): string {
@@ -29,59 +40,37 @@ export function verifyPassword(password: string, combinedHash: string): boolean 
 }
 
 export function generateToken(user: StoredUser): string {
-  const payload: TokenPayload = {
+  const payload: Omit<TokenPayload, 'iat' | 'exp'> = {
     userId: user.id,
     organizationId: user.organizationId,
     role: user.role,
     planTier: user.planTier,
     email: user.email,
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 dias
   };
 
-  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = crypto
-    .createHmac('sha256', JWT_SECRET)
-    .update(`${header}.${body}`)
-    .digest('base64url');
-
-  return `${header}.${body}.${signature}`;
+  return jwt.sign(payload, getJwtSecret(), {
+    expiresIn: '30d',
+    algorithm: 'HS256',
+  });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-
-    const [header, body, signature] = parts;
-    const expectedSig = crypto
-      .createHmac('sha256', JWT_SECRET)
-      .update(`${header}.${body}`)
-      .digest('base64url');
-
-    if (signature !== expectedSig) return null;
-
-    const payload: TokenPayload = JSON.parse(Buffer.from(body, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
-    }
-
-    return payload;
+    return jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] }) as TokenPayload;
   } catch {
     return null;
   }
 }
 
-export function registerUser(input: {
+export async function registerUser(input: {
   name: string;
   email: string;
   password: string;
   companyName: string;
   phone?: string;
   planTier?: PlanTier;
-}): { user: Omit<StoredUser, 'passwordHash'>; token: string } {
-  const existing = db.getUserByEmail(input.email);
+}): Promise<{ user: Omit<StoredUser, 'passwordHash'>; token: string }> {
+  const existing = await db.getUserByEmail(input.email);
   if (existing) {
     throw new Error('Já existe uma conta registrada com este e-mail.');
   }
@@ -91,10 +80,10 @@ export function registerUser(input: {
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-');
-  const org = db.createOrganization(input.companyName, slug);
+  const org = await db.createOrganization(input.companyName, slug);
 
   // Cria usuário
-  const user = db.createUser({
+  const user = await db.createUser({
     organizationId: org.id,
     name: input.name,
     email: input.email.toLowerCase().trim(),
@@ -107,7 +96,7 @@ export function registerUser(input: {
   });
 
   // Cria marca padrão
-  db.createBrand({
+  await db.createBrand({
     organizationId: org.id,
     name: input.companyName,
     websiteUrl: `https://${slug}.com.br`,
@@ -125,11 +114,11 @@ export function registerUser(input: {
   return { user: safeUser, token };
 }
 
-export function loginUser(input: {
+export async function loginUser(input: {
   email: string;
   password: string;
-}): { user: Omit<StoredUser, 'passwordHash'>; token: string } {
-  const user = db.getUserByEmail(input.email);
+}): Promise<{ user: Omit<StoredUser, 'passwordHash'>; token: string }> {
+  const user = await db.getUserByEmail(input.email);
   if (!user) {
     throw new Error('E-mail ou senha inválidos.');
   }
@@ -175,5 +164,19 @@ export function optionalAuthMiddleware(req: AuthenticatedRequest, _res: Response
       req.user = payload;
     }
   }
+  next();
+}
+
+export function requireOwnerMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ success: false, error: 'Acesso não autorizado. Faça login para continuar.' });
+    return;
+  }
+
+  if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN') {
+    res.status(403).json({ success: false, error: 'Acesso restrito a administradores da plataforma (papel OWNER).' });
+    return;
+  }
+
   next();
 }

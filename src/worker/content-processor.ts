@@ -13,11 +13,11 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
   console.log(`   Pauta: "${job.topic}" | Palavra-chave: "${job.primaryKeyword}"`);
 
   // 1. Busca dados da Marca (Brand Profile)
-  const brand = db.getBrand(job.brandId);
+  const brand = await db.getBrand(job.brandId);
   if (!brand) {
     const err = `Marca ${job.brandId} não encontrada no banco de dados.`;
     console.error(`   ❌ [WORKER ERRO]: ${err}`);
-    db.updateTopicStatus(job.topicQueueId, 'FAILED', err);
+    await db.updateTopicStatus(job.topicQueueId, 'FAILED', err);
     return {
       success: false,
       brandId: job.brandId,
@@ -29,11 +29,11 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
   }
 
   // 2. Busca lista de artigos existentes para malha de links internos
-  const existingArticles = db.listInternalLinksByBrand(job.brandId);
+  const existingArticles = await db.listInternalLinksByBrand(job.brandId);
   console.log(`   ✓ ${existingArticles.length} artigo(s) anterior(es) carregado(s) para links internos.`);
 
   // 3. Atualiza estado da pauta para RESEARCHING
-  db.updateTopicStatus(job.topicQueueId, 'RESEARCHING');
+  await db.updateTopicStatus(job.topicQueueId, 'RESEARCHING');
 
   const pipelineInput: PipelineInput = {
     topic: job.topic,
@@ -54,7 +54,7 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
 
   try {
     // 4. Atualiza estado para WRITING e gera o artigo
-    db.updateTopicStatus(job.topicQueueId, 'WRITING');
+    await db.updateTopicStatus(job.topicQueueId, 'WRITING');
     
     let articleOutput;
     if (process.env.GEMINI_API_KEY) {
@@ -86,7 +86,7 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
     }
 
     // 5. Verifica se há integração CMS ativa configurada
-    const cmsList = db.listCMSByBrand(job.brandId);
+    const cmsList = await db.listCMSByBrand(job.brandId);
     let publishedUrl: string | undefined;
     let remotePostId: string | undefined;
     let cmsPlatformUsed: any = undefined;
@@ -94,7 +94,7 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
 
     if (brand.autoPublish && cmsList.length > 0) {
       const primaryCMS = cmsList[0];
-      const decryptedData = db.getDecryptedCMSIntegration<any>(primaryCMS.id);
+      const decryptedData = await db.getDecryptedCMSIntegration<any>(primaryCMS.id);
 
       if (decryptedData) {
         console.log(`   📡 [WORKER] Auto-publicação ativada para CMS: ${primaryCMS.platform}...`);
@@ -145,7 +145,7 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
 
     // 6. Salva o artigo no banco
     const finalPostStatus = (brand.autoPublish && publishedUrl) ? 'PUBLISHED' : 'DRAFT';
-    const savedArticle = db.saveArticle({
+    const savedArticle = await db.saveArticle({
       brandId: job.brandId,
       topicQueueId: job.topicQueueId,
       title: articleOutput.title,
@@ -185,7 +185,7 @@ export async function processContentJob(job: ContentJobData): Promise<JobResult>
   } catch (error: any) {
     const errorMsg = error.message || String(error);
     console.error(`   ❌ [WORKER FALHA]: Erro durante geração:`, errorMsg);
-    db.updateTopicStatus(job.topicQueueId, 'FAILED', errorMsg);
+    await db.updateTopicStatus(job.topicQueueId, 'FAILED', errorMsg);
 
     return {
       success: false,

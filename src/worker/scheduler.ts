@@ -86,7 +86,7 @@ export class AutonomousScheduler {
     // Busca todas as organizações e marcas ativas
     // Para cada marca, verifica se há pautas pendentes
     // (Como usamos o EnterpriseRepository, varremos as marcas cadastradas)
-    const pendingTopicsToProcess = this.findNextEligibleTopics();
+    const pendingTopicsToProcess = await this.findNextEligibleTopics();
 
     for (const jobData of pendingTopicsToProcess) {
       if (this.activeJobsCount >= this.options.concurrency) {
@@ -106,19 +106,14 @@ export class AutonomousScheduler {
   /**
    * Identifica pautas elegíveis para processamento imediato
    */
-  private findNextEligibleTopics(): ContentJobData[] {
+  private async findNextEligibleTopics(): Promise<ContentJobData[]> {
     const eligible: ContentJobData[] = [];
     const now = new Date();
 
-    // Como as marcas são registradas no repositório, buscamos tópicos pendentes
-    // No ambiente de banco real (Prisma), seria uma query:
-    // WHERE status IN ('BACKLOG', 'SCHEDULED') AND (scheduledFor IS NULL OR scheduledFor <= now) ORDER BY priority DESC
-    // Aqui usamos os métodos do repositório:
-    
-    const activeBrands = db.listAllActiveBrands();
+    const activeBrands = await db.listAllActiveBrands();
 
     for (const brand of activeBrands) {
-      const pending = db.listPendingTopics(brand.id);
+      const pending = await db.listPendingTopics(brand.id);
       for (const topic of pending) {
         if (!topic.scheduledFor || topic.scheduledFor <= now) {
           eligible.push({
@@ -149,8 +144,8 @@ export class AutonomousScheduler {
 
     // Executa em background sem bloquear o tick do scheduler
     processContentJob(job)
-      .then((result) => {
-        const brand = db.getBrand(job.brandId);
+      .then(async (result) => {
+        const brand = await db.getBrand(job.brandId);
         this.executionHistory.unshift({
           id: `exec_${Date.now().toString(36)}`,
           topic: job.topic,
@@ -190,11 +185,11 @@ export class AutonomousScheduler {
     
     // Se a marca não tiver pauta pendente, o piloto automático gera uma pauta de alta relevância GEO
     if (brandId) {
-      const pending = db.listPendingTopics(brandId);
+      const pending = await db.listPendingTopics(brandId);
       if (pending.length === 0) {
-        const brand = db.getBrand(brandId);
+        const brand = await db.getBrand(brandId);
         if (brand) {
-          const autoTopic = db.addTopicToQueue({
+          const autoTopic = await db.addTopicToQueue({
             brandId,
             topic: `Como escolher o melhor especialista em ${brand.name}: Guia Comparativo 2026`,
             primaryKeyword: `melhor especialista ${brand.name.toLowerCase()} custo beneficio`,
@@ -206,7 +201,7 @@ export class AutonomousScheduler {
       }
     }
 
-    const eligible = this.findNextEligibleTopics();
+    const eligible = await this.findNextEligibleTopics();
     let dispatched = 0;
 
     for (const job of eligible) {

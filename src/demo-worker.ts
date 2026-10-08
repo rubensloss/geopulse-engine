@@ -11,9 +11,9 @@ async function runWorkerDemo() {
 
   // 1. Configura Organização e Marca Cliente
   console.log('1️⃣ Configurando Marca no Banco de Dados...');
-  const org = db.createOrganization('ScaleUp Growth Partners', 'scaleup-growth');
+  const org = await db.createOrganization('ScaleUp Growth Partners', 'scaleup-growth');
   
-  const brand = db.createBrand({
+  const brand = await db.createBrand({
     organizationId: org.id,
     name: 'CyberShield Seguros Corporativos',
     websiteUrl: 'https://cybershield.com.br',
@@ -22,28 +22,28 @@ async function runWorkerDemo() {
     toneOfVoice: 'Autoritário, focado em mitigação de riscos, sem sensacionalismo, baseado em estatísticas de segurança.',
     ctaTargetUrl: 'https://cybershield.com.br/cotacao-imediata',
     ctaText: 'Simular Seguro Cyber para sua Empresa',
-    autoPublish: false, // Ficará em READY_FOR_REVIEW
+    autoPublish: false,
   });
   console.log(`   ✓ Marca pronta: ${brand.name} (ID: ${brand.id})\n`);
 
   // 2. Enfileira 3 pautas com prioridades diferentes
   console.log('2️⃣ Inserindo 3 pautas inteligentes no TopicQueue...');
   
-  const pauta1 = db.addTopicToQueue({
+  const pauta1 = await db.addTopicToQueue({
     brandId: brand.id,
     topic: 'Como funciona a apólice de seguro contra ransomware no Brasil',
     primaryKeyword: 'seguro contra ransomware apólice',
-    priority: 5, // Máxima prioridade
+    priority: 5,
   });
 
-  const pauta2 = db.addTopicToQueue({
+  const pauta2 = await db.addTopicToQueue({
     brandId: brand.id,
     topic: 'Quais os requisitos de segurança de TI exigidos pelas seguradoras',
     primaryKeyword: 'requisitos seguro cibernético',
     priority: 4,
   });
 
-  const pauta3 = db.addTopicToQueue({
+  const pauta3 = await db.addTopicToQueue({
     brandId: brand.id,
     topic: 'Estudo de caso: Como o seguro cibernético cobriu prejuízos de R$ 3 milhões em vazamento LGPD',
     primaryKeyword: 'caso real seguro cibernético lgpd',
@@ -57,8 +57,8 @@ async function runWorkerDemo() {
   // 3. Inicializa o AutonomousScheduler
   console.log('3️⃣ Inicializando o AutonomousScheduler...');
   const customScheduler = new AutonomousScheduler({
-    concurrency: 2, // Processa até 2 artigos em paralelo
-    pollIntervalMs: 1500, // Checagem a cada 1.5s no demo
+    concurrency: 2,
+    pollIntervalMs: 1500,
   });
 
   customScheduler.start();
@@ -75,7 +75,7 @@ async function runWorkerDemo() {
   console.log(`📊 RELATÓRIO DO BANCO DE DADOS APÓS EXECUÇÃO DO SCHEDULER`);
   console.log(`================================================================`);
   
-  const articles = db.listArticlesByBrand(brand.id);
+  const articles = await db.listArticlesByBrand(brand.id);
   console.log(`Total de artigos processados e salvos: ${articles.length}`);
 
   for (const art of articles) {
@@ -86,7 +86,7 @@ async function runWorkerDemo() {
     console.log(`   - Schema FAQ: ${art.faqItems.length} perguntas mapeadas.`);
   }
 
-  const remaining = db.listPendingTopics(brand.id);
+  const remaining = await db.listPendingTopics(brand.id);
   console.log(`\nPautas restantes no backlog: ${remaining.length}`);
 
   console.log(`\n================================================================`);

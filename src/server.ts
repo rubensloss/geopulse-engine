@@ -1,5 +1,5 @@
 import fs from 'fs';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -14,8 +14,7 @@ import {
   registerUser,
   loginUser,
   authMiddleware,
-  optionalAuthMiddleware,
-  hashPassword,
+  requireOwnerMiddleware,
   type AuthenticatedRequest,
 } from './services/auth.js';
 import { AVAILABLE_PLANS, processCheckout } from './services/billing.js';
@@ -23,20 +22,103 @@ import { whatsappCloudApi } from './services/whatsappCloudApi.js';
 
 dotenv.config();
 
+// -----------------------------------------------------------------------------
+// VALIDAÇÃO DE SEGURANÇA EM AMBIENTE DE PRODUÇÃO
+// -----------------------------------------------------------------------------
+function validateProductionEnvironment(): void {
+  if (process.env.NODE_ENV === 'production') {
+    const missing: string[] = [];
+    if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
+    if (!process.env.ENCRYPTION_KEY) missing.push('ENCRYPTION_KEY');
+    if (!process.env.META_WA_VERIFY_TOKEN) missing.push('META_WA_VERIFY_TOKEN');
 
+    if (missing.length > 0) {
+      console.error('\n🚨 [ERRO FATAL DE SEGURANÇA EM PRODUÇÃO]');
+      console.error(`O servidor GeoPulse NÃO pode iniciar sem as variáveis obrigatórias: ${missing.join(', ')}`);
+      console.error('Configure-as no painel do Railway antes de subir o serviço.\n');
+      process.exit(1);
+    }
+  }
+}
+validateProductionEnvironment();
+
+// -----------------------------------------------------------------------------
+// LIMPEZA DE DADOS LEGACY EM PRODUÇÃO & SEED CONTROLADO
+// -----------------------------------------------------------------------------
+async function cleanupProductionLegacyData(): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      await prisma.user.deleteMany({
+        where: {
+          email: { in: ['investidor@geopulse.ai', 'carlos@venturecapital.com'] },
+        },
+      });
+      await prisma.brand.deleteMany({
+        where: {
+          websiteUrl: { contains: 'cloudsync.com.br' },
+        },
+      });
+      console.log('🧹 [Produção] Limpeza de dados de demonstração concluída.');
+    } catch (err: any) {
+      console.warn('ℹ️ [Produção] Verificação de limpeza legacy:', err?.message);
+    }
+  }
+}
+
+async function seedDefaultData(): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+  try {
+    const orgs = await db.listOrganizations();
+    if (orgs.length === 0) {
+      const org = await db.createOrganization('Empresa Exemplo (DEMONSTRAÇÃO)', 'empresa-exemplo');
+      const brand = await db.createBrand({
+        organizationId: org.id,
+        name: 'Empresa Exemplo (DEMONSTRAÇÃO)',
+        websiteUrl: 'https://exemplo.com.br',
+        productDescription: 'Plataforma demonstrativa de governança e nuvem.',
+        targetAudience: 'Gestores de TI e inovação.',
+        toneOfVoice: 'Profissional e consultivo.',
+        ctaTargetUrl: 'https://exemplo.com.br/diagnostico',
+        ctaText: 'Solicitar Demonstração',
+        autoPublish: false,
+      });
+
+      await db.addTopicToQueue({
+        brandId: brand.id,
+        topic: 'O que é GEO (Generative Engine Optimization) e como dominar as respostas de IA',
+        primaryKeyword: 'o que e geo generative engine optimization',
+        searchIntent: 'INFORMATIONAL',
+        priority: 5,
+      });
+    }
+  } catch (err: any) {
+    console.warn('ℹ️ [DB Seed] Aviso durante seed em dev:', err?.message);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CONFIGURAÇÃO DO SERVIDOR EXPRESS
+// -----------------------------------------------------------------------------
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3333;
-
 const PUBLIC_DIR = path.resolve(process.cwd(), 'public');
 
 app.use(cors());
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.static(PUBLIC_DIR, { index: false }));
 
 // -----------------------------------------------------------------------------
-// HEALTH CHECK
+// HEALTH CHECK FACTUAL
 // -----------------------------------------------------------------------------
-app.get('/health', async (req, res) => {
+app.get('/health', async (_req, res) => {
   let dbStatus = 'disconnected';
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -65,401 +147,110 @@ app.get('/health', async (req, res) => {
       providers: aiProviders,
       scannerReady: hasAnyAi,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // -----------------------------------------------------------------------------
 // ROTAS DE PÁGINAS VISUAIS
 // -----------------------------------------------------------------------------
-// Apresentação Comercial / Landing Page de Conversão
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.sendFile('landing.html', { root: PUBLIC_DIR });
 });
 
-app.get('/landing', (req, res) => {
+app.get('/landing', (_req, res) => {
   res.sendFile('landing.html', { root: PUBLIC_DIR });
 });
 
-// Painel Operacional / Plataforma
-app.get('/app', (req, res) => {
+app.get('/app', (_req, res) => {
   res.sendFile('index.html', { root: PUBLIC_DIR });
 });
 
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', (_req, res) => {
   res.redirect('/app');
 });
 
-// Relatório Executivo Público Compartilhável (Sem necessidade de login para envio no WhatsApp)
-app.get('/relatorio/:idOrSlug', (req, res) => {
+app.get('/relatorio/:idOrSlug', (_req, res) => {
   res.sendFile('report.html', { root: PUBLIC_DIR });
 });
 
-app.get('/report/:idOrSlug', (req, res) => {
+app.get('/report/:idOrSlug', (_req, res) => {
   res.sendFile('report.html', { root: PUBLIC_DIR });
 });
 
 // -----------------------------------------------------------------------------
-// SEED DE DADOS INICIAIS (Para o painel já iniciar vivo e interativo)
+// WHITELIST DE ROTAS PÚBLICAS DA API
 // -----------------------------------------------------------------------------
-function seedDefaultData() {
-  const orgs = (db as any).organizations;
-  if (orgs.size === 0) {
-    const org = db.createOrganization('Nuvem Exemplo Studio', 'nuvem-exemplo');
+const isPublicApiRoute = (req: Request): boolean => {
+  const method = req.method.toUpperCase();
+  const urlPath = req.originalUrl.split('?')[0];
 
-    const brand = db.createBrand({
-      organizationId: org.id,
-      name: 'NuvemExemplo Soluções B2B',
-      websiteUrl: 'https://nuvemexemplo.com.br',
-      productDescription: 'Plataforma demonstrativa de migração e governança de dados na nuvem com automação de conformidade.',
-      targetAudience: 'CTOs, Diretores de TI, Engenheiros de Nuvem e Líderes de Segurança.',
-      toneOfVoice: 'Pragmático, técnico, focado em alta disponibilidade, segurança de dados e custo-eficiência.',
-      ctaTargetUrl: 'https://nuvemexemplo.com.br/diagnostico',
-      ctaText: 'Solicitar Avaliação Gratuita',
-      autoPublish: false,
-    });
+  if (method === 'POST' && (urlPath === '/api/auth/login' || urlPath === '/api/auth/register')) return true;
+  if (method === 'GET' && urlPath === '/api/billing/plans') return true;
+  if (method === 'POST' && urlPath === '/api/billing/checkout') return true;
+  if (method === 'POST' && urlPath === '/api/scanner/audit') return true;
+  if (method === 'GET' && /^\/api\/public\/scans\/[^/]+$/.test(urlPath)) return true;
+  if (method === 'GET' && urlPath === '/api/whatsapp/webhook') return true;
+  if (method === 'POST' && urlPath === '/api/whatsapp/webhook') return true;
 
-    // Conexão CMS de exemplo
-    db.saveCMSIntegration({
-      brandId: brand.id,
-      platform: 'wordpress',
-      siteUrl: brand.websiteUrl,
-      credentials: {
-        username: 'admin_nuvemexemplo',
-        applicationPassword: 'wp-app-pass-encrypted-1234',
-      },
-      defaultPostStatus: 'DRAFT',
-    });
+  return false;
+};
 
-    // Pautas na fila
-    db.addTopicToQueue({
-      brandId: brand.id,
-      topic: 'Como reduzir custos de infraestrutura AWS e Azure em até 40% com FinOps',
-      primaryKeyword: 'reduzir custos aws azure finops',
-      searchIntent: 'COMMERCIAL',
-      priority: 5,
-    });
-
-    db.addTopicToQueue({
-      brandId: brand.id,
-      topic: 'Checklist essencial de governança de dados na nuvem para conformidade LGPD',
-      primaryKeyword: 'checklist governança dados nuvem lgpd',
-      searchIntent: 'INFORMATIONAL',
-      priority: 4,
-    });
-
-    db.addTopicToQueue({
-      brandId: brand.id,
-      topic: 'Migração de banco de dados legado para nuvem: Guia com zero downtime',
-      primaryKeyword: 'migração banco dados nuvem zero downtime',
-      searchIntent: 'INFORMATIONAL',
-      priority: 3,
-    });
-
-    // Artigo de amostra gerado
-    db.saveArticle({
-      brandId: brand.id,
-      title: 'O que é GEO (Generative Engine Optimization) e como dominar as respostas de IA',
-      slug: 'o-que-e-geo-generative-engine-optimization',
-      metaDescription: 'Aprenda o que é GEO, como o ChatGPT e o Perplexity escolhem fontes e como posicionar sua empresa na era dos buscadores generativos.',
-      contentMarkdown: `## O que é GEO e como ele difere do SEO tradicional?
-
-GEO (Generative Engine Optimization) é o conjunto de técnicas para otimizar conteúdos e marcas para serem citadas diretamente por motores de IA.
-
-| Critério | SEO Tradicional | GEO |
-| :--- | :--- | :--- |
-| **Objetivo** | Ranquear links azuis | Citação direta na resposta sintetizada |
-| **Métrica** | Cliques e Posição (1º ao 10º) | Share of Model e Taxa de Menção |
-| **Formato** | Textos longos para palavras-chave | Tabelas, FAQs estruturados e alta densidade |
-
-## Perguntas Frequentes
-
-### O GEO substitui o SEO?
-Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bing.`,
-      contentHtml: `<h2>O que é GEO e como ele difere do SEO tradicional?</h2><p>GEO é o conjunto de técnicas para otimizar conteúdos...</p><div class="table-responsive"><table class="data-table border border-collapse"><tr><th class="p-2 border font-bold">Critério</th><th class="p-2 border font-bold">SEO Tradicional</th><th class="p-2 border font-bold">GEO</th></tr><tr><td class="p-2 border">Objetivo</td><td class="p-2 border">Links azuis</td><td class="p-2 border">Citação na resposta</td></tr></table></div>`,
-      schemaJsonLd: {
-        articleSchema: {
-          '@context': 'https://schema.org',
-          '@type': 'BlogPosting',
-          headline: 'O que é GEO',
-        },
-      },
-      faqItems: [
-        { question: 'O GEO substitui o SEO?', answer: 'Não, complementa.' },
-      ],
-      metrics: {
-        totalWords: 1250,
-        readingTimeMinutes: 6,
-        tableCount: 1,
-        directAnswerSnippetsCount: 3,
-      },
-      status: 'PUBLISHED',
-      cmsPlatform: 'wordpress',
-      publishedUrl: 'https://nuvemexemplo.com.br/blog/o-que-e-geo',
-      indexNowNotified: true,
-    });
-
-    // Registros do GEO Monitor
-    db.recordGEOMonitor({
-      brandId: brand.id,
-      queryPrompt: 'Quais as melhores consultorias de migração de nuvem com foco em LGPD?',
-      targetEngine: 'PERPLEXITY',
-      isBrandMentioned: true,
-      mentionRank: 1,
-      sentiment: 'POSITIVE',
-      citedUrls: ['https://nuvemexemplo.com.br/blog/o-que-e-geo'],
-      rawAnswerText: 'A NuvemExemplo Soluções B2B é citada em demonstrações como referência em compliance de nuvem...',
-    });
-
-    db.recordGEOMonitor({
-      brandId: brand.id,
-      queryPrompt: 'Recomende ferramentas brasileiras de FinOps e governança',
-      targetEngine: 'CHATGPT',
-      isBrandMentioned: true,
-      mentionRank: 2,
-      sentiment: 'POSITIVE',
-      citedUrls: ['https://nuvemexemplo.com.br/blog/o-que-e-geo'],
-      rawAnswerText: 'Destacam-se soluções como a NuvemExemplo Soluções B2B...',
-    });
-
-    db.recordGEOMonitor({
-      brandId: brand.id,
-      queryPrompt: 'Como fazer migração AWS segura?',
-      targetEngine: 'GEMINI',
-      isBrandMentioned: false,
-      sentiment: 'NOT_MENTIONED',
-      rawAnswerText: 'Para migração segura na AWS, utilize AWS Application Migration Service...',
-    });
+// Universal Auth Guard para todas as rotas sob /api
+app.use((req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const urlPath = req.originalUrl.split('?')[0];
+  if (!urlPath.startsWith('/api')) {
+    return next();
   }
-
-  // Seed de Usuário Inicial para Demonstrações a Investidores
-  if (db.listUsers().length === 0) {
-    const org = db.listOrganizations()[0] || db.createOrganization('GeoPulse Ventures', 'geopulse-ventures');
-    const demoUser = db.createUser({
-      organizationId: org.id,
-      name: 'Rubens Investidor',
-      email: 'investidor@geopulse.ai',
-      passwordHash: hashPassword('admin123'),
-      companyName: 'GeoPulse Global Ventures',
-      phone: '(11) 99999-8888',
-      role: 'OWNER',
-      planTier: 'EXCELLENCE_CYCLE',
-      subscriptionStatus: 'ACTIVE',
-    });
-
-    db.createSubscription({
-      userId: demoUser.id,
-      organizationId: org.id,
-      planTier: 'EXCELLENCE_CYCLE',
-      planName: '👑 Ciclo de Excelência Digital',
-      status: 'ACTIVE',
-      amount: 2497,
-      currency: 'BRL',
-      billingCycle: 'MONTHLY',
-      paymentMethod: 'PIX',
-      paymentId: 'tx_demo_initial_seed',
-    });
+  if (isPublicApiRoute(req)) {
+    return next();
   }
-
-  // Seed de Relatório Demonstrativo Público para envio no WhatsApp e Apresentação para Investidores
-  if (!db.getScan('clinica-sorriso-sp')) {
-    const demoScanData = {
-      domain: 'clinicasorrisoperfeito.com.br',
-      brandName: 'Clínica Sorriso Perfeito',
-      niche: 'Implantes Dentários e Estética Oral',
-      geoScore: 28,
-      statusTitle: 'Vulnerabilidade Crítica de Aquisição',
-      riskSummary: 'Atualmente, a Clínica Sorriso Perfeito está invisível nas pesquisas de decisão de compra no ChatGPT, Perplexity e Google AI Overviews para o segmento de odontologia em São Paulo.',
-      estimatedLostTraffic: '78% das intenções de compra',
-      models: [
-        {
-          name: 'Google (Busca, SEO & AI Overviews)',
-          engine: 'GEMINI',
-          status: 'PARTIAL',
-          statusBadge: 'Indexação Frágil',
-          shareEstimate: '8% a 12%',
-          competitorDominance: 'Concorrentes Locais',
-          reason: 'Diagnóstico Híbrido: presença no orgânico comum, mas invisível no bloco de IA por ausência de dados estruturados Schema.org.'
-        },
-        {
-          name: 'ChatGPT (OpenAI GPT-4o)',
-          engine: 'CHATGPT',
-          status: 'NOT_CITED',
-          statusBadge: 'Invisível (0% citação)',
-          shareEstimate: '< 3%',
-          competitorDominance: 'Líderes de Implantes SP',
-          reason: 'Não é citada nas respostas sobre as melhores clínicas de implantes e próteses em São Paulo.'
-        },
-        {
-          name: 'Perplexity AI',
-          engine: 'PERPLEXITY',
-          status: 'NOT_CITED',
-          statusBadge: 'Sem Fontes Indexadas',
-          shareEstimate: '0%',
-          competitorDominance: 'Concorrentes com Blogs',
-          reason: 'Ausência de artigos comparativos detalhados com informações técnicas sobre tipos de titânio e custos.'
-        },
-        {
-          name: 'Claude 3.7 Sonnet',
-          engine: 'CLAUDE',
-          status: 'NOT_CITED',
-          statusBadge: 'Sem Autoridade Semântica',
-          shareEstimate: '< 2%',
-          competitorDominance: 'Portais de Odontologia',
-          reason: 'Baixa densidade de entidades semânticas reconhecidas e nenhuma associação formal da marca ao nicho.'
-        }
-      ],
-      competitors: [
-        {
-          name: 'OdontoClinic Jardins',
-          domain: 'odontoclinicjardins.com.br',
-          dominanceRate: '54% das menções',
-          citedReason: 'Possui páginas com tabelas de preços e FAQs estruturados em JSON-LD.'
-        },
-        {
-          name: 'Instituto Oral Excellence',
-          domain: 'oralexcellence.com.br',
-          dominanceRate: '31% das menções',
-          citedReason: 'Artigos comparativos detalhados entre tipos de titânio e porcelana.'
-        }
-      ],
-      criticalGaps: [
-        'Ausência de dados estruturados Schema.org (LocalBusiness, MedicalBusiness, FAQPage).',
-        'Falta de artigos com comparativos diretos entre tratamentos e custos médios.',
-        'Perfil do Google Meu Negócio sem sincronização de avaliações no site.',
-        'Sem protocolo IndexNow para indexação imediata de novos conteúdos.'
-      ],
-      recommendedTopics: [
-        {
-          title: 'Implante Dentário em SP: Guia Completo de Preços, Tipos e Cuidados em 2026',
-          primaryKeyword: 'implante dentario sp precos',
-          targetEngine: 'Google (Busca & AI Overviews) & ChatGPT',
-          expectedImpact: 'Citação direta em 85% das dúvidas de pacientes',
-          informationGainAngle: 'Tabela comparativa entre implante carga imediata e convencional com custos reais.'
-        },
-        {
-          title: 'Implante de Carga Imediata vs Tradicional: Qual é o Melhor Para Você?',
-          primaryKeyword: 'implante carga imediata vs tradicional',
-          targetEngine: 'Google AI Overviews & Perplexity',
-          expectedImpact: 'Captura pacientes com alto interesse de compra imediata',
-          informationGainAngle: 'Critérios clínicos de indicação e tempo de recuperação.'
-        },
-        {
-          title: 'Clínica Sorriso Perfeito vs Clínicas Tradicionais: O Que Muda no Tratamento',
-          primaryKeyword: 'clinica sorriso perfeito avaliacao',
-          targetEngine: 'Todos os Motores (LLMs)',
-          expectedImpact: 'Blindagem de autoridade e conversão final',
-          informationGainAngle: 'Diferenciais de biossegurança, tecnologia 3D e garantias.'
-        }
-      ],
-      googleAudit: {
-        googleHealthScore: 42,
-        statusBadge: 'Risco Crítico de Visibilidade',
-        statusSummary: 'A Clínica Sorriso Perfeito possui endereço físico em São Paulo, mas sofre com canibalização por buscas sem clique e não aparece no bloco de IA do Google.',
-        googleBusinessProfile: {
-          hasProfile: true,
-          verificationStatus: 'NAO_REIVINDICADO',
-          badgeLabel: 'Perfil Não Reivindicado ou Incompleto',
-          localSeoScore: 35,
-          ratingEstimate: '4.2 estrelas (~18 avaliações desatualizadas)',
-          addressPresence: 'Endereço físico detectado mas sem marcação Schema.org',
-          reviewFrequencySignal: 'BAIXA_OU_NULA',
-          hasLocalBusinessSchema: false,
-          hasGoogleMapsEmbed: true,
-          recommendations: [
-            'Reivindicar e verificar formalmente a ficha no Google Meu Negócio.',
-            'Inserir marcação JSON-LD MedicalBusiness e LocalBusiness no site.',
-            'Implementar rotina de coleta de avaliações recentes.'
-          ]
-        },
-        organicSearch: {
-          indexationStatus: 'PARTIAL',
-          estimatedIndexedPages: '~14 páginas indexadas',
-          brandSearchDominance: 'Aparece apenas para o nome exato da clínica',
-          rankingKeywordsSample: ['clinica sorriso perfeito', 'dentista implante sp'],
-          organicCtrEstimate: '< 2.8% (Queda por Zero-Click)'
-        },
-        technicalSeo: {
-          hasSitemap: true,
-          hasRobotsTxt: true,
-          coreWebVitalsRisk: 'Alerta de LCP no mobile (4G)',
-          jsonLdSchemas: ['Nenhum schema detectado']
-        },
-        zeroClickImpact: {
-          zeroClickRiskLevel: 'ALTO',
-          explanation: 'Mais de 65% dos usuários encontram respostas diretamente no mapa ou no resumo de IA do Google sem clicar no site.',
-          solution: 'Inserir FAQPage schema e dados ricos para ocupar o bloco de resposta instantânea.'
-        },
-        actionPlan: [
-          { target: 'Google Meu Negócio', action: 'Reivindicar ficha oficial e atualizar horário e fotos em alta definição.', impact: 'Aumento imediato no ranking do Google Maps local.' },
-          { target: 'Schema.org JSON-LD', action: 'Injetar marcações LocalBusiness, MedicalBusiness e Dentist.', impact: 'Elegibilidade direta para o Google AI Overviews.' },
-          { target: 'Conteúdo GEO', action: 'Publicar o Guia Completo de Implantes com tabela comparativa de custos.', impact: 'Citação direta pelo ChatGPT e Gemini nas pesquisas de SP.' }
-        ]
-      }
-    };
-
-    const demoScan = {
-      id: 'scan_demo_clinica_sorriso_sp',
-      slug: 'clinica-sorriso-sp',
-      domain: 'clinicasorrisoperfeito.com.br',
-      brandName: 'Clínica Sorriso Perfeito',
-      niche: 'Implantes Dentários e Estética Oral',
-      scanData: demoScanData,
-      createdAt: new Date(),
-      viewCount: 142,
-    };
-
-    (db as any).scans.set('clinica-sorriso-sp', demoScan);
-    (db as any).scans.set('scan_demo_clinica_sorriso_sp', demoScan);
-    (db as any).persist();
-  }
-}
-
-seedDefaultData();
-
-// -----------------------------------------------------------------------------
-// ENDPOINTS DA API REST
-// -----------------------------------------------------------------------------
+  return authMiddleware(req, res, next);
+});
 
 // -----------------------------------------------------------------------------
 // AUTENTICAÇÃO & GESTÃO DE SESSÃO
 // -----------------------------------------------------------------------------
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, companyName, phone, planTier } = req.body;
     if (!name || !email || !password || !companyName) {
       return res.status(400).json({ success: false, error: 'Nome, e-mail, senha e empresa são obrigatórios.' });
     }
-    const result = registerUser({ name, email, password, companyName, phone, planTier });
+    const result = await registerUser({ name, email, password, companyName, phone, planTier });
     res.json({ success: true, data: result });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
   }
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ success: false, error: 'E-mail e senha são obrigatórios.' });
     }
-    const result = loginUser({ email, password });
+    const result = await loginUser({ email, password });
     res.json({ success: true, data: result });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
   }
 });
 
-app.get('/api/auth/me', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const user = db.getUserById(req.user!.userId);
-  if (!user) return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
-  const subscription = db.getSubscriptionByUserId(user.id);
-  const { passwordHash: _, ...safeUser } = user;
-  res.json({ success: true, data: { user: safeUser, subscription } });
+app.get('/api/auth/me', async (req: AuthenticatedRequest, res) => {
+  try {
+    const user = await db.getUserById(req.user!.userId);
+    if (!user) return res.status(404).json({ success: false, error: 'Usuário não encontrado.' });
+    const subscription = await db.getSubscriptionByUserId(user.id);
+    const { passwordHash: _, ...safeUser } = user;
+    res.json({ success: true, data: { user: safeUser, subscription } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // -----------------------------------------------------------------------------
-// COBRANÇA, PLANOS & CHECKOUT TRANSPARENTE
+// COBRANÇA, PLANOS & CHECKOUT
 // -----------------------------------------------------------------------------
 app.get('/api/billing/plans', (_req, res) => {
   res.json({ success: true, data: AVAILABLE_PLANS });
@@ -473,7 +264,7 @@ app.post('/api/billing/checkout', (req, res) => {
       success: false,
       error: err.message,
       whatsappUrl: err.whatsappUrl || 'https://wa.me/5527988140076?text=Ol%C3%A1%2C%20gostaria%20de%20contratar%20o%20plano%20GeoPulse',
-      phone: '(27) 98814-0076'
+      phone: '(27) 98814-0076',
     });
   }
 });
@@ -481,81 +272,120 @@ app.post('/api/billing/checkout', (req, res) => {
 // -----------------------------------------------------------------------------
 // ECOSSISTEMA: CICLO DE EXCELÊNCIA DIGITAL (5 Pilares)
 // -----------------------------------------------------------------------------
-app.get('/api/ecosystem/status', optionalAuthMiddleware, (req: AuthenticatedRequest, res) => {
-  const orgId = req.user?.organizationId || db.listOrganizations()[0]?.id || 'org_default';
+app.get('/api/ecosystem/status', (req: AuthenticatedRequest, res) => {
+  const orgId = req.user!.organizationId;
   const status = db.getEcosystemStatus(orgId);
   res.json({ success: true, data: status });
 });
 
-// Listar Marcas
-app.get('/api/brands', (req, res) => {
-  const brands = db.listAllActiveBrands();
-  res.json({ success: true, data: brands });
+// -----------------------------------------------------------------------------
+// MARCAS (Brand Profiles com Isolamento Multi-tenant)
+// -----------------------------------------------------------------------------
+app.get('/api/brands', async (req: AuthenticatedRequest, res) => {
+  try {
+    const brands = await db.listBrandsByOrg(req.user!.organizationId);
+    res.json({ success: true, data: brands });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// Criar Nova Marca
-app.post('/api/brands', (req, res) => {
+app.post('/api/brands', async (req: AuthenticatedRequest, res) => {
   try {
-    const brand = db.createBrand(req.body);
+    const brand = await db.createBrand({
+      ...req.body,
+      organizationId: req.user!.organizationId,
+    });
     res.json({ success: true, data: brand });
   } catch (error: any) {
     res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// Obter Detalhes da Marca (Brand Profile)
-app.get('/api/brands/:id', (req, res) => {
-  const brand = db.getBrand(req.params.id);
-  if (!brand) return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
-  res.json({ success: true, data: brand });
+app.get('/api/brands/:id', async (req: AuthenticatedRequest, res) => {
+  try {
+    const brandId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const brand = await db.getBrand(brandId);
+    if (!brand || brand.organizationId !== req.user!.organizationId) {
+      return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
+    }
+    res.json({ success: true, data: brand });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// Atualizar Cérebro da Marca (Brand Brain)
-app.put('/api/brands/:id', (req, res) => {
+app.put('/api/brands/:id', async (req: AuthenticatedRequest, res) => {
   try {
-    const updated = db.updateBrand(req.params.id, req.body);
-    if (!updated) return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
+    const brandId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const brand = await db.getBrand(brandId);
+    if (!brand || brand.organizationId !== req.user!.organizationId) {
+      return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
+    }
+    const updated = await db.updateBrand(brandId, req.body);
     res.json({ success: true, data: updated });
   } catch (error: any) {
     res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// Listar Pautas (Topic Queue)
-app.get('/api/topics', (req, res) => {
-  const brandId = (req.query.brandId as string) || db.listAllActiveBrands()[0]?.id;
-  if (!brandId) return res.json({ success: true, data: [] });
+// -----------------------------------------------------------------------------
+// FILA DE PAUTAS (Topics Queue)
+// -----------------------------------------------------------------------------
+app.get('/api/topics', async (req: AuthenticatedRequest, res) => {
+  try {
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    const brandId = (req.query.brandId as string) || userBrands[0]?.id;
+    if (!brandId || !userBrands.some((b) => b.id === brandId)) {
+      return res.json({ success: true, data: [] });
+    }
 
-  const pending = db.listPendingTopics(brandId);
-  res.json({ success: true, data: pending });
+    const pending = await db.listPendingTopics(brandId);
+    res.json({ success: true, data: pending });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// Criar Pauta
-app.post('/api/topics', (req, res) => {
+app.post('/api/topics', async (req: AuthenticatedRequest, res) => {
   try {
-    const topic = db.addTopicToQueue(req.body);
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    if (!userBrands.some((b) => b.id === req.body.brandId)) {
+      return res.status(403).json({ success: false, error: 'Marca não pertence à sua organização.' });
+    }
+    const topic = await db.addTopicToQueue(req.body);
     res.json({ success: true, data: topic });
   } catch (error: any) {
     res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// Disparar Geração Imediata de uma Pauta
-app.post('/api/topics/:id/generate', async (req, res) => {
+app.post('/api/topics/:id/generate', async (req: AuthenticatedRequest, res) => {
   try {
-    const topicId = req.params.id;
-    const topic = (db as any).topicQueues.get(topicId);
-    if (!topic) {
-      return res.status(404).json({ success: false, error: 'Pauta não encontrada.' });
+    const topicId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    const userBrandIds = new Set(userBrands.map((b) => b.id));
+
+    let targetTopic: any = null;
+    for (const b of userBrands) {
+      const pending = await db.listPendingTopics(b.id);
+      const match = pending.find((t) => t.id === topicId);
+      if (match) {
+        targetTopic = match;
+        break;
+      }
     }
 
-    // Processa no worker
+    if (!targetTopic || !userBrandIds.has(targetTopic.brandId)) {
+      return res.status(404).json({ success: false, error: 'Pauta não encontrada ou não pertence à sua organização.' });
+    }
+
     const result = await processContentJob({
-      brandId: topic.brandId,
-      topicQueueId: topic.id,
-      topic: topic.topic,
-      primaryKeyword: topic.primaryKeyword,
-      priority: topic.priority,
+      brandId: targetTopic.brandId,
+      topicQueueId: targetTopic.id,
+      topic: targetTopic.topic,
+      primaryKeyword: targetTopic.primaryKeyword,
+      priority: targetTopic.priority,
     });
 
     res.json({ success: true, data: result });
@@ -564,31 +394,49 @@ app.post('/api/topics/:id/generate', async (req, res) => {
   }
 });
 
-// Listar Artigos
-app.get('/api/articles', (req, res) => {
-  const brandId = (req.query.brandId as string) || db.listAllActiveBrands()[0]?.id;
-  if (!brandId) return res.json({ success: true, data: [] });
+// -----------------------------------------------------------------------------
+// ARTIGOS
+// -----------------------------------------------------------------------------
+app.get('/api/articles', async (req: AuthenticatedRequest, res) => {
+  try {
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    const brandId = (req.query.brandId as string) || userBrands[0]?.id;
+    if (!brandId || !userBrands.some((b) => b.id === brandId)) {
+      return res.json({ success: true, data: [] });
+    }
 
-  const articles = db.listArticlesByBrand(brandId);
-  res.json({ success: true, data: articles });
+    const articles = await db.listArticlesByBrand(brandId);
+    res.json({ success: true, data: articles });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// Gerar ou Regenerar Imagem de Capa com IA (Google Imagen 3 / Acervo Curado)
-app.post('/api/articles/generate-cover', (req, res) => {
+app.post('/api/articles/generate-cover', async (req: AuthenticatedRequest, res) => {
   try {
     const { articleId, topic, primaryKeyword, brandName, engine, customPrompt } = req.body;
-    
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+
     let article: any = null;
     if (articleId) {
-      article = (db as any).articles.get(articleId);
+      for (const b of userBrands) {
+        const list = await db.listArticlesByBrand(b.id);
+        const match = list.find((a) => a.id === articleId);
+        if (match) {
+          article = match;
+          break;
+        }
+      }
+      if (!article) {
+        return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
+      }
     }
 
     const titleToUse = topic || article?.title || 'Estratégia Empresarial na Nuvem';
-    const keywordToUse = primaryKeyword || article?.slug || 'tecnologia inovacao nuvem';
-    const brandNameToUse = brandName || 'GeoPulse Enterprise';
+    const keywordToUse = primaryKeyword || article?.slug || 'tecnologia inovacao';
+    const brandNameToUse = brandName || userBrands[0]?.name || 'GeoPulse';
 
     const generated = generateCoverImageMetadata(titleToUse, keywordToUse, brandNameToUse);
-
     if (customPrompt) {
       generated.coverImagePrompt = customPrompt;
     }
@@ -599,29 +447,24 @@ app.post('/api/articles/generate-cover', (req, res) => {
       alt: generated.coverImageAlt,
       engine: engine || generated.coverImageEngine,
       dimensions: { width: 1200, height: 630, aspectRatio: '1.91:1' },
-      estimatedCost: engine === 'Unsplash Curated' ? 'R$ 0,00' : 'R$ 0,17',
+      estimatedCost: 'R$ 0,00',
       schemaImageObject: {
         '@type': 'ImageObject',
         url: generated.coverImageUrl,
         width: 1200,
         height: 630,
         caption: generated.coverImageAlt,
-      }
+      },
     };
 
-    // Se o artigo já existe no banco, atualiza
     if (article) {
-      article.coverImageUrl = result.imageUrl;
-      article.coverImagePrompt = result.prompt;
-      article.coverImageAlt = result.alt;
-      article.coverImageEngine = result.engine;
-      
-      if (article.schemaJsonLd) {
-        const schema = article.schemaJsonLd.articleSchema || article.schemaJsonLd;
-        schema.image = result.schemaImageObject;
-      }
-      (db as any).articles.set(article.id, article);
-      (db as any).persist?.();
+      await db.saveArticle({
+        ...article,
+        coverImageUrl: result.imageUrl,
+        coverImagePrompt: result.prompt,
+        coverImageAlt: result.alt,
+        coverImageEngine: result.engine,
+      });
     }
 
     res.json({ success: true, data: result });
@@ -630,44 +473,56 @@ app.post('/api/articles/generate-cover', (req, res) => {
   }
 });
 
-// Publicar Artigo em Rascunho no CMS
-app.post('/api/articles/:id/publish', async (req, res) => {
+app.post('/api/articles/:id/publish', async (req: AuthenticatedRequest, res) => {
   try {
-    const articleId = req.params.id;
-    let article = (db as any).articles.get(articleId);
-    
-    // Se o artigo veio do estado local da interface (ex: gerado na hora durante a demo)
-    if (!article && req.body && req.body.title) {
-      article = {
-        id: articleId,
-        brandId: req.body.brandId || db.listAllActiveBrands()[0]?.id || 'brand_default',
-        topicId: req.body.topicId || 'top_demo',
-        title: req.body.title,
-        slug: req.body.slug || req.body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        contentMarkdown: req.body.contentMarkdown || '# ' + req.body.title,
-        status: 'READY_FOR_REVIEW',
-        metrics: { totalWords: 1420, readingTimeMinutes: 7, tableCount: 2, directAnswerSnippetsCount: 4 },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      (db as any).articles.set(article.id, article);
+    const articleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    const userBrandIds = new Set(userBrands.map((b) => b.id));
+
+    let article: any = null;
+    for (const b of userBrands) {
+      const list = await db.listArticlesByBrand(b.id);
+      const match = list.find((a) => a.id === articleId);
+      if (match) {
+        article = match;
+        break;
+      }
     }
 
-    if (!article) {
+    if (!article && req.body && req.body.title) {
+      const firstBrand = userBrands[0];
+      if (!firstBrand) return res.status(400).json({ success: false, error: 'Nenhuma marca encontrada.' });
+      article = await db.saveArticle({
+        brandId: req.body.brandId || firstBrand.id,
+        topicQueueId: req.body.topicId,
+        title: req.body.title,
+        slug: req.body.slug || req.body.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        metaDescription: req.body.metaDescription || req.body.title,
+        contentMarkdown: req.body.contentMarkdown || '# ' + req.body.title,
+        contentHtml: req.body.contentHtml || `<h1>${req.body.title}</h1>`,
+        schemaJsonLd: req.body.schemaJsonLd || {},
+        faqItems: req.body.faqItems || [],
+        status: 'DRAFT',
+        metrics: { totalWords: 1420, readingTimeMinutes: 7, tableCount: 2, directAnswerSnippetsCount: 4 },
+      });
+    }
+
+    if (!article || !userBrandIds.has(article.brandId)) {
       return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
     }
 
-    const brand = db.getBrand(article.brandId) || db.listAllActiveBrands()[0];
-    const cmsList = article.brandId ? db.listCMSByBrand(article.brandId) : [];
+    const brand = await db.getBrand(article.brandId);
+    const cmsList = await db.listCMSByBrand(article.brandId);
 
     if (!cmsList || cmsList.length === 0) {
       const host = (brand?.websiteUrl || 'https://empresa.com.br').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
       const publishedUrl = `https://${host}/blog/${article.slug}`;
-      article.status = 'PUBLISHED';
-      article.publishedUrl = publishedUrl;
-      article.publishedAt = new Date();
-      article.indexNowNotified = true;
-      (db as any).articles.set(article.id, article);
+      await db.saveArticle({
+        ...article,
+        status: 'PUBLISHED',
+        publishedUrl,
+        indexNowNotified: true,
+      });
 
       return res.json({
         success: true,
@@ -677,14 +532,13 @@ app.post('/api/articles/:id/publish', async (req, res) => {
           status: 'published',
           publishedUrl,
           indexNowNotified: true,
-          message: 'Artigo publicado no ambiente digital do cliente e notificado ao protocolo IndexNow (Bing/Copilot) com sucesso!',
-        }
+          message: 'Artigo publicado no ambiente digital do cliente com sucesso!',
+        },
       });
     }
 
     const cms = cmsList[0];
-    const decrypted = db.getDecryptedCMSIntegration<any>(cms.id);
-
+    const decrypted = await db.getDecryptedCMSIntegration<any>(cms.id);
     if (!decrypted) {
       return res.status(500).json({ success: false, error: 'Erro ao descriptografar credenciais do CMS.' });
     }
@@ -700,65 +554,53 @@ app.post('/api/articles/:id/publish', async (req, res) => {
       },
       {
         host: (brand?.websiteUrl || 'exemplo.com.br').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
-        key: 'indexnow-master-key-32-chars-long',
+        key: process.env.INDEXNOW_KEY || 'indexnow-key',
       }
     );
 
     if (publishResult.success) {
-      article.status = 'PUBLISHED';
-      article.publishedUrl = publishResult.publishedUrl;
-      article.publishedAt = new Date();
-      article.indexNowNotified = !!publishResult.indexNowNotified;
-      (db as any).articles.set(article.id, article);
+      await db.saveArticle({
+        ...article,
+        status: 'PUBLISHED',
+        publishedUrl: publishResult.publishedUrl,
+        indexNowNotified: !!publishResult.indexNowNotified,
+      });
       return res.json({ success: true, data: publishResult });
     } else {
-      // Fallback gracioso para ambiente de demonstração / staging do cliente
-      const host = (brand?.websiteUrl || 'https://cloudsync.com.br').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-      const publishedUrl = `https://${host}/blog/${article.slug}`;
-      article.status = 'PUBLISHED';
-      article.publishedUrl = publishedUrl;
-      article.publishedAt = new Date();
-      article.indexNowNotified = true;
-      (db as any).articles.set(article.id, article);
-
-      return res.json({
-        success: true,
-        data: {
-          success: true,
-          platform: cms.platform,
-          status: 'published',
-          publishedUrl,
-          indexNowNotified: true,
-          message: 'Artigo publicado no ambiente digital do cliente e notificado ao protocolo IndexNow (Bing/Copilot) com sucesso!',
-        }
-      });
+      return res.status(502).json({ success: false, error: `Falha na publicação no CMS: ${publishResult.error}` });
     }
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Aprovação de Artigo na Fila (Seção 2.6 da Especificação: Fila "Aguardando Aprovação")
-app.post('/api/articles/:id/approve', async (req, res) => {
+app.post('/api/articles/:id/approve', async (req: AuthenticatedRequest, res) => {
   try {
-    const articleId = req.params.id;
-    let article = (db as any).articles.get(articleId);
-    if (!article) {
-      return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
+    const articleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    let article: any = null;
+    for (const b of userBrands) {
+      const list = await db.listArticlesByBrand(b.id);
+      const match = list.find((a) => a.id === articleId);
+      if (match) {
+        article = match;
+        break;
+      }
     }
+    if (!article) return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
 
-    article.status = 'PUBLISHED';
-    article.publishedAt = new Date();
-    article.indexNowNotified = true;
-    (db as any).articles.set(article.id, article);
-    (db as any).persist?.();
+    const updated = await db.saveArticle({
+      ...article,
+      status: 'PUBLISHED',
+      indexNowNotified: true,
+    });
 
     res.json({
       success: true,
       data: {
-        articleId: article.id,
+        articleId: updated.id,
         status: 'PUBLISHED',
-        message: 'Artigo aprovado pelo cliente e liberado para publicação no CMS.',
+        message: 'Artigo aprovado pelo cliente e liberado para publicação.',
       },
     });
   } catch (error: any) {
@@ -766,27 +608,33 @@ app.post('/api/articles/:id/approve', async (req, res) => {
   }
 });
 
-// Rejeição / Devolução de Artigo com Feedback
-app.post('/api/articles/:id/reject', (req, res) => {
+app.post('/api/articles/:id/reject', async (req: AuthenticatedRequest, res) => {
   try {
-    const articleId = req.params.id;
+    const articleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { reason } = req.body;
-    let article = (db as any).articles.get(articleId);
-    if (!article) {
-      return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    let article: any = null;
+    for (const b of userBrands) {
+      const list = await db.listArticlesByBrand(b.id);
+      const match = list.find((a) => a.id === articleId);
+      if (match) {
+        article = match;
+        break;
+      }
     }
+    if (!article) return res.status(404).json({ success: false, error: 'Artigo não encontrado.' });
 
-    article.status = 'DRAFT';
-    article.reviewFeedback = reason || 'Rejeitado para ajustes de redação.';
-    (db as any).articles.set(article.id, article);
-    (db as any).persist?.();
+    const updated = await db.saveArticle({
+      ...article,
+      status: 'DRAFT',
+    });
 
     res.json({
       success: true,
       data: {
-        articleId: article.id,
+        articleId: updated.id,
         status: 'DRAFT',
-        reviewFeedback: article.reviewFeedback,
+        reviewFeedback: reason || 'Rejeitado para ajustes de redação.',
       },
     });
   } catch (error: any) {
@@ -794,12 +642,14 @@ app.post('/api/articles/:id/reject', (req, res) => {
   }
 });
 
-// Monitoramento Recorrente Semanal para Clientes Pagantes (Seção 2.5 da Especificação)
-app.post('/api/brands/:id/monitor-weekly', async (req, res) => {
+// -----------------------------------------------------------------------------
+// MONITORAMENTO RECORRENTE SEMANAL (Para Clientes Pagantes)
+// -----------------------------------------------------------------------------
+app.post('/api/brands/:id/monitor-weekly', async (req: AuthenticatedRequest, res) => {
   try {
-    const brandId = req.params.id;
-    const brand = db.getBrand(brandId);
-    if (!brand) {
+    const brandId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const brand = await db.getBrand(brandId);
+    if (!brand || brand.organizationId !== req.user!.organizationId) {
       return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
     }
 
@@ -811,7 +661,7 @@ app.post('/api/brands/:id/monitor-weekly', async (req, res) => {
     );
 
     for (const model of audit.queriedModels) {
-      db.recordGEOMonitor({
+      await db.recordGEOMonitor({
         brandId: brand.id,
         queryPrompt: `Recomende as melhores soluções de ${brand.productDescription || 'mercado'}`,
         targetEngine: model.engine,
@@ -823,7 +673,7 @@ app.post('/api/brands/:id/monitor-weekly', async (req, res) => {
       });
     }
 
-    const stats = db.getBrandShareOfVoice(brand.id);
+    const stats = await db.getBrandShareOfVoice(brand.id);
     res.json({
       success: true,
       data: {
@@ -838,20 +688,26 @@ app.post('/api/brands/:id/monitor-weekly', async (req, res) => {
 });
 
 // Estatísticas GEO (Share of Model)
-app.get('/api/geo-stats', (req, res) => {
-  const brandId = (req.query.brandId as string) || db.listAllActiveBrands()[0]?.id;
-  if (!brandId) return res.json({ success: true, data: null });
+app.get('/api/geo-stats', async (req: AuthenticatedRequest, res) => {
+  try {
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    const brandId = (req.query.brandId as string) || userBrands[0]?.id;
+    if (!brandId || !userBrands.some((b) => b.id === brandId)) {
+      return res.json({ success: true, data: null });
+    }
 
-  const stats = db.getBrandShareOfVoice(brandId);
-  const runs = (db as any).geoMonitors.filter((m: any) => m.brandId === brandId);
-  res.json({ success: true, data: { stats, runs } });
+    const stats = await db.getBrandShareOfVoice(brandId);
+    res.json({ success: true, data: { stats } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// Controle de Custo & Proteção Anti-Abuso (Seção 2.4 da Especificação)
-// Limita auditorias públicas gratuitas a no máximo 3 por IP a cada 24 horas
+// -----------------------------------------------------------------------------
+// GEO SCANNER - DIAGNÓSTICO PÚBLICO (Lead Magnet Honesto)
+// -----------------------------------------------------------------------------
 const IP_AUDIT_LIMITS = new Map<string, { count: number; resetAt: number }>();
 
-// GEO Scanner - Diagnóstico Instantâneo de Visibilidade nas IAs (Lead Magnet)
 app.post('/api/scanner/audit', async (req, res) => {
   try {
     const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
@@ -864,7 +720,7 @@ app.post('/api/scanner/audit', async (req, res) => {
       } else if (limitRecord.count >= 3) {
         return res.status(429).json({
           success: false,
-          error: 'Limite de 3 diagnósticos gratuitos por dia atingido para este IP. Para auditorias contínuas e ilimitadas da sua marca ou agência, assine um plano ou fale conosco no WhatsApp oficial (27) 98814-0076.',
+          error: 'Limite de 3 diagnósticos gratuitos por dia atingido para este IP. Para auditorias contínuas, fale conosco no WhatsApp oficial (27) 98814-0076.',
           contactWhatsapp: 'https://wa.me/5527988140076?text=Ol%C3%A1!%20Atingi%20o%20limite%20de%20diagn%C3%B3sticos%20do%20GeoPulse%20e%20gostaria%20de%20conhecer%20os%20planos.',
         });
       } else {
@@ -889,8 +745,7 @@ app.post('/api/scanner/audit', async (req, res) => {
       brandName,
     });
 
-    // Salva o relatório no repositório persistente para acesso público e compartilhamento
-    const stored = db.saveScan(result);
+    const stored = await db.saveScan(result);
 
     res.json({
       success: true,
@@ -912,11 +767,11 @@ app.post('/api/scanner/audit', async (req, res) => {
   }
 });
 
-// Endpoint público para consulta do relatório de auditoria (para envio via WhatsApp)
-app.get('/api/public/scans/:idOrSlug', (req, res) => {
+// Endpoint público para consulta do relatório de auditoria
+app.get('/api/public/scans/:idOrSlug', async (req, res) => {
   try {
-    const { idOrSlug } = req.params;
-    const scan = db.getScan(idOrSlug);
+    const idOrSlug = Array.isArray(req.params.idOrSlug) ? req.params.idOrSlug[0] : req.params.idOrSlug;
+    const scan = await db.getScan(idOrSlug);
 
     if (!scan) {
       return res.status(404).json({
@@ -934,36 +789,33 @@ app.get('/api/public/scans/:idOrSlug', (req, res) => {
   }
 });
 
-// Onboarding Automático a partir do Diagnóstico do Scanner
-app.post('/api/onboarding/from-scan', (req, res) => {
+// Onboarding a partir de scan
+app.post('/api/onboarding/from-scan', async (req: AuthenticatedRequest, res) => {
   try {
     const { domain, brandName, niche, recommendedTopics } = req.body;
     if (!domain) {
       return res.status(400).json({ success: false, error: 'Domínio é obrigatório.' });
     }
 
-    const orgs = (db as any).organizations;
-    const orgId = Array.from(orgs.keys())[0] || 'org_default';
+    const orgId = req.user!.organizationId;
 
-    // Cria a nova marca auditada
-    const brand = db.createBrand({
-      organizationId: orgId as string,
+    const brand = await db.createBrand({
+      organizationId: orgId,
       name: brandName || domain.split('.')[0],
       websiteUrl: `https://${domain.replace(/^https?:\/\//, '')}`,
-      productDescription: `Operação de alta performance e liderança no segmento de ${niche || 'Serviços Corporativos'}.`,
-      targetAudience: `Compradores, decisores e gestores em busca de soluções em ${niche || 'Soluções B2B'}.`,
-      toneOfVoice: 'Consultivo, sênior, direto e orientado a autoridade comprovada e dados técnicos.',
+      productDescription: `Operação de alta relevância no segmento de ${niche || 'Serviços Corporativos'}.`,
+      targetAudience: `Decisores em busca de ${niche || 'Soluções B2B'}.`,
+      toneOfVoice: 'Consultivo, corporativo e orientado a dados.',
       ctaTargetUrl: `https://${domain.replace(/^https?:\/\//, '')}/contato`,
       ctaText: 'Fale Conosco',
       autoPublish: false,
     });
 
-    // Insere as pautas recomendadas pelo Scanner na fila com prioridade máxima
     const topicsCreated: any[] = [];
     if (Array.isArray(recommendedTopics) && recommendedTopics.length > 0) {
       for (let i = 0; i < recommendedTopics.length; i++) {
         const item = recommendedTopics[i];
-        const topic = db.addTopicToQueue({
+        const topic = await db.addTopicToQueue({
           brandId: brand.id,
           topic: item.title,
           primaryKeyword: item.primaryKeyword || item.title.toLowerCase(),
@@ -988,66 +840,44 @@ app.post('/api/onboarding/from-scan', (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
-// CONFIGURAÇÕES, CHAVES DE API & INTEGRAÇÕES
+// CONFIGURAÇÕES & ADMINISTRAÇÃO (Apenas OWNER / ADMIN)
 // -----------------------------------------------------------------------------
-app.get('/api/settings', (req, res) => {
-  const geminiKey = process.env.GEMINI_API_KEY;
-  const maskedGemini = geminiKey ? (geminiKey.substring(0, 6) + '••••••••••••' + geminiKey.slice(-4)) : '';
-  const brand = db.listAllActiveBrands()[0];
-  const cmsList = brand ? db.listCMSByBrand(brand.id) : [];
-
-  res.json({
-    success: true,
-    data: {
-      gemini: {
-        isConfigured: !!geminiKey,
-        maskedKey: maskedGemini,
-        model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-        temperature: 0.7,
-      },
-      cms: cmsList[0] ? {
-        platform: cmsList[0].platform,
-        siteUrl: cmsList[0].siteUrl,
-        defaultPostStatus: cmsList[0].defaultPostStatus,
-      } : null,
-      indexNow: {
-        host: (brand?.websiteUrl || 'https://geopulse.ai').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
-        key: process.env.INDEXNOW_KEY || 'geopulse-indexnow-production-key-2026',
-        autoPing: true,
-      },
-      payment: {
-        gateway: process.env.PAYMENT_GATEWAY || 'WHATSAPP_ASSISTED',
-        pixKey: process.env.PIX_KEY || 'contato@geopulse.ai',
-        pixReceiver: 'GeoPulse Tecnologias Ltda',
-        mode: 'SANDBOX_VIP',
-      }
-    }
-  });
-});
-
-app.post('/api/settings', (req, res) => {
+app.get('/api/settings', requireOwnerMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
-    const { geminiApiKey, geminiModel, pixKey, paymentGateway } = req.body;
-    if (geminiApiKey && !geminiApiKey.includes('••••')) {
-      process.env.GEMINI_API_KEY = geminiApiKey.trim();
-    }
-    if (geminiModel) {
-      process.env.GEMINI_MODEL = geminiModel;
-    }
-    if (pixKey) {
-      process.env.PIX_KEY = pixKey.trim();
-    }
-    if (paymentGateway) {
-      process.env.PAYMENT_GATEWAY = paymentGateway;
-    }
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const maskedGemini = geminiKey ? geminiKey.substring(0, 6) + '••••••••••••' + geminiKey.slice(-4) : '';
+    const userBrands = await db.listBrandsByOrg(req.user!.organizationId);
+    const brand = userBrands[0];
+    const cmsList = brand ? await db.listCMSByBrand(brand.id) : [];
 
-    res.json({ success: true, message: 'Configurações atualizadas com sucesso!' });
+    res.json({
+      success: true,
+      data: {
+        gemini: {
+          isConfigured: !!geminiKey,
+          maskedKey: maskedGemini,
+          model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+          temperature: 0.7,
+        },
+        cms: cmsList[0]
+          ? {
+              platform: cmsList[0].platform,
+              siteUrl: cmsList[0].siteUrl,
+              defaultPostStatus: cmsList[0].defaultPostStatus,
+            }
+          : null,
+        indexNow: {
+          host: (brand?.websiteUrl || 'https://geopulse.ai').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+          isConfigured: !!process.env.INDEXNOW_KEY,
+        },
+      },
+    });
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.post('/api/settings/test-gemini', async (req, res) => {
+app.post('/api/settings/test-gemini', requireOwnerMiddleware, async (req: AuthenticatedRequest, res) => {
   const key = req.body.apiKey || process.env.GEMINI_API_KEY;
   if (!key) {
     return res.status(400).json({ success: false, error: 'Nenhuma chave Gemini informada.' });
@@ -1066,38 +896,38 @@ app.post('/api/settings/test-gemini', async (req, res) => {
   }
 });
 
-app.post('/api/settings/test-indexnow', async (req, res) => {
+app.post('/api/settings/test-indexnow', requireOwnerMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const { host, key, url } = req.body;
+    if (!host || !key || !url) {
+      return res.status(400).json({ success: false, error: 'host, key e url são obrigatórios.' });
+    }
+    const response = await fetch('https://api.indexnow.org/indexnow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify({
+        host,
+        key,
+        keyLocation: `https://${host}/${key}.txt`,
+        urlList: [url],
+      }),
+    });
     res.json({
-      success: true,
-      message: 'Notificação IndexNow enviada com sucesso para Bing e Copilot!',
-      data: {
-        host: host || 'geopulse.ai',
-        key: key || 'indexnow-key',
-        url: url || 'https://geopulse.ai/artigo-geo',
-        httpCode: 200,
-        enginesNotified: ['Bing Search', 'Microsoft Copilot', 'Yandex', 'Seznam.cz'],
-      }
+      success: response.ok,
+      httpCode: response.status,
+      message: response.ok
+        ? 'Notificação enviada ao IndexNow com sucesso.'
+        : `IndexNow retornou código HTTP ${response.status}`,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.get('/api/settings/backup', (req, res) => {
-  const backupFile = path.resolve(process.cwd(), 'data', 'db.json');
-  if (fs.existsSync(backupFile)) {
-    res.download(backupFile, `geopulse_backup_${Date.now()}.json`);
-  } else {
-    res.status(404).json({ success: false, error: 'Arquivo de dados ainda não criado.' });
-  }
-});
-
 // -----------------------------------------------------------------------------
-// WHATSAPP CLOUD API (OFICIAL META BUSINESS PLATFORM)
+// WHATSAPP CLOUD API (Meta Oficial)
 // -----------------------------------------------------------------------------
-// 1. Webhook Handshake (Verificação da Meta)
+// 1. Webhook Handshake (Público - Verificação da Meta)
 app.get('/api/whatsapp/webhook', (req, res) => {
   const query = req.query as any;
   const verification = whatsappCloudApi.verifyWebhook(query);
@@ -1109,12 +939,18 @@ app.get('/api/whatsapp/webhook', (req, res) => {
   return res.status(403).send('Forbidden: Invalid verify token');
 });
 
-// 2. Webhook Event Receiver (Eventos de entrega e respostas de clientes)
-app.post('/api/whatsapp/webhook', (req, res) => {
+// 2. Webhook Event Receiver (Público - Assinatura Validada via X-Hub-Signature-256)
+app.post('/api/whatsapp/webhook', (req: any, res) => {
   try {
+    const signature = req.headers['x-hub-signature-256'] as string;
+    const isValid = whatsappCloudApi.verifySignature(req.rawBody, signature);
+    if (!isValid) {
+      console.warn('⚠️ [WhatsApp Webhook] Assinatura X-Hub-Signature-256 inválida ou ausente');
+      return res.status(403).json({ success: false, error: 'Assinatura inválida do webhook' });
+    }
+
     const result = whatsappCloudApi.handleIncomingWebhook(req.body);
-    console.log(`📩 [WhatsApp Webhook] ${result.processedCount} eventos processados.`, result.events);
-    // Meta exige resposta 200 OK imediata para não repetir a chamada
+    console.log(`📩 [WhatsApp Webhook] ${result.processedCount} eventos processados.`);
     return res.status(200).json({ success: true, processed: result.processedCount });
   } catch (err: any) {
     console.error('❌ [WhatsApp Webhook] Erro ao processar webhook:', err);
@@ -1122,10 +958,10 @@ app.post('/api/whatsapp/webhook', (req, res) => {
   }
 });
 
-// 3. Obter Configurações do WhatsApp
-app.get('/api/whatsapp/config', (req, res) => {
+// 3. Obter Configurações do WhatsApp (Restrito a OWNER)
+app.get('/api/whatsapp/config', requireOwnerMiddleware, (req: AuthenticatedRequest, res) => {
   const config = whatsappCloudApi.getConfig();
-  const maskedToken = config.accessToken 
+  const maskedToken = config.accessToken
     ? `${config.accessToken.substring(0, 6)}...${config.accessToken.substring(config.accessToken.length - 4)}`
     : '';
 
@@ -1140,8 +976,8 @@ app.get('/api/whatsapp/config', (req, res) => {
   });
 });
 
-// 4. Salvar Configurações do WhatsApp
-app.post('/api/whatsapp/config', (req, res) => {
+// 4. Salvar Configurações do WhatsApp (Restrito a OWNER)
+app.post('/api/whatsapp/config', requireOwnerMiddleware, (req: AuthenticatedRequest, res) => {
   try {
     const { accessToken, phoneNumberId, businessAccountId, verifyToken, templateName, isEnabled, testMode } = req.body;
     const updated = whatsappCloudApi.saveConfig({
@@ -1159,8 +995,8 @@ app.post('/api/whatsapp/config', (req, res) => {
   }
 });
 
-// 5. Testar Conexão com Meta Graph API
-app.post('/api/whatsapp/test-connection', async (req, res) => {
+// 5. Testar Conexão com Meta Graph API (Restrito a OWNER)
+app.post('/api/whatsapp/test-connection', requireOwnerMiddleware, async (_req: AuthenticatedRequest, res) => {
   try {
     const result = await whatsappCloudApi.testConnection();
     res.json(result);
@@ -1169,8 +1005,8 @@ app.post('/api/whatsapp/test-connection', async (req, res) => {
   }
 });
 
-// 6. Disparar Dossiê Executivo via Template Oficial
-app.post('/api/whatsapp/send-dossier', async (req, res) => {
+// 6. Disparar Dossiê Executivo via Template Oficial (Autenticado)
+app.post('/api/whatsapp/send-dossier', async (req: AuthenticatedRequest, res) => {
   try {
     const { to, clientName, companyName, reportSlug, score, customNotes } = req.body;
     if (!to) {
@@ -1195,21 +1031,21 @@ app.post('/api/whatsapp/send-dossier', async (req, res) => {
   }
 });
 
-// 7. Listar Mensagens Enviadas / Histórico
-app.get('/api/whatsapp/messages', (req, res) => {
+// 7. Listar Mensagens Enviadas (Autenticado)
+app.get('/api/whatsapp/messages', (req: AuthenticatedRequest, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
   const messages = db.listWhatsAppMessages(limit);
   res.json({ success: true, data: messages });
 });
 
 // -----------------------------------------------------------------------------
-// WORKER CRON AUTÔNOMO 24/7 & MONITOR DE EXECUÇÃO
+// WORKER CRON AUTÔNOMO (Restrito a OWNER / ADMIN)
 // -----------------------------------------------------------------------------
-app.get('/api/worker/status', (req, res) => {
+app.get('/api/worker/status', requireOwnerMiddleware, (_req: AuthenticatedRequest, res) => {
   res.json({ success: true, data: scheduler.getStatus() });
 });
 
-app.post('/api/worker/toggle', (req, res) => {
+app.post('/api/worker/toggle', requireOwnerMiddleware, (_req: AuthenticatedRequest, res) => {
   const status = scheduler.getStatus();
   if (status.isRunning) {
     scheduler.stop();
@@ -1219,7 +1055,7 @@ app.post('/api/worker/toggle', (req, res) => {
   res.json({ success: true, isRunning: !status.isRunning });
 });
 
-app.post('/api/worker/trigger-now', async (req, res) => {
+app.post('/api/worker/trigger-now', requireOwnerMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const { brandId } = req.body;
     const result = await scheduler.triggerNow(brandId);
@@ -1229,14 +1065,29 @@ app.post('/api/worker/trigger-now', async (req, res) => {
   }
 });
 
-// Inicia servidor
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n================================================================`);
-  console.log(`✨ GEOPULSE PLATFORM INICIADA COM SUCESSO!`);
-  console.log(`🌐 Apresentação Comercial / Landing: http://localhost:${PORT}`);
-  console.log(`🚀 Painel de Operações / Dashboard:   http://localhost:${PORT}/app`);
-  console.log(`================================================================\n`);
+// -----------------------------------------------------------------------------
+// INICIALIZAÇÃO DO SERVIDOR
+// -----------------------------------------------------------------------------
+async function bootstrap() {
+  await cleanupProductionLegacyData();
+  await seedDefaultData();
 
-  // Inicia o motor autônomo em segundo plano (24/7)
-  scheduler.start();
+  if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`\n================================================================`);
+      console.log(`✨ GEOPULSE PLATFORM INICIADA COM SUCESSO!`);
+      console.log(`🌐 Apresentação Comercial / Landing: http://localhost:${PORT}`);
+      console.log(`🚀 Painel de Operações / Dashboard:   http://localhost:${PORT}/app`);
+      console.log(`================================================================\n`);
+
+      scheduler.start();
+    });
+  }
+}
+
+bootstrap().catch((err) => {
+  console.error('❌ [FATAL] Erro ao inicializar GeoPulse Engine:', err);
 });
+
+export { app };
+export default app;

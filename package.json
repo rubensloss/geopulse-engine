@@ -11,6 +11,7 @@
     "dev:worker": "tsx src/demo-worker.ts",
     "dev:server": "tsx src/server.ts",
     "build": "prisma generate && tsc",
+    "test": "tsx test/rodada4.test.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {

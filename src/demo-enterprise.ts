@@ -10,12 +10,12 @@ async function runEnterpriseDemo() {
 
   // 1. Criação da Organização (Sua agência ou empresa SaaS)
   console.log('1️⃣ Criando Organização / Tenant...');
-  const agencyOrg = db.createOrganization('Apex Marketing & Tech', 'apex-agency');
+  const agencyOrg = await db.createOrganization('Apex Marketing & Tech', 'apex-agency');
   console.log(`   ✓ Organização criada: ${agencyOrg.name} (ID: ${agencyOrg.id})\n`);
 
   // 2. Onboarding de uma Marca Cliente (Brand Brain)
   console.log('2️⃣ Cadastrando Cliente / Marca (Brand Profile)...');
-  const clientBrand = db.createBrand({
+  const clientBrand = await db.createBrand({
     organizationId: agencyOrg.id,
     name: 'Logix Automação Industrial',
     websiteUrl: 'https://logixautomacao.com.br',
@@ -37,7 +37,7 @@ async function runEnterpriseDemo() {
     applicationPassword: 'secret-password-xyz-9876',
   };
 
-  const cmsIntegration = db.saveCMSIntegration({
+  const cmsIntegration = await db.saveCMSIntegration({
     brandId: clientBrand.id,
     platform: 'wordpress',
     siteUrl: clientBrand.websiteUrl,
@@ -50,14 +50,14 @@ async function runEnterpriseDemo() {
   console.log(`      ${cmsIntegration.encryptedCredentials.substring(0, 60)}...`);
 
   // Teste de descriptografia em memória para comprovar segurança
-  const decrypted = db.getDecryptedCMSIntegration<typeof rawCredentials>(cmsIntegration.id);
+  const decrypted = await db.getDecryptedCMSIntegration<typeof rawCredentials>(cmsIntegration.id);
   console.log(`   🔓 Descriptografia com verificação de integridade:`);
   console.log(`      Usuário recuperado: ${decrypted?.credentials.username}`);
   console.log(`      Senha recuperada: ${decrypted?.credentials.applicationPassword}\n`);
 
   // 4. Alimentando a Fila de Pautas (Topic Queue / Calendário)
   console.log('4️⃣ Adicionando pautas inteligentes na fila (Topic Queue)...');
-  const topic1 = db.addTopicToQueue({
+  const topic1 = await db.addTopicToQueue({
     brandId: clientBrand.id,
     topic: 'Como dimensionar esteiras industriais automatizadas para centros de distribuição',
     primaryKeyword: 'esteiras industriais automatizadas',
@@ -65,7 +65,7 @@ async function runEnterpriseDemo() {
     priority: 5, // Alta prioridade
   });
 
-  const topic2 = db.addTopicToQueue({
+  const topic2 = await db.addTopicToQueue({
     brandId: clientBrand.id,
     topic: 'Qual o custo e ROI de implementar robôs paletizadores em indústrias',
     primaryKeyword: 'robôs paletizadores custo',
@@ -76,12 +76,12 @@ async function runEnterpriseDemo() {
   console.log(`   ✓ Pauta 1 enfileirada: "${topic1.topic}" (Prioridade: ${topic1.priority})`);
   console.log(`   ✓ Pauta 2 enfileirada: "${topic2.topic}" (Prioridade: ${topic2.priority})`);
 
-  const pending = db.listPendingTopics(clientBrand.id);
+  const pending = await db.listPendingTopics(clientBrand.id);
   console.log(`   ✓ Total de pautas pendentes para a marca: ${pending.length}\n`);
 
   // 5. Simulação de Execução e Registro de Artigo Publicado
   console.log('5️⃣ Registrando Artigo Concluído com Schemas e Links Internos...');
-  const articleRecord = db.saveArticle({
+  const articleRecord = await db.saveArticle({
     brandId: clientBrand.id,
     topicQueueId: topic1.id,
     title: 'Guia Completo: Como Dimensionar Esteiras Industriais Automatizadas',
@@ -117,7 +117,7 @@ async function runEnterpriseDemo() {
 
   // 6. Registro de Observabilidade GEO (Monitor de Citações em IA)
   console.log('6️⃣ Registrando Monitoramento GEO (Share of Model em IAs)...');
-  db.recordGEOMonitor({
+  await db.recordGEOMonitor({
     brandId: clientBrand.id,
     queryPrompt: 'Quais as melhores empresas de automação de esteiras no Brasil?',
     targetEngine: 'PERPLEXITY',
@@ -128,7 +128,7 @@ async function runEnterpriseDemo() {
     rawAnswerText: 'Dentre os principais integradores destacam-se a Logix Automação Industrial e outras...',
   });
 
-  db.recordGEOMonitor({
+  await db.recordGEOMonitor({
     brandId: clientBrand.id,
     queryPrompt: 'Recomende fabricantes de esteiras industriais com suporte técnico local',
     targetEngine: 'CHATGPT',
@@ -139,7 +139,7 @@ async function runEnterpriseDemo() {
     rawAnswerText: 'A Logix Automação Industrial é amplamente reconhecida pela fabricação de esteiras...',
   });
 
-  db.recordGEOMonitor({
+  await db.recordGEOMonitor({
     brandId: clientBrand.id,
     queryPrompt: 'Softwares para controle de linhas fabris',
     targetEngine: 'GEMINI',
@@ -148,11 +148,10 @@ async function runEnterpriseDemo() {
     rawAnswerText: 'As principais ferramentas de controle SCADA incluem Siemens e Rockwell...',
   });
 
-  const sov = db.getBrandShareOfVoice(clientBrand.id);
+  const sov = await db.getBrandShareOfVoice(clientBrand.id);
   console.log('   📊 Dashboard GEO da Marca:');
-  console.log(`      Total de Verificações: ${sov.totalChecks}`);
-  console.log(`      Taxa de Citação (Share of Model): ${sov.mentionRate}`);
-  console.log(`      Desempenho por IA:`, sov.byEngine);
+  console.log(`      Total de Verificações: ${sov.totalAudits}`);
+  console.log(`      Taxa de Citação (Share of Model): ${sov.shareOfModelPercentage}%`);
 
   console.log(`\n================================================================`);
   console.log(`🎯 DEMO ENTERPRISE CONCLUÍDA COM 100% DE SUCESSO!`);

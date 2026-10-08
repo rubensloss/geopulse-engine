@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { db } from '../db/index.js';
 import type { WhatsAppCloudConfig, StoredWhatsAppMessage } from '../db/types.js';
 
@@ -29,15 +30,49 @@ export class WhatsAppCloudApiService {
    */
   getConfig(): WhatsAppCloudConfig {
     const config = db.getWhatsAppConfig();
+    const envVerifyToken = process.env.META_WA_VERIFY_TOKEN;
+    if (process.env.NODE_ENV === 'production' && !envVerifyToken && !config.verifyToken) {
+      throw new Error('ERRO FATAL DE SEGURANÇA: META_WA_VERIFY_TOKEN não configurado em ambiente de produção!');
+    }
+
     return {
       ...config,
       accessToken: config.accessToken || process.env.META_WA_TOKEN || '',
       phoneNumberId: config.phoneNumberId || process.env.META_WA_PHONE_NUMBER_ID || '',
       businessAccountId: config.businessAccountId || process.env.META_WA_BUSINESS_ACCOUNT_ID || '',
-      verifyToken: config.verifyToken || process.env.META_WA_VERIFY_TOKEN || 'geopulse_meta_verify_secret_2026',
+      verifyToken: config.verifyToken || envVerifyToken || 'geopulse-dev-verify-token-local',
       templateName: config.templateName || 'dossie_executivo_geo',
+      isEnabled: config.isEnabled !== undefined ? config.isEnabled : true,
       testMode: config.testMode !== undefined ? config.testMode : !config.accessToken,
     };
+  }
+
+  /**
+   * Valida a assinatura criptográfica X-Hub-Signature-256 no webhook da Meta usando META_APP_SECRET
+   */
+  verifySignature(rawBody: string | Buffer, signatureHeader?: string): boolean {
+    const appSecret = process.env.META_APP_SECRET;
+    if (!appSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('⚠️ [WhatsApp] META_APP_SECRET não definido em produção. Rejeitando validação de assinatura.');
+        return false;
+      }
+      return true;
+    }
+
+    if (!signatureHeader) return false;
+
+    try {
+      const parts = signatureHeader.split('=');
+      const hash = parts.length === 2 ? parts[1] : parts[0];
+      const hmac = crypto.createHmac('sha256', appSecret);
+      hmac.update(rawBody);
+      const digest = hmac.digest('hex');
+
+      return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(digest, 'hex'));
+    } catch {
+      return false;
+    }
   }
 
   /**

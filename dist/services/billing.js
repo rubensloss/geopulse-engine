@@ -35,21 +35,20 @@ export const AVAILABLE_PLANS = [
     },
     {
         id: 'EXCELLENCE_CYCLE',
-        name: '👑 Ciclo de Excelência Digital',
-        tagline: 'O Ecossistema Completo Chave-na-Mão: A Joia da Coroa + Os 4 Pilares Executados',
+        name: 'Ciclo de Excelência',
+        tagline: 'Ciclo de Excelência completo: os 5 pilares, com o GeoPulse no pilar Autoridade em IA',
         price: 2497,
         formattedPrice: 'R$ 2.497',
         billingPeriod: '/mês',
-        highlightCrown: true,
         features: [
-            '👑 Joia da Coroa: Licença PRO completa da Plataforma GEO GeoPulse',
-            '📍 Pilar 1: Configuração e Otimização Profissional do Google Meu Negócio / Maps',
-            '🌐 Pilar 2: Site Moderno, Imersivo e Ultra-rápido com Schemas JSON-LD',
-            '🤖 Pilar 3: Agente de IA Conversacional treinado para Atendimento 24/7',
-            '📊 Pilar 4: CRM Integrado com Gestão de Funil de Vendas e Follow-up Automático',
-            '🚀 Equipe dedicada cuidando da execução técnica e operacional'
+            'Pilar 01 - Atração: Tráfego qualificado e presença omnicanal',
+            'Pilar 02 - Atendimento: Agente de IA conversacional 24/7 e resposta ágil',
+            'Pilar 03 - Gestão: CRM integrado com acompanhamento do funil de vendas',
+            'Pilar 04 - Reputação: Gestão de avaliações, autoridade local e prova social',
+            'Pilar 05 - Autoridade em IA: GeoPulse Engine completo para dominar recomendações em LLMs',
+            'Execução técnica e acompanhamento estratégico da Creative Always'
         ],
-        ctaLabel: 'Contratar Ciclo de Excelência VIP'
+        ctaLabel: 'Contratar Ciclo de Excelência'
     }
 ];
 export function processCheckout(input) {

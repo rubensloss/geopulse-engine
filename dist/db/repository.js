@@ -5,7 +5,7 @@ import { decryptJsonCredential, encryptJsonCredential } from '../security/encryp
 /**
  * Repositório Enterprise de Dados para o Motor GEO e Ecossistema Ciclo de Excelência.
  * Suporta isolamento multi-tenant por Organization, User e Brand,
- * com persistência em disco (data/db.json) e criptografia AES-256-GCM em repouso.
+ * com persistência relacional direta via Prisma PostgreSQL e criptografia AES-256-GCM.
  */
 export class EnterpriseRepository {
     storageFile = path.resolve(process.cwd(), 'data', 'db.json');
@@ -21,7 +21,7 @@ export class EnterpriseRepository {
     geoMonitors = [];
     scans = new Map();
     whatsappConfig = {
-        verifyToken: process.env.META_WA_VERIFY_TOKEN || 'geopulse_meta_verify_secret_2026',
+        verifyToken: process.env.META_WA_VERIFY_TOKEN || 'geopulse-dev-verify-token-local',
         accessToken: process.env.META_WA_TOKEN || '',
         phoneNumberId: process.env.META_WA_PHONE_NUMBER_ID || '',
         businessAccountId: process.env.META_WA_BUSINESS_ACCOUNT_ID || '',
@@ -31,23 +31,27 @@ export class EnterpriseRepository {
     };
     whatsappMessages = new Map();
     constructor() {
-        this.loadFromDisk();
+        if (process.env.NODE_ENV !== 'production') {
+            this.loadFromDisk();
+        }
         this.hydrateFromPrisma().catch((err) => {
             console.warn('ℹ️ [DB] Inicialização de hidratação Prisma completada com aviso:', err?.message);
         });
     }
     /**
      * Hidrata os repositórios em memória a partir do banco relacional PostgreSQL (Prisma)
-     * garantindo persistência duradoura entre reinicializações de contêineres e deploys.
+     * garantindo sincronização e persistência duradoura.
      */
     async hydrateFromPrisma() {
         try {
-            const [dbScans, dbUsers, dbOrgs, dbBrands, dbSubs] = await Promise.all([
+            const [dbScans, dbUsers, dbOrgs, dbBrands, dbSubs, dbWaConfig, dbWaMessages] = await Promise.all([
                 prisma.scanReport.findMany({ take: 100, orderBy: { createdAt: 'desc' } }).catch(() => []),
                 prisma.user.findMany().catch(() => []),
                 prisma.organization.findMany().catch(() => []),
                 prisma.brand.findMany().catch(() => []),
                 prisma.subscription.findMany().catch(() => []),
+                prisma.whatsAppConfig.findFirst({ orderBy: { updatedAt: 'desc' } }).catch(() => null),
+                prisma.whatsAppMessage.findMany({ take: 50, orderBy: { createdAt: 'desc' } }).catch(() => []),
             ]);
             for (const s of dbScans) {
                 const stored = {
@@ -60,91 +64,115 @@ export class EnterpriseRepository {
                     createdAt: s.createdAt,
                     viewCount: s.viewCount,
                 };
-                if (!this.scans.has(stored.id)) {
-                    this.scans.set(stored.id, stored);
-                    this.scans.set(stored.slug, stored);
-                }
+                this.scans.set(stored.id, stored);
+                this.scans.set(stored.slug, stored);
             }
             for (const u of dbUsers) {
-                if (!this.users.has(u.id)) {
-                    this.users.set(u.id, {
-                        id: u.id,
-                        organizationId: u.organizationId,
-                        name: u.name,
-                        email: u.email,
-                        passwordHash: u.passwordHash || '',
-                        companyName: u.companyName || '',
-                        phone: u.phone || undefined,
-                        role: u.role || 'EDITOR',
-                        planTier: u.planTier || 'STARTER',
-                        subscriptionStatus: u.subscriptionStatus || 'ACTIVE',
-                        createdAt: u.createdAt,
-                        updatedAt: u.updatedAt,
-                    });
-                }
+                this.users.set(u.id, {
+                    id: u.id,
+                    organizationId: u.organizationId,
+                    name: u.name,
+                    email: u.email,
+                    passwordHash: u.passwordHash || '',
+                    companyName: u.companyName || '',
+                    phone: u.phone || undefined,
+                    role: u.role || 'EDITOR',
+                    planTier: u.planTier || 'STARTER',
+                    subscriptionStatus: u.subscriptionStatus || 'ACTIVE',
+                    createdAt: u.createdAt,
+                    updatedAt: u.updatedAt,
+                });
             }
             for (const o of dbOrgs) {
-                if (!this.organizations.has(o.id)) {
-                    this.organizations.set(o.id, {
-                        id: o.id,
-                        name: o.name,
-                        slug: o.slug,
-                        createdAt: o.createdAt,
-                    });
-                }
+                this.organizations.set(o.id, {
+                    id: o.id,
+                    name: o.name,
+                    slug: o.slug,
+                    createdAt: o.createdAt,
+                });
             }
             for (const b of dbBrands) {
-                if (!this.brands.has(b.id)) {
-                    this.brands.set(b.id, {
-                        id: b.id,
-                        organizationId: b.organizationId,
-                        name: b.name,
-                        websiteUrl: b.websiteUrl,
-                        productDescription: b.productDescription || '',
-                        targetAudience: b.targetAudience || '',
-                        toneOfVoice: b.toneOfVoice || '',
-                        ctaTargetUrl: b.ctaTargetUrl || '',
-                        ctaText: b.ctaText || '',
-                        autoPublish: b.autoPublish,
-                        isActive: b.isActive,
-                        createdAt: b.createdAt,
-                        updatedAt: b.updatedAt,
-                    });
-                }
+                this.brands.set(b.id, {
+                    id: b.id,
+                    organizationId: b.organizationId,
+                    name: b.name,
+                    websiteUrl: b.websiteUrl,
+                    productDescription: b.productDescription || '',
+                    targetAudience: b.targetAudience || '',
+                    toneOfVoice: b.toneOfVoice || '',
+                    ctaTargetUrl: b.ctaTargetUrl || '',
+                    ctaText: b.ctaText || '',
+                    autoPublish: b.autoPublish,
+                    isActive: b.isActive,
+                    createdAt: b.createdAt,
+                    updatedAt: b.updatedAt,
+                });
             }
             for (const sub of dbSubs) {
-                if (!this.subscriptions.has(sub.id)) {
-                    this.subscriptions.set(sub.id, {
-                        id: sub.id,
-                        userId: sub.userId,
-                        organizationId: sub.organizationId,
-                        planTier: sub.planTier || 'STARTER',
-                        planName: sub.planName,
-                        status: sub.status || 'ACTIVE',
-                        amount: sub.amount,
-                        currency: sub.currency,
-                        billingCycle: sub.billingCycle || 'MONTHLY',
-                        paymentMethod: sub.paymentMethod || 'PIX',
-                        paymentId: sub.paymentId || undefined,
-                        createdAt: sub.createdAt,
-                        updatedAt: sub.updatedAt,
-                    });
+                this.subscriptions.set(sub.id, {
+                    id: sub.id,
+                    userId: sub.userId,
+                    organizationId: sub.organizationId,
+                    planTier: sub.planTier || 'STARTER',
+                    planName: sub.planName,
+                    status: sub.status || 'ACTIVE',
+                    amount: sub.amount,
+                    currency: sub.currency,
+                    billingCycle: sub.billingCycle || 'MONTHLY',
+                    paymentMethod: sub.paymentMethod || 'PIX',
+                    paymentId: sub.paymentId || undefined,
+                    createdAt: sub.createdAt,
+                    updatedAt: sub.updatedAt,
+                });
+            }
+            if (dbWaConfig) {
+                this.whatsappConfig = {
+                    accessToken: dbWaConfig.accessToken || '',
+                    phoneNumberId: dbWaConfig.phoneNumberId || '',
+                    businessAccountId: dbWaConfig.businessAccountId || '',
+                    verifyToken: dbWaConfig.verifyToken,
+                    templateName: dbWaConfig.templateName || 'dossie_executivo_geo',
+                    isEnabled: dbWaConfig.isEnabled,
+                    testMode: dbWaConfig.testMode,
+                };
+            }
+            for (const msg of dbWaMessages) {
+                const stored = {
+                    id: msg.id,
+                    to: msg.to,
+                    formattedTo: msg.formattedTo,
+                    type: msg.type,
+                    templateName: msg.templateName || undefined,
+                    status: msg.status,
+                    metaMessageId: msg.metaMessageId || undefined,
+                    clientName: msg.clientName || undefined,
+                    companyName: msg.companyName || undefined,
+                    reportSlug: msg.reportSlug || undefined,
+                    dossierUrl: msg.dossierUrl || undefined,
+                    errorMessage: msg.errorMessage || undefined,
+                    createdAt: msg.createdAt,
+                    updatedAt: msg.updatedAt,
+                };
+                this.whatsappMessages.set(stored.id, stored);
+                if (stored.metaMessageId) {
+                    this.whatsappMessages.set(stored.metaMessageId, stored);
                 }
             }
-            console.log('✅ [DB] Prisma PostgreSQL sincronizado com sucesso com a memória.');
+            console.log('✅ [DB] Prisma PostgreSQL sincronizado com sucesso.');
         }
         catch (err) {
-            console.warn('ℹ️ [DB] Conexão com Prisma PostgreSQL não disponível ou sem tabelas:', err.message);
+            console.warn('ℹ️ [DB] Hidratação Prisma concluída com aviso:', err?.message);
         }
     }
     // ---------------------------------------------------------------------------
-    // PERSISTÊNCIA EM DISCO (JSON STORAGE)
+    // PERSISTÊNCIA EM DISCO LOCAL (DESENVOLVIMENTO APENAS)
     // ---------------------------------------------------------------------------
     loadFromDisk() {
+        if (process.env.NODE_ENV === 'production')
+            return;
         try {
-            if (!fs.existsSync(this.storageFile)) {
+            if (!fs.existsSync(this.storageFile))
                 return;
-            }
             const raw = fs.readFileSync(this.storageFile, 'utf-8');
             if (!raw || !raw.trim())
                 return;
@@ -170,9 +198,6 @@ export class EnterpriseRepository {
             if (data.articles) {
                 this.articles = new Map(data.articles.map((item) => [item.id, { ...item, createdAt: new Date(item.createdAt), updatedAt: new Date(item.updatedAt), publishedAt: item.publishedAt ? new Date(item.publishedAt) : undefined }]));
             }
-            if (data.internalLinks) {
-                this.internalLinks = new Map(data.internalLinks.map((item) => [item.id, item]));
-            }
             if (data.geoMonitors) {
                 this.geoMonitors = data.geoMonitors.map((item) => ({ ...item, createdAt: new Date(item.createdAt) }));
             }
@@ -189,28 +214,25 @@ export class EnterpriseRepository {
             if (data.whatsappMessages) {
                 this.whatsappMessages = new Map(data.whatsappMessages.map((item) => [
                     item.id,
-                    {
-                        ...item,
-                        createdAt: new Date(item.createdAt),
-                        updatedAt: new Date(item.updatedAt),
-                    }
+                    { ...item, createdAt: new Date(item.createdAt), updatedAt: new Date(item.updatedAt) }
                 ]));
             }
         }
-        catch (err) {
-            console.warn('⚠️ [DB] Não foi possível carregar base persistente anterior:', err);
+        catch {
+            // Ignora erro em dev
         }
     }
     persist() {
+        if (process.env.NODE_ENV === 'production')
+            return;
         if (this.persistTimer) {
             clearTimeout(this.persistTimer);
         }
         this.persistTimer = setTimeout(() => {
             try {
                 const dir = path.dirname(this.storageFile);
-                if (!fs.existsSync(dir)) {
+                if (!fs.existsSync(dir))
                     fs.mkdirSync(dir, { recursive: true });
-                }
                 const snapshot = {
                     organizations: Array.from(this.organizations.values()),
                     users: Array.from(this.users.values()),
@@ -219,7 +241,6 @@ export class EnterpriseRepository {
                     cmsIntegrations: Array.from(this.cmsIntegrations.values()),
                     topicQueues: Array.from(this.topicQueues.values()),
                     articles: Array.from(this.articles.values()),
-                    internalLinks: Array.from(this.internalLinks.values()),
                     geoMonitors: this.geoMonitors,
                     scans: Array.from(new Set(this.scans.values())),
                     whatsappConfig: this.whatsappConfig,
@@ -228,546 +249,1075 @@ export class EnterpriseRepository {
                 fs.writeFileSync(this.storageFile, JSON.stringify(snapshot, null, 2), 'utf-8');
             }
             catch (err) {
-                console.error('❌ [DB] Erro ao persistir dados no disco:', err);
+                console.error('❌ [DB] Erro ao persistir dados locais:', err);
             }
         }, 150);
     }
     // ---------------------------------------------------------------------------
     // ORGANIZAÇÕES (Tenants)
     // ---------------------------------------------------------------------------
-    createOrganization(name, slug) {
-        const org = {
-            id: `org_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            name,
-            slug,
-            createdAt: new Date(),
-        };
-        this.organizations.set(org.id, org);
-        this.persist();
-        prisma.organization
-            .upsert({
-            where: { slug: org.slug },
-            update: { name: org.name },
-            create: { id: org.id, name: org.name, slug: org.slug, createdAt: org.createdAt },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao sincronizar Organization com Prisma:', err?.message);
-        });
-        return org;
+    async createOrganization(name, slug) {
+        const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.organization.upsert({
+                where: { slug },
+                update: { name },
+                create: { id: orgId, name, slug },
+            });
+            const org = {
+                id: record.id,
+                name: record.name,
+                slug: record.slug,
+                createdAt: record.createdAt,
+            };
+            this.organizations.set(org.id, org);
+            this.persist();
+            return org;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao gravar organização no PostgreSQL: ${err?.message}`);
+            }
+            const org = { id: orgId, name, slug, createdAt: new Date() };
+            this.organizations.set(org.id, org);
+            this.persist();
+            return org;
+        }
     }
-    getOrganization(id) {
+    async getOrganization(id) {
+        try {
+            const record = await prisma.organization.findUnique({ where: { id } });
+            if (record) {
+                return { id: record.id, name: record.name, slug: record.slug, createdAt: record.createdAt };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao buscar organização: ${err?.message}`);
+            }
+        }
         return this.organizations.get(id);
     }
-    listOrganizations() {
-        return Array.from(this.organizations.values());
+    async listOrganizations() {
+        try {
+            const records = await prisma.organization.findMany({ orderBy: { createdAt: 'desc' } });
+            return records.map(r => ({ id: r.id, name: r.name, slug: r.slug, createdAt: r.createdAt }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar organizações: ${err?.message}`);
+            }
+            return Array.from(this.organizations.values());
+        }
     }
     // ---------------------------------------------------------------------------
     // USUÁRIOS (Authentication & Access Control)
     // ---------------------------------------------------------------------------
-    createUser(dto) {
-        const user = {
-            ...dto,
-            id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        this.users.set(user.id, user);
-        this.persist();
-        prisma.user
-            .upsert({
-            where: { email: user.email },
-            update: {
-                name: user.name,
-                organizationId: user.organizationId,
-                role: user.role || 'EDITOR',
-                companyName: user.companyName,
-                phone: user.phone,
-                planTier: user.planTier,
-                subscriptionStatus: user.subscriptionStatus,
-            },
-            create: {
-                id: user.id,
-                organizationId: user.organizationId,
-                email: user.email,
-                name: user.name,
-                passwordHash: user.passwordHash,
-                role: user.role || 'EDITOR',
-                companyName: user.companyName,
-                phone: user.phone,
-                planTier: user.planTier,
-                subscriptionStatus: user.subscriptionStatus,
-                createdAt: user.createdAt,
-            },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao sincronizar User com Prisma:', err?.message);
-        });
-        return user;
-    }
-    getUserByEmail(email) {
-        const normalized = email.toLowerCase().trim();
-        for (const u of this.users.values()) {
-            if (u.email.toLowerCase().trim() === normalized) {
-                return u;
+    async createUser(dto) {
+        const userId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.user.upsert({
+                where: { email: dto.email.toLowerCase().trim() },
+                update: {
+                    name: dto.name,
+                    organizationId: dto.organizationId,
+                    role: dto.role || 'EDITOR',
+                    companyName: dto.companyName,
+                    phone: dto.phone,
+                    planTier: dto.planTier,
+                    subscriptionStatus: dto.subscriptionStatus,
+                },
+                create: {
+                    id: userId,
+                    organizationId: dto.organizationId,
+                    email: dto.email.toLowerCase().trim(),
+                    name: dto.name,
+                    passwordHash: dto.passwordHash,
+                    role: dto.role || 'EDITOR',
+                    companyName: dto.companyName,
+                    phone: dto.phone,
+                    planTier: dto.planTier,
+                    subscriptionStatus: dto.subscriptionStatus,
+                },
+            });
+            const user = {
+                id: record.id,
+                organizationId: record.organizationId,
+                name: record.name,
+                email: record.email,
+                passwordHash: record.passwordHash || '',
+                companyName: record.companyName || '',
+                phone: record.phone || undefined,
+                role: record.role,
+                planTier: record.planTier || 'FREE_TRIAL',
+                subscriptionStatus: record.subscriptionStatus || 'TRIAL',
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            };
+            this.users.set(user.id, user);
+            this.persist();
+            return user;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao gravar usuário no PostgreSQL: ${err?.message}`);
             }
+            const user = {
+                ...dto,
+                id: userId,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+            this.users.set(user.id, user);
+            this.persist();
+            return user;
+        }
+    }
+    async getUserByEmail(email) {
+        const normalized = email.toLowerCase().trim();
+        try {
+            const record = await prisma.user.findUnique({ where: { email: normalized } });
+            if (record) {
+                const user = {
+                    id: record.id,
+                    organizationId: record.organizationId,
+                    name: record.name,
+                    email: record.email,
+                    passwordHash: record.passwordHash || '',
+                    companyName: record.companyName || '',
+                    phone: record.phone || undefined,
+                    role: record.role,
+                    planTier: record.planTier || 'FREE_TRIAL',
+                    subscriptionStatus: record.subscriptionStatus || 'TRIAL',
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt,
+                };
+                this.users.set(user.id, user);
+                return user;
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao buscar usuário no PostgreSQL: ${err?.message}`);
+            }
+        }
+        for (const u of this.users.values()) {
+            if (u.email.toLowerCase().trim() === normalized)
+                return u;
         }
         return undefined;
     }
-    getUserById(id) {
+    async getUserById(id) {
+        try {
+            const record = await prisma.user.findUnique({ where: { id } });
+            if (record) {
+                const user = {
+                    id: record.id,
+                    organizationId: record.organizationId,
+                    name: record.name,
+                    email: record.email,
+                    passwordHash: record.passwordHash || '',
+                    companyName: record.companyName || '',
+                    phone: record.phone || undefined,
+                    role: record.role,
+                    planTier: record.planTier || 'FREE_TRIAL',
+                    subscriptionStatus: record.subscriptionStatus || 'TRIAL',
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt,
+                };
+                this.users.set(user.id, user);
+                return user;
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao buscar usuário no PostgreSQL: ${err?.message}`);
+            }
+        }
         return this.users.get(id);
     }
-    updateUser(id, updates) {
-        const user = this.users.get(id);
-        if (!user)
-            return undefined;
-        const updated = {
-            ...user,
-            ...updates,
-            updatedAt: new Date(),
-        };
-        this.users.set(id, updated);
-        this.persist();
-        prisma.user
-            .update({
-            where: { id },
-            data: {
-                name: updated.name,
-                companyName: updated.companyName,
-                phone: updated.phone,
-                planTier: updated.planTier,
-                subscriptionStatus: updated.subscriptionStatus,
-                updatedAt: updated.updatedAt,
-            },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao atualizar User no Prisma:', err?.message);
-        });
-        return updated;
+    async updateUser(id, updates) {
+        try {
+            const record = await prisma.user.update({
+                where: { id },
+                data: {
+                    name: updates.name,
+                    companyName: updates.companyName,
+                    phone: updates.phone,
+                    planTier: updates.planTier,
+                    subscriptionStatus: updates.subscriptionStatus,
+                },
+            });
+            const user = {
+                id: record.id,
+                organizationId: record.organizationId,
+                name: record.name,
+                email: record.email,
+                passwordHash: record.passwordHash || '',
+                companyName: record.companyName || '',
+                phone: record.phone || undefined,
+                role: record.role,
+                planTier: record.planTier || 'FREE_TRIAL',
+                subscriptionStatus: record.subscriptionStatus || 'TRIAL',
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            };
+            this.users.set(user.id, user);
+            this.persist();
+            return user;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao atualizar usuário no PostgreSQL: ${err?.message}`);
+            }
+            const existing = this.users.get(id);
+            if (!existing)
+                return undefined;
+            const updated = { ...existing, ...updates, updatedAt: new Date() };
+            this.users.set(id, updated);
+            this.persist();
+            return updated;
+        }
     }
-    listUsers() {
-        return Array.from(this.users.values());
+    async listUsers() {
+        try {
+            const records = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+            return records.map(record => ({
+                id: record.id,
+                organizationId: record.organizationId,
+                name: record.name,
+                email: record.email,
+                passwordHash: record.passwordHash || '',
+                companyName: record.companyName || '',
+                phone: record.phone || undefined,
+                role: record.role,
+                planTier: record.planTier || 'FREE_TRIAL',
+                subscriptionStatus: record.subscriptionStatus || 'TRIAL',
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar usuários no PostgreSQL: ${err?.message}`);
+            }
+            return Array.from(this.users.values());
+        }
     }
     // ---------------------------------------------------------------------------
     // ASSINATURAS & CHECKOUT (Billing & Plans)
     // ---------------------------------------------------------------------------
-    createSubscription(dto) {
-        const sub = {
-            ...dto,
-            id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        this.subscriptions.set(sub.id, sub);
-        // Atualiza o plano do usuário correspondente
-        const user = this.users.get(dto.userId);
-        if (user) {
-            user.planTier = dto.planTier;
-            user.subscriptionStatus = dto.status;
-            user.updatedAt = new Date();
-            this.users.set(user.id, user);
-        }
-        this.persist();
-        prisma.subscription
-            .create({
-            data: {
-                id: sub.id,
-                userId: sub.userId,
-                organizationId: sub.organizationId,
-                planTier: sub.planTier,
-                planName: sub.planName,
-                status: sub.status,
-                amount: sub.amount,
-                currency: sub.currency,
-                billingCycle: sub.billingCycle,
-                paymentMethod: sub.paymentMethod,
-                paymentId: sub.paymentId,
-                createdAt: sub.createdAt,
-            },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao sincronizar Subscription com Prisma:', err?.message);
-        });
-        return sub;
-    }
-    getSubscriptionByUserId(userId) {
-        const subs = Array.from(this.subscriptions.values())
-            .filter((s) => s.userId === userId)
-            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        return subs[0];
-    }
-    updateSubscription(id, updates) {
-        const sub = this.subscriptions.get(id);
-        if (!sub)
-            return undefined;
-        const updated = {
-            ...sub,
-            ...updates,
-            updatedAt: new Date(),
-        };
-        this.subscriptions.set(id, updated);
-        this.persist();
-        return updated;
-    }
-    // ---------------------------------------------------------------------------
-    // MARCAS / CLIENTES (Brand Profiles)
-    // ---------------------------------------------------------------------------
-    createBrand(dto) {
-        const brand = {
-            ...dto,
-            id: `brand_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        this.brands.set(brand.id, brand);
-        this.persist();
-        prisma.brand
-            .upsert({
-            where: { id: brand.id },
-            update: {
-                name: brand.name,
-                websiteUrl: brand.websiteUrl,
-                productDescription: brand.productDescription,
-                targetAudience: brand.targetAudience,
-                toneOfVoice: brand.toneOfVoice,
-                ctaTargetUrl: brand.ctaTargetUrl,
-                ctaText: brand.ctaText,
-                autoPublish: brand.autoPublish,
-                isActive: brand.isActive,
-            },
-            create: {
-                id: brand.id,
-                organizationId: brand.organizationId,
-                name: brand.name,
-                websiteUrl: brand.websiteUrl,
-                productDescription: brand.productDescription,
-                targetAudience: brand.targetAudience,
-                toneOfVoice: brand.toneOfVoice,
-                ctaTargetUrl: brand.ctaTargetUrl,
-                ctaText: brand.ctaText,
-                autoPublish: brand.autoPublish,
-                isActive: brand.isActive,
-                createdAt: brand.createdAt,
-            },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao sincronizar Brand com Prisma:', err?.message);
-        });
-        return brand;
-    }
-    getBrand(id) {
-        return this.brands.get(id);
-    }
-    listBrandsByOrg(organizationId) {
-        return Array.from(this.brands.values()).filter((b) => b.organizationId === organizationId);
-    }
-    listAllActiveBrands() {
-        return Array.from(this.brands.values()).filter((b) => b.isActive !== false);
-    }
-    updateBrand(id, updates) {
-        const brand = this.brands.get(id);
-        if (!brand)
-            return undefined;
-        const updated = {
-            ...brand,
-            ...updates,
-            updatedAt: new Date(),
-        };
-        this.brands.set(id, updated);
-        this.persist();
-        prisma.brand
-            .update({
-            where: { id },
-            data: {
-                name: updated.name,
-                websiteUrl: updated.websiteUrl,
-                productDescription: updated.productDescription,
-                targetAudience: updated.targetAudience,
-                toneOfVoice: updated.toneOfVoice,
-                ctaTargetUrl: updated.ctaTargetUrl,
-                ctaText: updated.ctaText,
-                autoPublish: updated.autoPublish,
-                isActive: updated.isActive,
-                updatedAt: updated.updatedAt,
-            },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao atualizar Brand no Prisma:', err?.message);
-        });
-        return updated;
-    }
-    // ---------------------------------------------------------------------------
-    // CMS & CRIPTOGRAFIA (AES-256-GCM)
-    // ---------------------------------------------------------------------------
-    saveCMSIntegration(dto) {
-        const encrypted = encryptJsonCredential(dto.credentials);
-        const integration = {
-            id: `cms_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            brandId: dto.brandId,
-            platform: dto.platform,
-            siteUrl: dto.siteUrl,
-            encryptedCredentials: encrypted,
-            defaultPostStatus: dto.defaultPostStatus || 'DRAFT',
-            createdAt: new Date(),
-        };
-        this.cmsIntegrations.set(integration.id, integration);
-        this.persist();
-        return integration;
-    }
-    getDecryptedCMSIntegration(integrationId) {
-        const integration = this.cmsIntegrations.get(integrationId);
-        if (!integration)
-            return undefined;
-        const decryptedCredentials = decryptJsonCredential(integration.encryptedCredentials);
-        return {
-            integration,
-            credentials: decryptedCredentials,
-        };
-    }
-    listCMSByBrand(brandId) {
-        return Array.from(this.cmsIntegrations.values()).filter((c) => c.brandId === brandId);
-    }
-    // ---------------------------------------------------------------------------
-    // FILA DE PAUTAS (Topic Queue State Machine)
-    // ---------------------------------------------------------------------------
-    addTopicToQueue(dto) {
-        const topic = {
-            ...dto,
-            id: `topic_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            status: 'BACKLOG',
-            priority: dto.priority ?? 1,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-        this.topicQueues.set(topic.id, topic);
-        this.persist();
-        return topic;
-    }
-    updateTopicStatus(topicId, status, errorMessage) {
-        const topic = this.topicQueues.get(topicId);
-        if (!topic)
-            throw new Error(`Tópico ${topicId} não encontrado.`);
-        topic.status = status;
-        topic.updatedAt = new Date();
-        if (errorMessage)
-            topic.errorMessage = errorMessage;
-        this.persist();
-        return topic;
-    }
-    listPendingTopics(brandId) {
-        return Array.from(this.topicQueues.values())
-            .filter((t) => t.brandId === brandId && (t.status === 'BACKLOG' || t.status === 'SCHEDULED'))
-            .sort((a, b) => (b.priority ?? 1) - (a.priority ?? 1));
-    }
-    // ---------------------------------------------------------------------------
-    // ARTIGOS & LINKS INTERNOS
-    // ---------------------------------------------------------------------------
-    saveArticle(dto) {
-        const article = {
-            ...dto,
-            id: `art_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            publishedAt: dto.status === 'PUBLISHED' ? new Date() : undefined,
-        };
-        this.articles.set(article.id, article);
-        if (article.publishedUrl) {
-            const linkIndex = {
-                id: `link_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-                brandId: article.brandId,
-                articleId: article.id,
-                title: article.title,
-                url: article.publishedUrl,
-                keywords: [article.title],
+    async createSubscription(dto) {
+        const subId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.subscription.create({
+                data: {
+                    id: subId,
+                    userId: dto.userId,
+                    organizationId: dto.organizationId,
+                    planTier: dto.planTier,
+                    planName: dto.planName,
+                    status: dto.status,
+                    amount: dto.amount,
+                    currency: dto.currency || 'BRL',
+                    billingCycle: dto.billingCycle,
+                    paymentMethod: dto.paymentMethod,
+                    paymentId: dto.paymentId,
+                },
+            });
+            await prisma.user.update({
+                where: { id: dto.userId },
+                data: { planTier: dto.planTier, subscriptionStatus: dto.status },
+            }).catch(() => { });
+            const sub = {
+                ...dto,
+                id: record.id,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
             };
-            this.internalLinks.set(linkIndex.id, linkIndex);
-        }
-        if (dto.topicQueueId) {
-            this.updateTopicStatus(dto.topicQueueId, dto.status === 'PUBLISHED' ? 'PUBLISHED' : 'READY_FOR_REVIEW');
-        }
-        this.persist();
-        return article;
-    }
-    listArticlesByBrand(brandId) {
-        return Array.from(this.articles.values()).filter((a) => a.brandId === brandId);
-    }
-    listInternalLinksByBrand(brandId) {
-        return Array.from(this.internalLinks.values())
-            .filter((l) => l.brandId === brandId)
-            .map((l) => ({ title: l.title, url: l.url }));
-    }
-    // ---------------------------------------------------------------------------
-    // MONITOR GEO (Share of Model)
-    // ---------------------------------------------------------------------------
-    recordGEOMonitor(dto) {
-        const entry = {
-            ...dto,
-            id: `geo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            createdAt: new Date(),
-        };
-        this.geoMonitors.push(entry);
-        this.persist();
-        return entry;
-    }
-    getBrandShareOfVoice(brandId) {
-        const brandRuns = this.geoMonitors.filter((m) => m.brandId === brandId);
-        if (brandRuns.length === 0) {
-            return { totalChecks: 0, mentionRate: '0%', byEngine: {} };
-        }
-        const mentions = brandRuns.filter((m) => m.isBrandMentioned);
-        const mentionRate = `${Math.round((mentions.length / brandRuns.length) * 100)}%`;
-        const byEngine = {};
-        for (const run of brandRuns) {
-            if (!byEngine[run.targetEngine]) {
-                byEngine[run.targetEngine] = { checks: 0, mentions: 0, percentage: '0%' };
-            }
-            byEngine[run.targetEngine].checks++;
-            if (run.isBrandMentioned) {
-                byEngine[run.targetEngine].mentions++;
-            }
-        }
-        for (const engine in byEngine) {
-            const stats = byEngine[engine];
-            stats.percentage = `${Math.round((stats.mentions / stats.checks) * 100)}%`;
-        }
-        return {
-            totalChecks: brandRuns.length,
-            totalMentions: mentions.length,
-            mentionRate,
-            byEngine,
-        };
-    }
-    // ---------------------------------------------------------------------------
-    // ECOSSISTEMA: CICLO DE EXCELÊNCIA DIGITAL (5 Pilares)
-    // ---------------------------------------------------------------------------
-    getEcosystemStatus(organizationId) {
-        const user = Array.from(this.users.values()).find(u => u.organizationId === organizationId);
-        const isExcellenceCycle = user?.planTier === 'EXCELLENCE_CYCLE';
-        return {
-            organizationId,
-            googleMyBusiness: {
-                name: 'Pilar 1: Google Meu Negócio & Maps',
-                status: isExcellenceCycle ? 'ACTIVE' : 'ACTION_REQUIRED',
-                rating: 4.8,
-                reviewsCount: isExcellenceCycle ? 142 : 12,
-                details: isExcellenceCycle
-                    ? 'Ficha oficial verificada, fotos 360°, postagens semanais e gestão ativa de avaliações 5 estrelas.'
-                    : 'Ficha necessita de verificação, alinhamento de categorias comerciais e padronização de NAP.',
-                actionLabel: isExcellenceCycle ? 'Ver Ficha no Google Maps' : 'Ativar Gestão no Ciclo de Excelência',
-            },
-            modernWebsite: {
-                name: 'Pilar 2: Site Moderno & Imersivo',
-                status: isExcellenceCycle ? 'ACTIVE' : 'UPGRADE_RECOMMENDED',
-                speedScore: isExcellenceCycle ? 98 : 64,
-                details: isExcellenceCycle
-                    ? 'Arquitetura ultra-rápida, mobile-first, schemas JSON-LD injetados e taxa de rejeição reduzida em 45%.'
-                    : 'Site legado com perda de velocidade móvel e sem dados estruturados para captura de Zero-Click.',
-                actionLabel: isExcellenceCycle ? 'Inspecionar Métricas Web' : 'Modernizar Site no Ciclo de Excelência',
-            },
-            aiAgent: {
-                name: 'Pilar 3: Agente de IA 24/7',
-                status: isExcellenceCycle ? 'ACTIVE' : 'STANDBY',
-                conversationsHandled: isExcellenceCycle ? 438 : 0,
-                details: isExcellenceCycle
-                    ? 'Agente conversacional treinado nos produtos da empresa, atendendo clientes no WhatsApp e site sem espera.'
-                    : 'Atendimento manual em horário comercial com perda estimada de 38% dos leads noturnos e de fim de semana.',
-                actionLabel: isExcellenceCycle ? 'Painel de Diálogos do Agente' : 'Implantar Agente de IA',
-            },
-            crm: {
-                name: 'Pilar 4: CRM & Gestão de Funil',
-                status: isExcellenceCycle ? 'ACTIVE' : 'READY_TO_SYNC',
-                activeDealsCount: isExcellenceCycle ? 29 : 4,
-                details: isExcellenceCycle
-                    ? 'Funil de vendas sincronizado com automação de follow-up, histórico de negociação e previsibilidade de caixa.'
-                    : 'Contatos e oportunidades dispersos em planilhas ou WhatsApp pessoal dos vendedores.',
-                actionLabel: isExcellenceCycle ? 'Acessar Pipeline de Vendas' : 'Conectar CRM ao Ecossistema',
-            },
-            geoEngine: {
-                name: '👑 Joia da Coroa: Motor GEO & Citações nas IAs',
-                status: isExcellenceCycle ? 'DOMINATING' : 'ACTIVE',
-                shareOfModel: isExcellenceCycle ? '78% das consultas' : '24% das consultas',
-                details: 'Motor autônomo gerando conteúdos com Information Gain e indexação em tempo real no Google, ChatGPT e Perplexity.',
-                actionLabel: 'Ver Pautas e Monitoramento',
-            },
-        };
-    }
-    // ---------------------------------------------------------------------------
-    // RELATÓRIOS PÚBLICOS DE AUDITORIA GEO (LEAD MAGNET & COMPARTILHAMENTO)
-    // ---------------------------------------------------------------------------
-    saveScan(scanData) {
-        const rawDomain = (scanData.domain || 'empresa.com.br').toLowerCase().trim();
-        const cleanDomain = rawDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/[^a-z0-9]/g, '-');
-        const randomSuffix = Math.random().toString(36).substring(2, 6);
-        const id = `scan_${Date.now().toString(36)}_${randomSuffix}`;
-        const slug = `${cleanDomain}-${randomSuffix}`;
-        const report = {
-            id,
-            slug,
-            domain: rawDomain,
-            brandName: scanData.brandName || scanData.domain,
-            niche: scanData.niche || 'Geral',
-            scanData,
-            createdAt: new Date(),
-            viewCount: 0,
-        };
-        this.scans.set(report.id, report);
-        this.scans.set(report.slug, report);
-        this.persist();
-        const geoScore = typeof scanData.geoScore === 'number' ? scanData.geoScore : 0;
-        prisma.scanReport
-            .upsert({
-            where: { slug: report.slug },
-            update: {
-                domain: report.domain,
-                brandName: report.brandName,
-                niche: report.niche,
-                geoScore,
-                scanData: report.scanData,
-                viewCount: report.viewCount,
-            },
-            create: {
-                id: report.id,
-                slug: report.slug,
-                domain: report.domain,
-                brandName: report.brandName,
-                niche: report.niche,
-                geoScore,
-                scanData: report.scanData,
-                viewCount: report.viewCount,
-                createdAt: report.createdAt,
-            },
-        })
-            .catch((err) => {
-            console.warn('⚠️ [DB] Erro ao sincronizar ScanReport com Prisma:', err?.message);
-        });
-        return report;
-    }
-    getScan(idOrSlug) {
-        if (!idOrSlug)
-            return undefined;
-        const report = this.scans.get(idOrSlug);
-        if (report) {
-            report.viewCount = (report.viewCount || 0) + 1;
+            this.subscriptions.set(sub.id, sub);
             this.persist();
-            prisma.scanReport
-                .update({
-                where: { id: report.id },
-                data: { viewCount: { increment: 1 } },
-            })
-                .catch(() => { });
-            return report;
+            return sub;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao registrar assinatura no PostgreSQL: ${err?.message}`);
+            }
+            const sub = {
+                ...dto,
+                id: subId,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+            this.subscriptions.set(sub.id, sub);
+            this.persist();
+            return sub;
+        }
+    }
+    async getSubscriptionByUserId(userId) {
+        try {
+            const record = await prisma.subscription.findFirst({
+                where: { userId },
+                orderBy: { createdAt: 'desc' },
+            });
+            if (record) {
+                return {
+                    id: record.id,
+                    userId: record.userId,
+                    organizationId: record.organizationId,
+                    planTier: record.planTier,
+                    planName: record.planName,
+                    status: record.status,
+                    amount: record.amount,
+                    currency: record.currency,
+                    billingCycle: record.billingCycle,
+                    paymentMethod: record.paymentMethod,
+                    paymentId: record.paymentId || undefined,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt,
+                };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao buscar assinatura: ${err?.message}`);
+            }
+        }
+        for (const s of this.subscriptions.values()) {
+            if (s.userId === userId)
+                return s;
         }
         return undefined;
     }
-    listRecentScans(limit = 10) {
-        const unique = Array.from(new Set(this.scans.values()));
-        return unique
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, limit);
+    // ---------------------------------------------------------------------------
+    // MARCAS / CLIENTES ATENDIDOS (Brand Brain & Multi-tenant)
+    // ---------------------------------------------------------------------------
+    async createBrand(dto) {
+        const brandId = `brd_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.brand.create({
+                data: {
+                    id: brandId,
+                    organizationId: dto.organizationId,
+                    name: dto.name,
+                    websiteUrl: dto.websiteUrl,
+                    productDescription: dto.productDescription || '',
+                    targetAudience: dto.targetAudience || '',
+                    toneOfVoice: dto.toneOfVoice || '',
+                    ctaTargetUrl: dto.ctaTargetUrl || '',
+                    ctaText: dto.ctaText,
+                    forbiddenTerms: dto.forbiddenTerms || [],
+                    targetLanguage: dto.targetLanguage || 'pt-BR',
+                    autoPublish: dto.autoPublish ?? false,
+                    publishingSchedule: dto.publishingSchedule,
+                    isActive: dto.isActive ?? true,
+                },
+            });
+            const brand = {
+                ...dto,
+                id: record.id,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            };
+            this.brands.set(brand.id, brand);
+            this.persist();
+            return brand;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao gravar marca no PostgreSQL: ${err?.message}`);
+            }
+            const brand = {
+                ...dto,
+                id: brandId,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+            this.brands.set(brand.id, brand);
+            this.persist();
+            return brand;
+        }
+    }
+    async getBrand(id) {
+        try {
+            const record = await prisma.brand.findUnique({ where: { id } });
+            if (record) {
+                return {
+                    id: record.id,
+                    organizationId: record.organizationId,
+                    name: record.name,
+                    websiteUrl: record.websiteUrl,
+                    productDescription: record.productDescription,
+                    targetAudience: record.targetAudience,
+                    toneOfVoice: record.toneOfVoice,
+                    ctaTargetUrl: record.ctaTargetUrl,
+                    ctaText: record.ctaText || undefined,
+                    forbiddenTerms: record.forbiddenTerms,
+                    targetLanguage: record.targetLanguage,
+                    autoPublish: record.autoPublish,
+                    publishingSchedule: record.publishingSchedule || undefined,
+                    isActive: record.isActive,
+                    createdAt: record.createdAt,
+                    updatedAt: record.updatedAt,
+                };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao buscar marca no PostgreSQL: ${err?.message}`);
+            }
+        }
+        return this.brands.get(id);
+    }
+    async updateBrand(id, updates) {
+        try {
+            const record = await prisma.brand.update({
+                where: { id },
+                data: updates,
+            });
+            const brand = {
+                id: record.id,
+                organizationId: record.organizationId,
+                name: record.name,
+                websiteUrl: record.websiteUrl,
+                productDescription: record.productDescription,
+                targetAudience: record.targetAudience,
+                toneOfVoice: record.toneOfVoice,
+                ctaTargetUrl: record.ctaTargetUrl,
+                ctaText: record.ctaText || undefined,
+                forbiddenTerms: record.forbiddenTerms,
+                targetLanguage: record.targetLanguage,
+                autoPublish: record.autoPublish,
+                publishingSchedule: record.publishingSchedule || undefined,
+                isActive: record.isActive,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            };
+            this.brands.set(id, brand);
+            this.persist();
+            return brand;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao atualizar marca no PostgreSQL: ${err?.message}`);
+            }
+            const existing = this.brands.get(id);
+            if (!existing)
+                return undefined;
+            const updated = { ...existing, ...updates, updatedAt: new Date() };
+            this.brands.set(id, updated);
+            this.persist();
+            return updated;
+        }
+    }
+    async listBrandsByOrg(organizationId) {
+        try {
+            const records = await prisma.brand.findMany({
+                where: { organizationId, isActive: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return records.map(record => ({
+                id: record.id,
+                organizationId: record.organizationId,
+                name: record.name,
+                websiteUrl: record.websiteUrl,
+                productDescription: record.productDescription,
+                targetAudience: record.targetAudience,
+                toneOfVoice: record.toneOfVoice,
+                ctaTargetUrl: record.ctaTargetUrl,
+                ctaText: record.ctaText || undefined,
+                forbiddenTerms: record.forbiddenTerms,
+                targetLanguage: record.targetLanguage,
+                autoPublish: record.autoPublish,
+                publishingSchedule: record.publishingSchedule || undefined,
+                isActive: record.isActive,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar marcas no PostgreSQL: ${err?.message}`);
+            }
+            return Array.from(this.brands.values()).filter(b => b.organizationId === organizationId && b.isActive !== false);
+        }
+    }
+    async listAllActiveBrands() {
+        try {
+            const records = await prisma.brand.findMany({
+                where: { isActive: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return records.map(record => ({
+                id: record.id,
+                organizationId: record.organizationId,
+                name: record.name,
+                websiteUrl: record.websiteUrl,
+                productDescription: record.productDescription,
+                targetAudience: record.targetAudience,
+                toneOfVoice: record.toneOfVoice,
+                ctaTargetUrl: record.ctaTargetUrl,
+                ctaText: record.ctaText || undefined,
+                forbiddenTerms: record.forbiddenTerms,
+                targetLanguage: record.targetLanguage,
+                autoPublish: record.autoPublish,
+                publishingSchedule: record.publishingSchedule || undefined,
+                isActive: record.isActive,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar marcas no PostgreSQL: ${err?.message}`);
+            }
+            return Array.from(this.brands.values()).filter(b => b.isActive !== false);
+        }
     }
     // ---------------------------------------------------------------------------
-    // WHATSAPP CLOUD API (META OFICIAL)
+    // INTEGRAÇÕES COM CMS (Criptografia AES-256-GCM em Repouso)
+    // ---------------------------------------------------------------------------
+    async saveCMSIntegration(dto) {
+        const encryptedCredentials = encryptJsonCredential(dto.credentials);
+        const id = `cms_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.cMSIntegration.create({
+                data: {
+                    id,
+                    brandId: dto.brandId,
+                    platform: dto.platform.toUpperCase(),
+                    siteUrl: dto.siteUrl,
+                    encryptedCredentials,
+                    defaultPostStatus: dto.defaultPostStatus || 'DRAFT',
+                },
+            });
+            const item = {
+                id: record.id,
+                brandId: record.brandId,
+                platform: record.platform.toLowerCase(),
+                siteUrl: record.siteUrl || undefined,
+                encryptedCredentials: record.encryptedCredentials,
+                defaultPostStatus: record.defaultPostStatus,
+                createdAt: record.createdAt,
+            };
+            this.cmsIntegrations.set(item.id, item);
+            this.persist();
+            return item;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao gravar integração CMS no PostgreSQL: ${err?.message}`);
+            }
+            const item = {
+                id,
+                brandId: dto.brandId,
+                platform: dto.platform,
+                siteUrl: dto.siteUrl,
+                encryptedCredentials,
+                defaultPostStatus: dto.defaultPostStatus || 'DRAFT',
+                createdAt: new Date(),
+            };
+            this.cmsIntegrations.set(item.id, item);
+            this.persist();
+            return item;
+        }
+    }
+    async listCMSByBrand(brandId) {
+        try {
+            const records = await prisma.cMSIntegration.findMany({
+                where: { brandId, isActive: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return records.map(r => ({
+                id: r.id,
+                brandId: r.brandId,
+                platform: r.platform.toLowerCase(),
+                siteUrl: r.siteUrl || undefined,
+                encryptedCredentials: r.encryptedCredentials,
+                defaultPostStatus: r.defaultPostStatus,
+                createdAt: r.createdAt,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar integrações CMS: ${err?.message}`);
+            }
+            return Array.from(this.cmsIntegrations.values()).filter(c => c.brandId === brandId);
+        }
+    }
+    async getDecryptedCMSIntegration(id) {
+        try {
+            const record = await prisma.cMSIntegration.findUnique({ where: { id } });
+            if (record) {
+                const credentials = decryptJsonCredential(record.encryptedCredentials);
+                const integration = {
+                    id: record.id,
+                    brandId: record.brandId,
+                    platform: record.platform.toLowerCase(),
+                    siteUrl: record.siteUrl || undefined,
+                    encryptedCredentials: record.encryptedCredentials,
+                    defaultPostStatus: record.defaultPostStatus,
+                    createdAt: record.createdAt,
+                };
+                return { integration, credentials };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao descriptografar CMS: ${err?.message}`);
+            }
+        }
+        const item = this.cmsIntegrations.get(id);
+        if (!item)
+            return null;
+        const credentials = decryptJsonCredential(item.encryptedCredentials);
+        return { integration: item, credentials };
+    }
+    // ---------------------------------------------------------------------------
+    // FILA DE PAUTAS (Queue)
+    // ---------------------------------------------------------------------------
+    async addTopicToQueue(dto) {
+        const id = `top_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.topicQueue.create({
+                data: {
+                    id,
+                    brandId: dto.brandId,
+                    topic: dto.topic,
+                    primaryKeyword: dto.primaryKeyword,
+                    searchIntent: dto.searchIntent || 'INFORMATIONAL',
+                    priority: dto.priority || 1,
+                    status: 'BACKLOG',
+                    scheduledFor: dto.scheduledFor,
+                },
+            });
+            const topic = {
+                ...dto,
+                id: record.id,
+                status: record.status,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            };
+            this.topicQueues.set(topic.id, topic);
+            this.persist();
+            return topic;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao gravar pauta no PostgreSQL: ${err?.message}`);
+            }
+            const topic = {
+                ...dto,
+                id,
+                status: 'BACKLOG',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
+            this.topicQueues.set(topic.id, topic);
+            this.persist();
+            return topic;
+        }
+    }
+    async listPendingTopics(brandId) {
+        try {
+            const records = await prisma.topicQueue.findMany({
+                where: { brandId, status: { in: ['BACKLOG', 'SCHEDULED', 'READY_FOR_REVIEW'] } },
+                orderBy: { priority: 'desc' },
+            });
+            return records.map(r => ({
+                id: r.id,
+                brandId: r.brandId,
+                topic: r.topic,
+                primaryKeyword: r.primaryKeyword,
+                searchIntent: r.searchIntent,
+                priority: r.priority,
+                status: r.status,
+                scheduledFor: r.scheduledFor || undefined,
+                errorMessage: r.errorMessage || undefined,
+                createdAt: r.createdAt,
+                updatedAt: r.updatedAt,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar pautas: ${err?.message}`);
+            }
+            return Array.from(this.topicQueues.values()).filter(t => t.brandId === brandId && ['BACKLOG', 'SCHEDULED', 'READY_FOR_REVIEW'].includes(t.status));
+        }
+    }
+    async updateTopicStatus(id, status, errorMessage) {
+        try {
+            const record = await prisma.topicQueue.update({
+                where: { id },
+                data: { status: status, errorMessage },
+            });
+            const topic = {
+                id: record.id,
+                brandId: record.brandId,
+                topic: record.topic,
+                primaryKeyword: record.primaryKeyword,
+                searchIntent: record.searchIntent,
+                priority: record.priority,
+                status: record.status,
+                errorMessage: record.errorMessage || undefined,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+            };
+            this.topicQueues.set(id, topic);
+            this.persist();
+            return topic;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao atualizar pauta: ${err?.message}`);
+            }
+            const item = this.topicQueues.get(id);
+            if (!item)
+                return undefined;
+            item.status = status;
+            item.updatedAt = new Date();
+            if (errorMessage)
+                item.errorMessage = errorMessage;
+            this.persist();
+            return item;
+        }
+    }
+    // ---------------------------------------------------------------------------
+    // ARTIGOS
+    // ---------------------------------------------------------------------------
+    async saveArticle(dto) {
+        const id = `art_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.article.upsert({
+                where: { brandId_slug: { brandId: dto.brandId, slug: dto.slug } },
+                update: {
+                    title: dto.title,
+                    metaDescription: dto.metaDescription,
+                    contentMarkdown: dto.contentMarkdown,
+                    contentHtml: dto.contentHtml,
+                    schemaJsonLd: dto.schemaJsonLd,
+                    faqItems: dto.faqItems,
+                    metrics: dto.metrics,
+                    status: dto.status,
+                    cmsPlatform: dto.cmsPlatform ? dto.cmsPlatform.toUpperCase() : null,
+                    remotePostId: dto.remotePostId,
+                    publishedUrl: dto.publishedUrl,
+                    indexNowNotified: dto.indexNowNotified ?? false,
+                    publishedAt: dto.status === 'PUBLISHED' ? new Date() : undefined,
+                },
+                create: {
+                    id,
+                    brandId: dto.brandId,
+                    topicQueueId: dto.topicQueueId,
+                    title: dto.title,
+                    slug: dto.slug,
+                    metaDescription: dto.metaDescription,
+                    contentMarkdown: dto.contentMarkdown,
+                    contentHtml: dto.contentHtml,
+                    schemaJsonLd: dto.schemaJsonLd,
+                    faqItems: dto.faqItems,
+                    metrics: dto.metrics,
+                    status: dto.status,
+                    cmsPlatform: dto.cmsPlatform ? dto.cmsPlatform.toUpperCase() : null,
+                    remotePostId: dto.remotePostId,
+                    publishedUrl: dto.publishedUrl,
+                    indexNowNotified: dto.indexNowNotified ?? false,
+                    publishedAt: dto.status === 'PUBLISHED' ? new Date() : undefined,
+                },
+            });
+            const art = {
+                ...dto,
+                id: record.id,
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
+                publishedAt: record.publishedAt || undefined,
+            };
+            this.articles.set(art.id, art);
+            this.persist();
+            return art;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao gravar artigo no PostgreSQL: ${err?.message}`);
+            }
+            const art = {
+                ...dto,
+                id,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                publishedAt: dto.status === 'PUBLISHED' ? new Date() : undefined,
+            };
+            this.articles.set(art.id, art);
+            this.persist();
+            return art;
+        }
+    }
+    async listArticlesByBrand(brandId) {
+        try {
+            const records = await prisma.article.findMany({
+                where: { brandId },
+                orderBy: { createdAt: 'desc' },
+            });
+            return records.map(r => ({
+                id: r.id,
+                brandId: r.brandId,
+                topicQueueId: r.topicQueueId || undefined,
+                title: r.title,
+                slug: r.slug,
+                metaDescription: r.metaDescription,
+                contentMarkdown: r.contentMarkdown,
+                contentHtml: r.contentHtml,
+                schemaJsonLd: r.schemaJsonLd,
+                faqItems: r.faqItems,
+                metrics: r.metrics,
+                status: r.status,
+                cmsPlatform: r.cmsPlatform ? r.cmsPlatform.toLowerCase() : undefined,
+                remotePostId: r.remotePostId || undefined,
+                publishedUrl: r.publishedUrl || undefined,
+                indexNowNotified: r.indexNowNotified,
+                createdAt: r.createdAt,
+                updatedAt: r.updatedAt,
+                publishedAt: r.publishedAt || undefined,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar artigos: ${err?.message}`);
+            }
+            return Array.from(this.articles.values()).filter(a => a.brandId === brandId);
+        }
+    }
+    async listInternalLinksByBrand(brandId) {
+        try {
+            const records = await prisma.article.findMany({
+                where: { brandId, status: 'PUBLISHED' },
+                take: 20,
+            });
+            return records.map(r => ({
+                title: r.title,
+                url: r.publishedUrl || `/blog/${r.slug}`,
+                keywords: [r.title.toLowerCase()],
+            }));
+        }
+        catch {
+            return Array.from(this.articles.values())
+                .filter(a => a.brandId === brandId && a.status === 'PUBLISHED')
+                .map(a => ({
+                title: a.title,
+                url: a.publishedUrl || `/blog/${a.slug}`,
+                keywords: [a.title.toLowerCase()],
+            }));
+        }
+    }
+    // ---------------------------------------------------------------------------
+    // GEO MONITOR (Share of Voice & IA Citations)
+    // ---------------------------------------------------------------------------
+    async recordGEOMonitor(dto) {
+        const id = `geo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        try {
+            const record = await prisma.gEOMonitorRun.create({
+                data: {
+                    id,
+                    brandId: dto.brandId,
+                    queryPrompt: dto.queryPrompt,
+                    targetEngine: dto.targetEngine,
+                    isBrandMentioned: dto.isBrandMentioned,
+                    mentionRank: dto.mentionRank,
+                    sentiment: dto.sentiment,
+                    citedUrls: dto.citedUrls || [],
+                    rawAnswerText: dto.rawAnswerText,
+                },
+            });
+            const mon = {
+                ...dto,
+                id: record.id,
+                createdAt: record.createdAt,
+            };
+            this.geoMonitors.unshift(mon);
+            this.persist();
+            return mon;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao registrar monitoramento GEO: ${err?.message}`);
+            }
+            const mon = { ...dto, id, createdAt: new Date() };
+            this.geoMonitors.unshift(mon);
+            this.persist();
+            return mon;
+        }
+    }
+    async getBrandShareOfVoice(brandId) {
+        try {
+            const runs = await prisma.gEOMonitorRun.findMany({
+                where: { brandId },
+                orderBy: { createdAt: 'desc' },
+                take: 100,
+            });
+            if (runs.length > 0) {
+                const total = runs.length;
+                const mentioned = runs.filter(r => r.isBrandMentioned).length;
+                return {
+                    totalAudits: total,
+                    mentionedCount: mentioned,
+                    shareOfModelPercentage: Math.round((mentioned / total) * 100),
+                    lastAuditAt: runs[0].createdAt,
+                };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao consultar Share of Voice: ${err?.message}`);
+            }
+        }
+        const runs = this.geoMonitors.filter(m => m.brandId === brandId);
+        const total = runs.length;
+        const mentioned = runs.filter(r => r.isBrandMentioned).length;
+        return {
+            totalAudits: total,
+            mentionedCount: mentioned,
+            shareOfModelPercentage: total > 0 ? Math.round((mentioned / total) * 100) : 0,
+            lastAuditAt: runs[0]?.createdAt || null,
+        };
+    }
+    // ---------------------------------------------------------------------------
+    // SCAN REPORTS (Auditorias Públicas)
+    // ---------------------------------------------------------------------------
+    async saveScan(scanData) {
+        const id = `scn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        const slug = scanData.domain.replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString(36);
+        const geoScore = scanData.geoScore || 0;
+        try {
+            const record = await prisma.scanReport.create({
+                data: {
+                    id,
+                    slug,
+                    domain: scanData.domain,
+                    brandName: scanData.brandName,
+                    niche: scanData.niche,
+                    geoScore,
+                    scanData,
+                },
+            });
+            const report = {
+                id: record.id,
+                slug: record.slug,
+                domain: record.domain,
+                brandName: record.brandName,
+                niche: record.niche,
+                scanData: record.scanData,
+                createdAt: record.createdAt,
+                viewCount: record.viewCount,
+            };
+            this.scans.set(report.id, report);
+            this.scans.set(report.slug, report);
+            this.persist();
+            return report;
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao salvar relatório de auditoria: ${err?.message}`);
+            }
+            const report = {
+                id,
+                slug,
+                domain: scanData.domain,
+                brandName: scanData.brandName,
+                niche: scanData.niche,
+                scanData,
+                createdAt: new Date(),
+                viewCount: 0,
+            };
+            this.scans.set(report.id, report);
+            this.scans.set(report.slug, report);
+            this.persist();
+            return report;
+        }
+    }
+    async getScan(idOrSlug) {
+        if (!idOrSlug)
+            return undefined;
+        try {
+            const record = await prisma.scanReport.findFirst({
+                where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+            });
+            if (record) {
+                await prisma.scanReport.update({
+                    where: { id: record.id },
+                    data: { viewCount: { increment: 1 } },
+                }).catch(() => { });
+                return {
+                    id: record.id,
+                    slug: record.slug,
+                    domain: record.domain,
+                    brandName: record.brandName,
+                    niche: record.niche,
+                    scanData: record.scanData,
+                    createdAt: record.createdAt,
+                    viewCount: record.viewCount + 1,
+                };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao buscar relatório de auditoria: ${err?.message}`);
+            }
+        }
+        return this.scans.get(idOrSlug);
+    }
+    async listRecentScans(limit = 10) {
+        try {
+            const records = await prisma.scanReport.findMany({
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+            });
+            return records.map(r => ({
+                id: r.id,
+                slug: r.slug,
+                domain: r.domain,
+                brandName: r.brandName,
+                niche: r.niche,
+                scanData: r.scanData,
+                createdAt: r.createdAt,
+                viewCount: r.viewCount,
+            }));
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao listar relatórios: ${err?.message}`);
+            }
+            const unique = Array.from(new Set(this.scans.values()));
+            return unique
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, limit);
+        }
+    }
+    // ---------------------------------------------------------------------------
+    // WHATSAPP CLOUD API (Meta Oficial)
     // ---------------------------------------------------------------------------
     getWhatsAppConfig() {
+        return { ...this.whatsappConfig };
+    }
+    async getWhatsAppConfigAsync() {
+        try {
+            const record = await prisma.whatsAppConfig.findFirst({ orderBy: { updatedAt: 'desc' } });
+            if (record) {
+                this.whatsappConfig = {
+                    accessToken: record.accessToken || '',
+                    phoneNumberId: record.phoneNumberId || '',
+                    businessAccountId: record.businessAccountId || '',
+                    verifyToken: record.verifyToken,
+                    templateName: record.templateName || 'dossie_executivo_geo',
+                    isEnabled: record.isEnabled,
+                    testMode: record.testMode,
+                };
+            }
+        }
+        catch (err) {
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Falha ao ler configuração WhatsApp: ${err?.message}`);
+            }
+        }
         return { ...this.whatsappConfig };
     }
     saveWhatsAppConfig(updates) {
@@ -775,6 +1325,29 @@ export class EnterpriseRepository {
             ...this.whatsappConfig,
             ...updates,
         };
+        prisma.whatsAppConfig.findFirst().then(existing => {
+            if (existing) {
+                return prisma.whatsAppConfig.update({
+                    where: { id: existing.id },
+                    data: updates,
+                });
+            }
+            else {
+                return prisma.whatsAppConfig.create({
+                    data: {
+                        accessToken: updates.accessToken || this.whatsappConfig.accessToken,
+                        phoneNumberId: updates.phoneNumberId || this.whatsappConfig.phoneNumberId,
+                        businessAccountId: updates.businessAccountId || this.whatsappConfig.businessAccountId,
+                        verifyToken: updates.verifyToken || this.whatsappConfig.verifyToken,
+                        templateName: updates.templateName || this.whatsappConfig.templateName,
+                        isEnabled: updates.isEnabled ?? this.whatsappConfig.isEnabled,
+                        testMode: updates.testMode ?? this.whatsappConfig.testMode,
+                    },
+                });
+            }
+        }).catch(err => {
+            console.warn('⚠️ [DB] Erro ao sincronizar WhatsAppConfig no Prisma:', err?.message);
+        });
         this.persist();
         return this.whatsappConfig;
     }
@@ -790,18 +1363,42 @@ export class EnterpriseRepository {
         if (record.metaMessageId) {
             this.whatsappMessages.set(record.metaMessageId, record);
         }
+        prisma.whatsAppMessage.create({
+            data: {
+                id: record.id,
+                to: record.to,
+                formattedTo: record.formattedTo,
+                type: record.type,
+                templateName: record.templateName,
+                status: record.status,
+                metaMessageId: record.metaMessageId,
+                clientName: record.clientName,
+                companyName: record.companyName,
+                reportSlug: record.reportSlug,
+                dossierUrl: record.dossierUrl,
+                errorMessage: record.errorMessage,
+                createdAt: record.createdAt,
+            },
+        }).catch(err => {
+            console.warn('⚠️ [DB] Erro ao salvar WhatsAppMessage no Prisma:', err?.message);
+        });
         this.persist();
         return record;
     }
     updateWhatsAppMessageStatus(idOrMetaId, status, errorMessage) {
         const record = this.whatsappMessages.get(idOrMetaId);
-        if (!record)
-            return false;
-        record.status = status;
-        record.updatedAt = new Date();
-        if (errorMessage) {
-            record.errorMessage = errorMessage;
+        if (record) {
+            record.status = status;
+            record.updatedAt = new Date();
+            if (errorMessage)
+                record.errorMessage = errorMessage;
         }
+        prisma.whatsAppMessage.updateMany({
+            where: { OR: [{ id: idOrMetaId }, { metaMessageId: idOrMetaId }] },
+            data: { status, errorMessage, updatedAt: new Date() },
+        }).catch(err => {
+            console.warn('⚠️ [DB] Erro ao atualizar WhatsAppMessage no Prisma:', err?.message);
+        });
         this.persist();
         return true;
     }
@@ -811,6 +1408,43 @@ export class EnterpriseRepository {
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, limit);
     }
+    // ---------------------------------------------------------------------------
+    // ECOSSISTEMA: STATUS DOS 5 PILARES
+    // ---------------------------------------------------------------------------
+    getEcosystemStatus(organizationId) {
+        return {
+            organizationId,
+            googleMyBusiness: {
+                name: 'Pilar 01: Atração Local',
+                status: 'ACTIVE',
+                details: 'Perfil local monitorado para termos de busca regional',
+                actionLabel: 'Verificar Ficha',
+            },
+            modernWebsite: {
+                name: 'Pilar 02: Atendimento e Site',
+                status: 'ACTIVE',
+                details: 'Site veloz com estrutura semântica Schema.org',
+                actionLabel: 'Ver Detalhes',
+            },
+            aiAgent: {
+                name: 'Pilar 03: Gestão & Atendimento IA',
+                status: 'ACTIVE',
+                details: 'Agente conversacional treinado para captação 24/7',
+                actionLabel: 'Abrir Painel',
+            },
+            crm: {
+                name: 'Pilar 04: Reputação & CRM',
+                status: 'ACTIVE',
+                details: 'Funil de vendas integrado com gestão de leads',
+                actionLabel: 'Abrir Pipeline',
+            },
+            geoEngine: {
+                name: 'Pilar 05: Autoridade em IA (GeoPulse)',
+                status: 'DOMINATING',
+                details: 'Motor autônomo monitorando citações em LLMs',
+                actionLabel: 'Gerenciar Pautas',
+            },
+        };
+    }
 }
-// Instância singleton exportada
 export const db = new EnterpriseRepository();

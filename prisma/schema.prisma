@@ -318,3 +318,48 @@ model Subscription {
   @@map("subscriptions")
 }
 
+// -----------------------------------------------------------------------------
+// CONFIGURAÇÃO DO WHATSAPP CLOUD API
+// -----------------------------------------------------------------------------
+
+model WhatsAppConfig {
+  id                String   @id @default(cuid())
+  accessToken       String?  @db.Text
+  phoneNumberId     String?
+  businessAccountId String?
+  verifyToken       String   @default("geopulse_meta_verify_secret_2026")
+  templateName      String?  @default("dossie_executivo_geo")
+  isEnabled         Boolean  @default(true)
+  testMode          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("whatsapp_configs")
+}
+
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE MENSAGENS DO WHATSAPP
+// -----------------------------------------------------------------------------
+
+model WhatsAppMessage {
+  id            String   @id @default(cuid())
+  to            String
+  formattedTo   String
+  type          String   @default("TEMPLATE")
+  templateName  String?
+  status        String   @default("QUEUED")
+  metaMessageId String?
+  clientName    String?
+  companyName   String?
+  reportSlug    String?
+  dossierUrl    String?
+  errorMessage  String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([to])
+  @@index([metaMessageId])
+  @@index([status])
+  @@map("whatsapp_messages")
+}
+
