@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { db } from '../db/index.js';
-const JWT_SECRET = process.env.JWT_SECRET || 'omnicite-secret-key-geo-2026-ciclo-excelencia-secure';
+const JWT_SECRET = process.env.JWT_SECRET || 'geopulse-secret-key-geo-2026-ciclo-excelencia-secure';
 export function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');

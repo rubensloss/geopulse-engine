@@ -125,9 +125,10 @@ async function queryOpenAiModel(
   brandName: string,
   _niche: string
 ): Promise<ModelAuditDetail | null> {
+  const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   try {
     const res = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: modelName,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 600,
       temperature: 0.3,
@@ -138,7 +139,7 @@ async function queryOpenAiModel(
 
     return {
       engine: 'CHATGPT',
-      name: 'ChatGPT (OpenAI GPT-4o-mini)',
+      name: `ChatGPT (OpenAI ${modelName})`,
       isMentioned: analysis.isMentioned,
       mentionRank: analysis.rank,
       status: analysis.status,
@@ -163,9 +164,10 @@ async function queryGeminiModel(
   brandName: string,
   _niche: string
 ): Promise<ModelAuditDetail | null> {
+  const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   try {
     const res = await client.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: modelName,
       contents: prompt,
     });
 
@@ -174,7 +176,7 @@ async function queryGeminiModel(
 
     return {
       engine: 'GEMINI',
-      name: 'Google Gemini (Gemini 2.0 Flash)',
+      name: `Google Gemini (${modelName})`,
       isMentioned: analysis.isMentioned,
       mentionRank: analysis.rank,
       status: analysis.status,
@@ -199,9 +201,10 @@ async function queryPerplexityModel(
   brandName: string,
   _niche: string
 ): Promise<ModelAuditDetail | null> {
+  const modelName = process.env.PERPLEXITY_MODEL || 'sonar';
   try {
     const res = await client.chat.completions.create({
-      model: 'sonar',
+      model: modelName,
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 600,
     });
@@ -212,7 +215,7 @@ async function queryPerplexityModel(
 
     return {
       engine: 'PERPLEXITY',
-      name: 'Perplexity AI (Sonar Search)',
+      name: `Perplexity AI (${modelName})`,
       isMentioned: analysis.isMentioned,
       mentionRank: analysis.rank,
       status: analysis.status,
@@ -237,9 +240,10 @@ async function queryClaudeModel(
   brandName: string,
   _niche: string
 ): Promise<ModelAuditDetail | null> {
+  const modelName = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
   try {
     const res = await client.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: modelName,
       max_tokens: 600,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -249,7 +253,7 @@ async function queryClaudeModel(
 
     return {
       engine: 'CLAUDE',
-      name: 'Claude (Anthropic Claude 3.5 Haiku)',
+      name: `Claude (Anthropic ${modelName})`,
       isMentioned: analysis.isMentioned,
       mentionRank: analysis.rank,
       status: analysis.status,

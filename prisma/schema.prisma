@@ -86,6 +86,10 @@ model User {
   name           String
   passwordHash   String?
   role           UserRole     @default(EDITOR)
+  companyName    String?
+  phone          String?
+  planTier       String?
+  subscriptionStatus String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -268,3 +272,49 @@ model GEOMonitorRun {
   @@index([brandId, targetEngine, createdAt])
   @@map("geo_monitor_runs")
 }
+
+// -----------------------------------------------------------------------------
+// RELATÓRIOS DO SCANNER GEO (Persistência Pública e Compartilhamento)
+// -----------------------------------------------------------------------------
+
+model ScanReport {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  domain    String
+  brandName String
+  niche     String
+  geoScore  Int
+  scanData  Json
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domain])
+  @@index([slug])
+  @@map("scan_reports")
+}
+
+// -----------------------------------------------------------------------------
+// ASSINATURAS E PLANOS
+// -----------------------------------------------------------------------------
+
+model Subscription {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  planTier       String
+  planName       String
+  status         String   @default("ACTIVE")
+  amount         Float
+  currency       String   @default("BRL")
+  billingCycle   String   @default("MONTHLY")
+  paymentMethod  String
+  paymentId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("subscriptions")
+}
+

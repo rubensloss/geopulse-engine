@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { db } from '../db/index.js';
 import type { StoredUser, PlanTier } from '../db/types.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'omnicite-secret-key-geo-2026-ciclo-excelencia-secure';
+const JWT_SECRET = process.env.JWT_SECRET || 'geopulse-secret-key-geo-2026-ciclo-excelencia-secure';
 
 export interface TokenPayload {
   userId: string;

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { prisma } from './prisma.js';
 import {
   CreateBrandDto,
   CreateTopicDto,
@@ -103,6 +104,115 @@ export class EnterpriseRepository {
 
   constructor() {
     this.loadFromDisk();
+    this.hydrateFromPrisma().catch((err) => {
+      console.warn('ℹ️ [DB] Inicialização de hidratação Prisma completada com aviso:', err?.message);
+    });
+  }
+
+  /**
+   * Hidrata os repositórios em memória a partir do banco relacional PostgreSQL (Prisma)
+   * garantindo persistência duradoura entre reinicializações de contêineres e deploys.
+   */
+  private async hydrateFromPrisma(): Promise<void> {
+    try {
+      const [dbScans, dbUsers, dbOrgs, dbBrands, dbSubs] = await Promise.all([
+        prisma.scanReport.findMany({ take: 100, orderBy: { createdAt: 'desc' } }).catch(() => []),
+        prisma.user.findMany().catch(() => []),
+        prisma.organization.findMany().catch(() => []),
+        prisma.brand.findMany().catch(() => []),
+        prisma.subscription.findMany().catch(() => []),
+      ]);
+
+      for (const s of dbScans) {
+        const stored: StoredScanReport = {
+          id: s.id,
+          slug: s.slug,
+          domain: s.domain,
+          brandName: s.brandName,
+          niche: s.niche,
+          scanData: s.scanData,
+          createdAt: s.createdAt,
+          viewCount: s.viewCount,
+        };
+        if (!this.scans.has(stored.id)) {
+          this.scans.set(stored.id, stored);
+          this.scans.set(stored.slug, stored);
+        }
+      }
+
+      for (const u of dbUsers) {
+        if (!this.users.has(u.id)) {
+          this.users.set(u.id, {
+            id: u.id,
+            organizationId: u.organizationId,
+            name: u.name,
+            email: u.email,
+            passwordHash: u.passwordHash || '',
+            companyName: u.companyName || '',
+            phone: u.phone || undefined,
+            role: (u.role as any) || 'EDITOR',
+            planTier: (u.planTier as any) || 'STARTER',
+            subscriptionStatus: (u.subscriptionStatus as any) || 'ACTIVE',
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt,
+          });
+        }
+      }
+
+      for (const o of dbOrgs) {
+        if (!this.organizations.has(o.id)) {
+          this.organizations.set(o.id, {
+            id: o.id,
+            name: o.name,
+            slug: o.slug,
+            createdAt: o.createdAt,
+          });
+        }
+      }
+
+      for (const b of dbBrands) {
+        if (!this.brands.has(b.id)) {
+          this.brands.set(b.id, {
+            id: b.id,
+            organizationId: b.organizationId,
+            name: b.name,
+            websiteUrl: b.websiteUrl,
+            productDescription: b.productDescription || '',
+            targetAudience: b.targetAudience || '',
+            toneOfVoice: b.toneOfVoice || '',
+            ctaTargetUrl: b.ctaTargetUrl || '',
+            ctaText: b.ctaText || '',
+            autoPublish: b.autoPublish,
+            isActive: b.isActive,
+            createdAt: b.createdAt,
+            updatedAt: b.updatedAt,
+          });
+        }
+      }
+
+      for (const sub of dbSubs) {
+        if (!this.subscriptions.has(sub.id)) {
+          this.subscriptions.set(sub.id, {
+            id: sub.id,
+            userId: sub.userId,
+            organizationId: sub.organizationId,
+            planTier: (sub.planTier as any) || 'STARTER',
+            planName: sub.planName,
+            status: (sub.status as any) || 'ACTIVE',
+            amount: sub.amount,
+            currency: sub.currency,
+            billingCycle: (sub.billingCycle as any) || 'MONTHLY',
+            paymentMethod: (sub.paymentMethod as any) || 'PIX',
+            paymentId: sub.paymentId || undefined,
+            createdAt: sub.createdAt,
+            updatedAt: sub.updatedAt,
+          });
+        }
+      }
+      console.log('✅ [DB] Prisma PostgreSQL sincronizado com sucesso com a memória.');
+    } catch (err: any) {
+      console.warn('ℹ️ [DB] Conexão com Prisma PostgreSQL não disponível ou sem tabelas:', err.message);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -211,6 +321,17 @@ export class EnterpriseRepository {
     };
     this.organizations.set(org.id, org);
     this.persist();
+
+    prisma.organization
+      .upsert({
+        where: { slug: org.slug },
+        update: { name: org.name },
+        create: { id: org.id, name: org.name, slug: org.slug, createdAt: org.createdAt },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao sincronizar Organization com Prisma:', err?.message);
+      });
+
     return org;
   }
 
@@ -234,6 +355,37 @@ export class EnterpriseRepository {
     };
     this.users.set(user.id, user);
     this.persist();
+
+    prisma.user
+      .upsert({
+        where: { email: user.email },
+        update: {
+          name: user.name,
+          organizationId: user.organizationId,
+          role: (user.role as any) || 'EDITOR',
+          companyName: user.companyName,
+          phone: user.phone,
+          planTier: user.planTier,
+          subscriptionStatus: user.subscriptionStatus,
+        },
+        create: {
+          id: user.id,
+          organizationId: user.organizationId,
+          email: user.email,
+          name: user.name,
+          passwordHash: user.passwordHash,
+          role: (user.role as any) || 'EDITOR',
+          companyName: user.companyName,
+          phone: user.phone,
+          planTier: user.planTier,
+          subscriptionStatus: user.subscriptionStatus,
+          createdAt: user.createdAt,
+        },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao sincronizar User com Prisma:', err?.message);
+      });
+
     return user;
   }
 
@@ -261,6 +413,23 @@ export class EnterpriseRepository {
     };
     this.users.set(id, updated);
     this.persist();
+
+    prisma.user
+      .update({
+        where: { id },
+        data: {
+          name: updated.name,
+          companyName: updated.companyName,
+          phone: updated.phone,
+          planTier: updated.planTier,
+          subscriptionStatus: updated.subscriptionStatus,
+          updatedAt: updated.updatedAt,
+        },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao atualizar User no Prisma:', err?.message);
+      });
+
     return updated;
   }
 
@@ -290,6 +459,28 @@ export class EnterpriseRepository {
     }
 
     this.persist();
+
+    prisma.subscription
+      .create({
+        data: {
+          id: sub.id,
+          userId: sub.userId,
+          organizationId: sub.organizationId,
+          planTier: sub.planTier,
+          planName: sub.planName,
+          status: sub.status,
+          amount: sub.amount,
+          currency: sub.currency,
+          billingCycle: sub.billingCycle,
+          paymentMethod: sub.paymentMethod,
+          paymentId: sub.paymentId,
+          createdAt: sub.createdAt,
+        },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao sincronizar Subscription com Prisma:', err?.message);
+      });
+
     return sub;
   }
 
@@ -325,6 +516,40 @@ export class EnterpriseRepository {
     };
     this.brands.set(brand.id, brand);
     this.persist();
+
+    prisma.brand
+      .upsert({
+        where: { id: brand.id },
+        update: {
+          name: brand.name,
+          websiteUrl: brand.websiteUrl,
+          productDescription: brand.productDescription,
+          targetAudience: brand.targetAudience,
+          toneOfVoice: brand.toneOfVoice,
+          ctaTargetUrl: brand.ctaTargetUrl,
+          ctaText: brand.ctaText,
+          autoPublish: brand.autoPublish,
+          isActive: brand.isActive,
+        },
+        create: {
+          id: brand.id,
+          organizationId: brand.organizationId,
+          name: brand.name,
+          websiteUrl: brand.websiteUrl,
+          productDescription: brand.productDescription,
+          targetAudience: brand.targetAudience,
+          toneOfVoice: brand.toneOfVoice,
+          ctaTargetUrl: brand.ctaTargetUrl,
+          ctaText: brand.ctaText,
+          autoPublish: brand.autoPublish,
+          isActive: brand.isActive,
+          createdAt: brand.createdAt,
+        },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao sincronizar Brand com Prisma:', err?.message);
+      });
+
     return brand;
   }
 
@@ -350,6 +575,27 @@ export class EnterpriseRepository {
     };
     this.brands.set(id, updated);
     this.persist();
+
+    prisma.brand
+      .update({
+        where: { id },
+        data: {
+          name: updated.name,
+          websiteUrl: updated.websiteUrl,
+          productDescription: updated.productDescription,
+          targetAudience: updated.targetAudience,
+          toneOfVoice: updated.toneOfVoice,
+          ctaTargetUrl: updated.ctaTargetUrl,
+          ctaText: updated.ctaText,
+          autoPublish: updated.autoPublish,
+          isActive: updated.isActive,
+          updatedAt: updated.updatedAt,
+        },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao atualizar Brand no Prisma:', err?.message);
+      });
+
     return updated;
   }
 
@@ -597,6 +843,35 @@ export class EnterpriseRepository {
     this.scans.set(report.id, report);
     this.scans.set(report.slug, report);
     this.persist();
+
+    const geoScore = typeof scanData.geoScore === 'number' ? scanData.geoScore : 0;
+    prisma.scanReport
+      .upsert({
+        where: { slug: report.slug },
+        update: {
+          domain: report.domain,
+          brandName: report.brandName,
+          niche: report.niche,
+          geoScore,
+          scanData: report.scanData,
+          viewCount: report.viewCount,
+        },
+        create: {
+          id: report.id,
+          slug: report.slug,
+          domain: report.domain,
+          brandName: report.brandName,
+          niche: report.niche,
+          geoScore,
+          scanData: report.scanData,
+          viewCount: report.viewCount,
+          createdAt: report.createdAt,
+        },
+      })
+      .catch((err) => {
+        console.warn('⚠️ [DB] Erro ao sincronizar ScanReport com Prisma:', err?.message);
+      });
+
     return report;
   }
 
@@ -606,8 +881,17 @@ export class EnterpriseRepository {
     if (report) {
       report.viewCount = (report.viewCount || 0) + 1;
       this.persist();
+
+      prisma.scanReport
+        .update({
+          where: { id: report.id },
+          data: { viewCount: { increment: 1 } },
+        })
+        .catch(() => {});
+
+      return report;
     }
-    return report;
+    return undefined;
   }
 
   listRecentScans(limit: number = 10): StoredScanReport[] {

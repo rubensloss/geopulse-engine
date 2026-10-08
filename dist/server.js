@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
 import { db } from './db/index.js';
+import { prisma } from './db/prisma.js';
 import { processContentJob } from './worker/index.js';
 import { scheduler } from './worker/scheduler.js';
 import { generateCoverImageMetadata } from './worker/content-processor.js';
@@ -22,14 +23,34 @@ app.use(express.static(PUBLIC_DIR, { index: false }));
 // -----------------------------------------------------------------------------
 // HEALTH CHECK
 // -----------------------------------------------------------------------------
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+    let dbStatus = 'disconnected';
+    try {
+        await prisma.$queryRaw `SELECT 1`;
+        dbStatus = 'connected';
+    }
+    catch (err) {
+        dbStatus = `error: ${err?.message || 'failed'}`;
+    }
+    const aiProviders = {
+        openai: !!process.env.OPENAI_API_KEY,
+        gemini: !!process.env.GEMINI_API_KEY,
+        perplexity: !!process.env.PERPLEXITY_API_KEY,
+        anthropic: !!process.env.ANTHROPIC_API_KEY,
+    };
+    const hasAnyAi = Object.values(aiProviders).some(Boolean);
     res.json({
-        status: 'ok',
+        status: dbStatus === 'connected' ? 'ok' : 'degraded',
         service: 'GeoPulse Engine API',
         brand: 'Creative Always',
         version: '1.0.0',
         ecosystem: 'https://creativealways.com.br/solucoes/',
-        storage: 'operational',
+        database: dbStatus,
+        aiIntegrations: {
+            available: hasAnyAi,
+            providers: aiProviders,
+            scannerReady: hasAnyAi,
+        },
         timestamp: new Date().toISOString()
     });
 });
@@ -63,16 +84,16 @@ app.get('/report/:idOrSlug', (req, res) => {
 function seedDefaultData() {
     const orgs = db.organizations;
     if (orgs.size === 0) {
-        const org = db.createOrganization('Growth Scale Studio', 'growth-scale');
+        const org = db.createOrganization('Nuvem Exemplo Studio', 'nuvem-exemplo');
         const brand = db.createBrand({
             organizationId: org.id,
-            name: 'CloudSync Soluções B2B',
-            websiteUrl: 'https://cloudsync.com.br',
-            productDescription: 'Plataforma de migração e governança de dados na nuvem com automação de compliance LGPD e ISO 27001.',
+            name: 'NuvemExemplo Soluções B2B',
+            websiteUrl: 'https://nuvemexemplo.com.br',
+            productDescription: 'Plataforma demonstrativa de migração e governança de dados na nuvem com automação de conformidade.',
             targetAudience: 'CTOs, Diretores de TI, Engenheiros de Nuvem e Líderes de Segurança.',
             toneOfVoice: 'Pragmático, técnico, focado em alta disponibilidade, segurança de dados e custo-eficiência.',
-            ctaTargetUrl: 'https://cloudsync.com.br/diagnostico',
-            ctaText: 'Solicitar Avaliação de Nuvem Gratuita',
+            ctaTargetUrl: 'https://nuvemexemplo.com.br/diagnostico',
+            ctaText: 'Solicitar Avaliação Gratuita',
             autoPublish: false,
         });
         // Conexão CMS de exemplo
@@ -81,7 +102,7 @@ function seedDefaultData() {
             platform: 'wordpress',
             siteUrl: brand.websiteUrl,
             credentials: {
-                username: 'admin_cloudsync',
+                username: 'admin_nuvemexemplo',
                 applicationPassword: 'wp-app-pass-encrypted-1234',
             },
             defaultPostStatus: 'DRAFT',
@@ -147,7 +168,7 @@ Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bi
             },
             status: 'PUBLISHED',
             cmsPlatform: 'wordpress',
-            publishedUrl: 'https://cloudsync.com.br/blog/o-que-e-geo',
+            publishedUrl: 'https://nuvemexemplo.com.br/blog/o-que-e-geo',
             indexNowNotified: true,
         });
         // Registros do GEO Monitor
@@ -158,8 +179,8 @@ Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bi
             isBrandMentioned: true,
             mentionRank: 1,
             sentiment: 'POSITIVE',
-            citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'],
-            rawAnswerText: 'A CloudSync Soluções B2B é amplamente citada como referência em compliance de nuvem...',
+            citedUrls: ['https://nuvemexemplo.com.br/blog/o-que-e-geo'],
+            rawAnswerText: 'A NuvemExemplo Soluções B2B é citada em demonstrações como referência em compliance de nuvem...',
         });
         db.recordGEOMonitor({
             brandId: brand.id,
@@ -168,8 +189,8 @@ Não, o GEO complementa o SEO, já que os LLMs navegam na web usando Google e Bi
             isBrandMentioned: true,
             mentionRank: 2,
             sentiment: 'POSITIVE',
-            citedUrls: ['https://cloudsync.com.br/blog/o-que-e-geo'],
-            rawAnswerText: 'Destacam-se soluções como a CloudSync Soluções B2B...',
+            citedUrls: ['https://nuvemexemplo.com.br/blog/o-que-e-geo'],
+            rawAnswerText: 'Destacam-se soluções como a NuvemExemplo Soluções B2B...',
         });
         db.recordGEOMonitor({
             brandId: brand.id,
@@ -407,11 +428,15 @@ app.get('/api/billing/plans', (_req, res) => {
 });
 app.post('/api/billing/checkout', (req, res) => {
     try {
-        const result = processCheckout(req.body);
-        res.json({ success: true, data: result });
+        processCheckout(req.body);
     }
     catch (err) {
-        res.status(400).json({ success: false, error: err.message });
+        res.status(err.statusCode || 400).json({
+            success: false,
+            error: err.message,
+            whatsappUrl: err.whatsappUrl || 'https://wa.me/5527988140076?text=Ol%C3%A1%2C%20gostaria%20de%20contratar%20o%20plano%20GeoPulse',
+            phone: '(27) 98814-0076'
+        });
     }
 });
 // -----------------------------------------------------------------------------
@@ -796,7 +821,14 @@ app.post('/api/scanner/audit', async (req, res) => {
     }
     catch (error) {
         console.error('Erro na auditoria do GEO Scanner:', error);
-        res.status(500).json({ success: false, error: error.message || 'Erro ao processar auditoria GEO.' });
+        const statusCode = error.statusCode || 500;
+        res.status(statusCode).json({
+            success: false,
+            error: error.message || 'Erro ao processar auditoria GEO.',
+            details: error.details,
+            whatsappUrl: error.whatsappUrl || 'https://wa.me/5527988140076?text=Ol%C3%A1!%20Gostaria%20de%20uma%20auditoria%20GEO%20personalizada.',
+            whatsappPhone: '(27) 98814-0076',
+        });
     }
 });
 // Endpoint público para consulta do relatório de auditoria (para envio via WhatsApp)
@@ -892,11 +924,11 @@ app.get('/api/settings', (req, res) => {
             } : null,
             indexNow: {
                 host: (brand?.websiteUrl || 'https://geopulse.ai').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
-                key: process.env.INDEXNOW_KEY || 'omnicite-indexnow-production-key-2026',
+                key: process.env.INDEXNOW_KEY || 'geopulse-indexnow-production-key-2026',
                 autoPing: true,
             },
             payment: {
-                gateway: process.env.PAYMENT_GATEWAY || 'SIMULATOR',
+                gateway: process.env.PAYMENT_GATEWAY || 'WHATSAPP_ASSISTED',
                 pixKey: process.env.PIX_KEY || 'contato@geopulse.ai',
                 pixReceiver: 'GeoPulse Tecnologias Ltda',
                 mode: 'SANDBOX_VIP',

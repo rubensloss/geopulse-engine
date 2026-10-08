@@ -70,9 +70,10 @@ export async function runHonestMultiLlmAudit(domain, brandName, niche) {
     };
 }
 async function queryOpenAiModel(client, prompt, domain, brandName, _niche) {
+    const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     try {
         const res = await client.chat.completions.create({
-            model: 'gpt-4o-mini',
+            model: modelName,
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 600,
             temperature: 0.3,
@@ -81,7 +82,7 @@ async function queryOpenAiModel(client, prompt, domain, brandName, _niche) {
         const analysis = analyzeModelResponseText(text, domain, brandName);
         return {
             engine: 'CHATGPT',
-            name: 'ChatGPT (OpenAI GPT-4o-mini)',
+            name: `ChatGPT (OpenAI ${modelName})`,
             isMentioned: analysis.isMentioned,
             mentionRank: analysis.rank,
             status: analysis.status,
@@ -100,16 +101,17 @@ async function queryOpenAiModel(client, prompt, domain, brandName, _niche) {
     }
 }
 async function queryGeminiModel(client, prompt, domain, brandName, _niche) {
+    const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     try {
         const res = await client.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: modelName,
             contents: prompt,
         });
         const text = res.text || '';
         const analysis = analyzeModelResponseText(text, domain, brandName);
         return {
             engine: 'GEMINI',
-            name: 'Google Gemini (Gemini 2.0 Flash)',
+            name: `Google Gemini (${modelName})`,
             isMentioned: analysis.isMentioned,
             mentionRank: analysis.rank,
             status: analysis.status,
@@ -128,9 +130,10 @@ async function queryGeminiModel(client, prompt, domain, brandName, _niche) {
     }
 }
 async function queryPerplexityModel(client, prompt, domain, brandName, _niche) {
+    const modelName = process.env.PERPLEXITY_MODEL || 'sonar';
     try {
         const res = await client.chat.completions.create({
-            model: 'sonar',
+            model: modelName,
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 600,
         });
@@ -139,7 +142,7 @@ async function queryPerplexityModel(client, prompt, domain, brandName, _niche) {
         const analysis = analyzeModelResponseText(text, domain, brandName);
         return {
             engine: 'PERPLEXITY',
-            name: 'Perplexity AI (Sonar Search)',
+            name: `Perplexity AI (${modelName})`,
             isMentioned: analysis.isMentioned,
             mentionRank: analysis.rank,
             status: analysis.status,
@@ -158,9 +161,10 @@ async function queryPerplexityModel(client, prompt, domain, brandName, _niche) {
     }
 }
 async function queryClaudeModel(client, prompt, domain, brandName, _niche) {
+    const modelName = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
     try {
         const res = await client.messages.create({
-            model: 'claude-3-5-haiku-20241022',
+            model: modelName,
             max_tokens: 600,
             messages: [{ role: 'user', content: prompt }],
         });
@@ -168,7 +172,7 @@ async function queryClaudeModel(client, prompt, domain, brandName, _niche) {
         const analysis = analyzeModelResponseText(text, domain, brandName);
         return {
             engine: 'CLAUDE',
-            name: 'Claude (Anthropic Claude 3.5 Haiku)',
+            name: `Claude (Anthropic ${modelName})`,
             isMentioned: analysis.isMentioned,
             mentionRank: analysis.rank,
             status: analysis.status,
