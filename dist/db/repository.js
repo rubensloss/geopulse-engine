@@ -33,7 +33,7 @@ export class EnterpriseRepository {
     whatsappMessages = new Map();
     publicAuditLogs = [];
     constructor() {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
             this.loadFromDisk();
         }
         this.hydrateFromPrisma().catch((err) => {
@@ -179,7 +179,7 @@ export class EnterpriseRepository {
     // PERSISTÊNCIA EM DISCO LOCAL (DESENVOLVIMENTO APENAS)
     // ---------------------------------------------------------------------------
     loadFromDisk() {
-        if (process.env.NODE_ENV === 'production')
+        if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test')
             return;
         try {
             if (!fs.existsSync(this.storageFile))
@@ -240,7 +240,7 @@ export class EnterpriseRepository {
         }
     }
     persist() {
-        if (process.env.NODE_ENV === 'production')
+        if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test')
             return;
         if (this.persistTimer) {
             clearTimeout(this.persistTimer);
@@ -1562,6 +1562,9 @@ export class EnterpriseRepository {
         catch {
             return this.publicAuditLogs.filter((log) => log.clientIp === clientIp && new Date(log.createdAt).getTime() >= since.getTime()).length;
         }
+    }
+    resetPublicAuditLogs() {
+        this.publicAuditLogs = [];
     }
 }
 export const db = new EnterpriseRepository();

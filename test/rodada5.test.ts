@@ -11,6 +11,8 @@ async function runTestSuite() {
   console.log('🧪 INICIANDO SUÍTE DE TESTES AUTOMATIZADOS - GEOPULSE RODADA 5');
   console.log('================================================================\n');
 
+  db.resetPublicAuditLogs();
+
   // Inicializa servidor HTTP dinâmico para a API principal
   const server = http.createServer(app);
   await new Promise<void>((resolve) => server.listen(0, resolve));

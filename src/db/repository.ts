@@ -112,7 +112,7 @@ export class EnterpriseRepository {
   private publicAuditLogs: StoredPublicAuditLog[] = [];
 
   constructor() {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       this.loadFromDisk();
     }
     this.hydrateFromPrisma().catch((err) => {
@@ -268,7 +268,7 @@ export class EnterpriseRepository {
   // PERSISTÊNCIA EM DISCO LOCAL (DESENVOLVIMENTO APENAS)
   // ---------------------------------------------------------------------------
   private loadFromDisk(): void {
-    if (process.env.NODE_ENV === 'production') return;
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') return;
 
     try {
       if (!fs.existsSync(this.storageFile)) return;
@@ -327,7 +327,7 @@ export class EnterpriseRepository {
   }
 
   private persist(): void {
-    if (process.env.NODE_ENV === 'production') return;
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') return;
 
     if (this.persistTimer) {
       clearTimeout(this.persistTimer);
@@ -1648,6 +1648,10 @@ export class EnterpriseRepository {
         (log) => log.clientIp === clientIp && new Date(log.createdAt).getTime() >= since.getTime()
       ).length;
     }
+  }
+
+  resetPublicAuditLogs(): void {
+    this.publicAuditLogs = [];
   }
 }
 

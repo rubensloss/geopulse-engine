@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { app } from '../src/server.js';
+import { db } from '../src/db/index.js';
 import { extractMentionedCompanies, normalizeText } from '../src/services/multiLlmAuditor.js';
 import { isSsrfTarget } from '../src/services/scanner.js';
 
@@ -10,6 +11,8 @@ async function runTestSuite() {
   console.log('================================================================');
   console.log('🧪 INICIANDO SUÍTE DE TESTES AUTOMATIZADOS - GEOPULSE RODADA 4');
   console.log('================================================================\n');
+
+  db.resetPublicAuditLogs();
 
   // Inicializa servidor HTTP na porta dinâmica para testes ponta a ponta
   const server = http.createServer(app);
