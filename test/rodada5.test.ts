@@ -355,8 +355,144 @@ async function runTestSuite() {
     console.log('   ✓ Usuário promovido no banco para PLATFORM_ADMIN ganhou acesso imediato (200 OK) sem reemissão de token');
     console.log('✅ TESTE 10 PASSOU: Validação em tempo real no banco garante consistência e revogação imediata.\n');
 
+    // -------------------------------------------------------------------------
+    // TESTE 11: Auditoria pública - Bloqueio de evasão por X-Forwarded-For (IP real)
+    // -------------------------------------------------------------------------
+    console.log('TESTE 11: Validando que forjar X-Forwarded-For não burla o limite de 3 auditorias por IP...');
+    const testRealIp = `203.0.113.${(Date.now() % 200) + 10}`;
+
+    // Executa 3 diagnósticos com o IP real no final da cadeia do X-Forwarded-For
+    for (let reqNum = 1; reqNum <= 3; reqNum++) {
+      const spoofRes = await fetch(`${baseUrl}/api/scanner/audit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Forwarded-For': `1.1.1.${reqNum}, ${testRealIp}`,
+        },
+        body: JSON.stringify({
+          domain: `empresa-ip-test-${reqNum}.com.br`,
+          niche: 'Tecnologia',
+        }),
+      });
+
+      // Em ambiente de teste sem chaves de IA retorna 503 (ou 200 se mockado), mas NUNCA 429 nas primeiras 3
+      assert.notEqual(
+        spoofRes.status,
+        429,
+        `Diagnóstico ${reqNum} não deveria atingir 429 Too Many Requests`
+      );
+      console.log(`   ✓ Diagnóstico ${reqNum}/3 processado com IP real ${testRealIp} (Status: ${spoofRes.status})`);
+    }
+
+    // 4ª requisição tentando burlar o limite trocando o prefixo do X-Forwarded-For para outro IP
+    const evadeRes = await fetch(`${baseUrl}/api/scanner/audit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Forwarded-For': `99.99.99.99, ${testRealIp}`, // Atacante forja 99.99.99.99, mas o proxy do Railway apende testRealIp no final
+      },
+      body: JSON.stringify({
+        domain: 'empresa-ip-test-4.com.br',
+        niche: 'Tecnologia',
+      }),
+    });
+
+    assert.equal(
+      evadeRes.status,
+      429,
+      `4ª chamada deveria retornar 429 Too Many Requests mesmo forjando prefixo no X-Forwarded-For, mas retornou ${evadeRes.status}`
+    );
+    const evadeJson = await evadeRes.json();
+    assert.equal(evadeJson.success, false);
+    assert.match(
+      evadeJson.error,
+      /Limite de 3 diagnósticos gratuitos por dia atingido para este IP/i,
+      'Mensagem deve indicar que o limite por IP foi atingido'
+    );
+    console.log('   ✓ 4ª requisição com X-Forwarded-For adulterado bloqueada com 429 (IP real identificado no final da cadeia)');
+    console.log('✅ TESTE 11 PASSOU: Evasão de rate limiting por spoofing de cabeçalho neutralizada.\n');
+
+    // -------------------------------------------------------------------------
+    // TESTE 12: Teto global diário de diagnósticos públicos (PUBLIC_AUDIT_DAILY_LIMIT)
+    // -------------------------------------------------------------------------
+    console.log('TESTE 12: Validando bloqueio 429 ao atingir o teto global diário de diagnósticos...');
+    // Consulta quantas auditorias já foram registradas nas últimas 24h
+    const currentGlobal = await db.countDailyPublicAudits(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const ceilingLimit = 30; // PUBLIC_AUDIT_DAILY_LIMIT padrão
+    const neededToHitCeiling = Math.max(0, ceilingLimit - currentGlobal);
+
+    // Registra registros simulados até atingir o teto de 30
+    for (let i = 0; i < neededToHitCeiling; i++) {
+      await db.recordPublicAudit(`198.51.100.${i + 50}`, `simulated-${i}.com.br`);
+    }
+
+    // Agora, mesmo uma requisição de um IP completamente virgem (nunca usado antes) deve receber 429
+    const virginIp = '198.51.199.199';
+    const ceilingRes = await fetch(`${baseUrl}/api/scanner/audit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Forwarded-For': virginIp,
+      },
+      body: JSON.stringify({
+        domain: 'nova-empresa-teto-global.com.br',
+        niche: 'Tecnologia',
+      }),
+    });
+
+    assert.equal(
+      ceilingRes.status,
+      429,
+      `Requisição após teto global deveria retornar 429, mas retornou ${ceilingRes.status}`
+    );
+    const ceilingJson = await ceilingRes.json();
+    assert.equal(ceilingJson.success, false);
+    assert.match(
+      ceilingJson.error,
+      /teto global diário de diagnósticos públicos gratuitos/i,
+      'Mensagem deve informar que o teto global diário foi atingido'
+    );
+    console.log(`   ✓ Requisição com IP virgem bloqueada com 429 devido ao teto diário global (${ceilingLimit}/dia)`);
+    console.log('✅ TESTE 12 PASSOU: Teto global diário protege o orçamento e créditos de IA.\n');
+
+    // -------------------------------------------------------------------------
+    // TESTE 13: POST /api/whatsapp/send-dossier valida PLATFORM_ADMIN em tempo real no banco
+    // -------------------------------------------------------------------------
+    console.log('TESTE 13: Validando que send-dossier rejeita tokens antigos se o usuário for rebaixado no banco...');
+    // targetUserId foi promovido para PLATFORM_ADMIN no Teste 10.
+    // Vamos rebaixar o usuário no banco de volta para OWNER:
+    await db.updateUser(targetUserId, {
+      role: 'OWNER',
+    });
+
+    // Tenta chamar /api/whatsapp/send-dossier usando o token
+    const demotedRes = await fetch(`${baseUrl}/api/whatsapp/send-dossier`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${spoofAdminToken}`,
+      },
+      body: JSON.stringify({
+        to: '5527988140076',
+        clientName: 'Cliente Teste',
+        companyName: 'Empresa Teste',
+        reportSlug: 'relatorio-teste',
+        score: 60,
+      }),
+    });
+
+    assert.equal(
+      demotedRes.status,
+      403,
+      `send-dossier deveria retornar 403 Forbidden para admin rebaixado no banco, retornou ${demotedRes.status}`
+    );
+    const demotedJson = await demotedRes.json();
+    assert.equal(demotedJson.success, false);
+    console.log('   ✓ Usuário rebaixado no PostgreSQL bloqueado imediatamente em POST /api/whatsapp/send-dossier (403)');
+    console.log('✅ TESTE 13 PASSOU: requirePlatformAdminMiddleware aplicado com sucesso no envio de dossiê WhatsApp.\n');
+
     console.log('================================================================');
-    console.log('🎉 TODOS OS 10 TESTES DA RODADA 5 PASSARAM COM 100% DE SUCESSO!');
+    console.log('🎉 TODOS OS 13 TESTES DA RODADA 5 / 5c PASSARAM COM 100% DE SUCESSO!');
     console.log('================================================================\n');
   } finally {
     server.close();

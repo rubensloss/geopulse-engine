@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { prisma } from './prisma.js';
 import {
   CreateBrandDto,
@@ -19,6 +20,13 @@ import {
   StoredWhatsAppMessage,
 } from './types.js';
 import { decryptJsonCredential, encryptJsonCredential } from '../security/encryption.js';
+
+export interface StoredPublicAuditLog {
+  id: string;
+  clientIp: string;
+  domain: string;
+  createdAt: Date;
+}
 
 export interface StoredOrganization {
   id: string;
@@ -101,6 +109,7 @@ export class EnterpriseRepository {
     testMode: !process.env.META_WA_TOKEN,
   };
   private whatsappMessages: Map<string, StoredWhatsAppMessage> = new Map();
+  private publicAuditLogs: StoredPublicAuditLog[] = [];
 
   constructor() {
     if (process.env.NODE_ENV !== 'production') {
@@ -117,7 +126,7 @@ export class EnterpriseRepository {
    */
   private async hydrateFromPrisma(): Promise<void> {
     try {
-      const [dbScans, dbUsers, dbOrgs, dbBrands, dbSubs, dbWaConfig, dbWaMessages] = await Promise.all([
+      const [dbScans, dbUsers, dbOrgs, dbBrands, dbSubs, dbWaConfig, dbWaMessages, dbAuditLogs] = await Promise.all([
         prisma.scanReport.findMany({ take: 100, orderBy: { createdAt: 'desc' } }).catch(() => []),
         prisma.user.findMany().catch(() => []),
         prisma.organization.findMany().catch(() => []),
@@ -125,6 +134,7 @@ export class EnterpriseRepository {
         prisma.subscription.findMany().catch(() => []),
         prisma.whatsAppConfig.findFirst({ orderBy: { updatedAt: 'desc' } }).catch(() => null),
         prisma.whatsAppMessage.findMany({ take: 50, orderBy: { createdAt: 'desc' } }).catch(() => []),
+        prisma.publicAuditLog.findMany({ take: 500, orderBy: { createdAt: 'desc' } }).catch(() => []),
       ]);
 
       for (const s of dbScans) {
@@ -239,6 +249,15 @@ export class EnterpriseRepository {
         }
       }
 
+      for (const log of dbAuditLogs) {
+        this.publicAuditLogs.push({
+          id: log.id,
+          clientIp: log.clientIp,
+          domain: log.domain,
+          createdAt: log.createdAt,
+        });
+      }
+
       console.log('✅ [DB] Prisma PostgreSQL sincronizado com sucesso.');
     } catch (err: any) {
       console.warn('ℹ️ [DB] Hidratação Prisma concluída com aviso:', err?.message);
@@ -296,6 +315,12 @@ export class EnterpriseRepository {
           { ...item, createdAt: new Date(item.createdAt), updatedAt: new Date(item.updatedAt) }
         ]));
       }
+      if (data.publicAuditLogs && Array.isArray(data.publicAuditLogs)) {
+        this.publicAuditLogs = data.publicAuditLogs.map((item: any) => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+        }));
+      }
     } catch {
       // Ignora erro em dev
     }
@@ -323,6 +348,7 @@ export class EnterpriseRepository {
           scans: Array.from(new Set(this.scans.values())),
           whatsappConfig: this.whatsappConfig,
           whatsappMessages: Array.from(this.whatsappMessages.values()),
+          publicAuditLogs: this.publicAuditLogs,
         };
         fs.writeFileSync(this.storageFile, JSON.stringify(snapshot, null, 2), 'utf-8');
       } catch (err) {
@@ -1562,6 +1588,66 @@ export class EnterpriseRepository {
         actionLabel: 'Gerenciar Pautas',
       },
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // AUDITORIAS PÚBLICAS (Rate Limiting Persistente & Anti-Drenagem de IA)
+  // ---------------------------------------------------------------------------
+  async recordPublicAudit(clientIp: string, domain: string): Promise<StoredPublicAuditLog> {
+    const record: StoredPublicAuditLog = {
+      id: crypto.randomUUID(),
+      clientIp,
+      domain,
+      createdAt: new Date(),
+    };
+    this.publicAuditLogs.push(record);
+    this.persist();
+
+    try {
+      await prisma.publicAuditLog.create({
+        data: {
+          id: record.id,
+          clientIp: record.clientIp,
+          domain: record.domain,
+          createdAt: record.createdAt,
+        },
+      });
+    } catch (err: any) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('🚨 [DB] Falha crítica ao persistir PublicAuditLog no Prisma:', err?.message);
+      } else {
+        console.warn('⚠️ [DB] Aviso ao persistir PublicAuditLog no Prisma:', err?.message);
+      }
+    }
+
+    return record;
+  }
+
+  async countDailyPublicAudits(since: Date): Promise<number> {
+    try {
+      return await prisma.publicAuditLog.count({
+        where: {
+          createdAt: { gte: since },
+        },
+      });
+    } catch {
+      return this.publicAuditLogs.filter((log) => new Date(log.createdAt).getTime() >= since.getTime()).length;
+    }
+  }
+
+  async countDailyPublicAuditsByIp(clientIp: string, since: Date): Promise<number> {
+    try {
+      return await prisma.publicAuditLog.count({
+        where: {
+          clientIp,
+          createdAt: { gte: since },
+        },
+      });
+    } catch {
+      return this.publicAuditLogs.filter(
+        (log) => log.clientIp === clientIp && new Date(log.createdAt).getTime() >= since.getTime()
+      ).length;
+    }
   }
 }
 

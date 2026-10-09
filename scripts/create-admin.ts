@@ -19,8 +19,9 @@ function getCliArg(flag: string): string | null {
 
 function askHiddenPassword(promptText: string): Promise<string> {
   return new Promise((resolve) => {
-    // Se não estiver em terminal interativo (ex: CI ou pipe), lê linha normalmente
-    if (!process.stdin.isTTY) {
+    // Se não estiver em terminal interativo com TTY ou se setRawMode não existir/falhar,
+    // faz fallback gracioso para readline padrão (ex: ambientes railway ssh sem pty)
+    if (!process.stdin.isTTY || typeof process.stdin.setRawMode !== 'function') {
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -33,32 +34,45 @@ function askHiddenPassword(promptText: string): Promise<string> {
       return;
     }
 
-    process.stdout.write(promptText);
-    let password = '';
+    try {
+      process.stdout.write(promptText);
+      let password = '';
 
-    const onData = (buffer: Buffer) => {
-      const char = buffer.toString('utf-8');
-      if (char === '\r' || char === '\n') {
-        process.stdin.setRawMode?.(false);
-        process.stdin.pause();
-        process.stdin.removeListener('data', onData);
-        process.stdout.write('\n');
-        resolve(password.trim());
-      } else if (char === '\u0008' || char === '\x7f') { // Backspace
-        if (password.length > 0) {
-          password = password.slice(0, -1);
+      const onData = (buffer: Buffer) => {
+        const char = buffer.toString('utf-8');
+        if (char === '\r' || char === '\n') {
+          try { process.stdin.setRawMode?.(false); } catch {}
+          process.stdin.pause();
+          process.stdin.removeListener('data', onData);
+          process.stdout.write('\n');
+          resolve(password.trim());
+        } else if (char === '\u0008' || char === '\x7f') { // Backspace
+          if (password.length > 0) {
+            password = password.slice(0, -1);
+          }
+        } else if (char === '\u0003') { // Ctrl+C
+          try { process.stdin.setRawMode?.(false); } catch {}
+          process.exit(1);
+        } else {
+          password += char;
         }
-      } else if (char === '\u0003') { // Ctrl+C
-        process.stdin.setRawMode?.(false);
-        process.exit(1);
-      } else {
-        password += char;
-      }
-    };
+      };
 
-    process.stdin.setRawMode?.(true);
-    process.stdin.resume();
-    process.stdin.on('data', onData);
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.on('data', onData);
+    } catch {
+      // Fallback gracioso se setRawMode falhar no contêiner
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false,
+      });
+      rl.question(promptText, (answer) => {
+        rl.close();
+        resolve(answer.trim());
+      });
+    }
   });
 }
 
@@ -67,12 +81,19 @@ async function main() {
   console.log('🛡️  GEOPULSE - PROMOÇÃO / CRIAÇÃO DE PLATFORM_ADMIN');
   console.log('================================================================\n');
 
+  // Segurança estrita: rejeita flag --password para evitar vazamento em logs/histórico
+  if (process.argv.some((a) => a.startsWith('--password'))) {
+    console.error('❌ Por motivos de segurança, o argumento --password via linha de comando foi desativado.');
+    console.error('   Senhas em flags de CLI ficam salvas no histórico (.bash_history) e na listagem de processos.');
+    console.error('   Por favor, execute sem --password e insira a senha na pergunta oculta interativa.\n');
+    process.exit(1);
+  }
+
   let email = getCliArg('--email');
-  let password = getCliArg('--password');
 
   if (!email) {
     console.error('❌ Parâmetro --email é obrigatório.');
-    console.error('Uso: npm run create-admin -- --email admin@empresa.com [--password <senha>]\n');
+    console.error('Uso: npm run create-admin -- --email admin@empresa.com\n');
     process.exit(1);
   }
 
@@ -82,12 +103,10 @@ async function main() {
     process.exit(1);
   }
 
-  if (!password) {
-    password = await askHiddenPassword('Digite a senha para a conta PLATFORM_ADMIN: ');
-  }
+  const password = await askHiddenPassword('Digite a senha para a conta PLATFORM_ADMIN (mínimo 12 caracteres): ');
 
-  if (!password || password.length < 6) {
-    console.error('❌ A senha deve conter pelo menos 6 caracteres.');
+  if (!password || password.length < 12) {
+    console.error('❌ A senha deve conter pelo menos 12 caracteres para contas PLATFORM_ADMIN.');
     process.exit(1);
   }
 

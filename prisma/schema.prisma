@@ -364,3 +364,19 @@ model WhatsAppMessage {
   @@map("whatsapp_messages")
 }
 
+// -----------------------------------------------------------------------------
+// RATE LIMITING DE AUDITORIAS PÚBLICAS (Resistente a reinício)
+// -----------------------------------------------------------------------------
+
+model PublicAuditLog {
+  id        String   @id @default(cuid())
+  clientIp  String
+  domain    String
+  createdAt DateTime @default(now())
+
+  @@index([clientIp, createdAt])
+  @@index([createdAt])
+  @@map("public_audit_logs")
+}
+
+

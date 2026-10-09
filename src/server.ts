@@ -9,7 +9,7 @@ import { processContentJob } from './worker/index.js';
 import { scheduler } from './worker/scheduler.js';
 import { generateCoverImageMetadata } from './worker/content-processor.js';
 import { publishArticleToCMS } from './publishers/index.js';
-import { executeGEOScan } from './services/scanner.js';
+import { executeGEOScan, cleanDomain, isSsrfTarget } from './services/scanner.js';
 import {
   registerUser,
   loginUser,
@@ -120,6 +120,44 @@ async function seedDefaultData(): Promise<void> {
 // CONFIGURAÇÃO DO SERVIDOR EXPRESS
 // -----------------------------------------------------------------------------
 const app = express();
+app.set('trust proxy', 1);
+
+/**
+ * Extrai o IP real do cliente.
+ * Em proxies reversos como o Railway, o IP real é sempre adicionado ao final
+ * da cadeia do cabeçalho X-Forwarded-For. Nunca usamos o primeiro valor,
+ * pois ele pode ser forjado pelo cliente para burlar limites de taxa.
+ */
+export function extractRealClientIp(req: Request): string {
+  const xForwardedFor = req.headers['x-forwarded-for'];
+  if (typeof xForwardedFor === 'string' && xForwardedFor.trim()) {
+    const parts = xForwardedFor.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length > 0) {
+      let lastIp = parts[parts.length - 1];
+      if (lastIp.startsWith('::ffff:')) {
+        lastIp = lastIp.substring(7);
+      }
+      return lastIp;
+    }
+  } else if (Array.isArray(xForwardedFor) && xForwardedFor.length > 0) {
+    const lastEntry = xForwardedFor[xForwardedFor.length - 1];
+    const parts = lastEntry.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length > 0) {
+      let lastIp = parts[parts.length - 1];
+      if (lastIp.startsWith('::ffff:')) {
+        lastIp = lastIp.substring(7);
+      }
+      return lastIp;
+    }
+  }
+
+  let ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+  if (ip.startsWith('::ffff:')) {
+    ip = ip.substring(7);
+  }
+  return ip;
+}
+
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3333;
 const PUBLIC_DIR = path.resolve(process.cwd(), 'public');
 
@@ -767,28 +805,32 @@ app.get('/api/geo-stats', async (req: AuthenticatedRequest, res) => {
 // -----------------------------------------------------------------------------
 // GEO SCANNER - DIAGNÓSTICO PÚBLICO (Lead Magnet Honesto)
 // -----------------------------------------------------------------------------
-const IP_AUDIT_LIMITS = new Map<string, { count: number; resetAt: number }>();
+export const PUBLIC_AUDIT_DAILY_LIMIT = parseInt(process.env.PUBLIC_AUDIT_DAILY_LIMIT || '30', 10);
+export const PUBLIC_AUDIT_IP_LIMIT = 3;
 
 app.post('/api/scanner/audit', async (req, res) => {
   try {
-    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
-    const now = Date.now();
-    const limitRecord = IP_AUDIT_LIMITS.get(clientIp);
+    const clientIp = extractRealClientIp(req);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    if (limitRecord) {
-      if (now > limitRecord.resetAt) {
-        IP_AUDIT_LIMITS.set(clientIp, { count: 1, resetAt: now + 24 * 60 * 60 * 1000 });
-      } else if (limitRecord.count >= 3) {
-        return res.status(429).json({
-          success: false,
-          error: 'Limite de 3 diagnósticos gratuitos por dia atingido para este IP. Para auditorias contínuas, fale conosco no WhatsApp oficial (27) 98814-0076.',
-          contactWhatsapp: 'https://wa.me/5527988140076?text=Ol%C3%A1!%20Atingi%20o%20limite%20de%20diagn%C3%B3sticos%20do%20GeoPulse%20e%20gostaria%20de%20conhecer%20os%20planos.',
-        });
-      } else {
-        limitRecord.count += 1;
-      }
-    } else {
-      IP_AUDIT_LIMITS.set(clientIp, { count: 1, resetAt: now + 24 * 60 * 60 * 1000 });
+    // 1. Verificação do Teto Global Diário (Anti-Drenagem Coletiva de Créditos de IA)
+    const globalCount = await db.countDailyPublicAudits(oneDayAgo);
+    if (globalCount >= PUBLIC_AUDIT_DAILY_LIMIT) {
+      return res.status(429).json({
+        success: false,
+        error: `O teto global diário de diagnósticos públicos gratuitos (${PUBLIC_AUDIT_DAILY_LIMIT}/dia) foi atingido. Para realizar sua auditoria imediatamente, fale conosco no WhatsApp oficial (27) 98814-0076.`,
+        contactWhatsapp: 'https://wa.me/5527988140076?text=Ol%C3%A1!%20O%20teto%20global%20de%20diagn%C3%B3sticos%20foi%20atingido%20e%20gostaria%20de%20uma%20auditoria.',
+      });
+    }
+
+    // 2. Verificação do Limite Individual por IP Real (Máximo 3 diagnósticos por 24h, persistido no banco)
+    const ipCount = await db.countDailyPublicAuditsByIp(clientIp, oneDayAgo);
+    if (ipCount >= PUBLIC_AUDIT_IP_LIMIT) {
+      return res.status(429).json({
+        success: false,
+        error: 'Limite de 3 diagnósticos gratuitos por dia atingido para este IP. Para auditorias contínuas, fale conosco no WhatsApp oficial (27) 98814-0076.',
+        contactWhatsapp: 'https://wa.me/5527988140076?text=Ol%C3%A1!%20Atingi%20o%20limite%20de%20diagn%C3%B3sticos%20do%20GeoPulse%20e%20gostaria%20de%20conhecer%20os%20planos.',
+      });
     }
 
     const { domain, niche, brandName } = req.body;
@@ -800,8 +842,19 @@ app.post('/api/scanner/audit', async (req, res) => {
       });
     }
 
+    const clean = cleanDomain(domain);
+    if (isSsrfTarget(clean)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Acesso bloqueado por segurança: endereço interno, privado ou não permitido para escaneamento.',
+      });
+    }
+
+    // 3. Registra a auditoria válida no banco de dados para persistência e rate limiting resistente a reinício
+    await db.recordPublicAudit(clientIp, clean);
+
     const result = await executeGEOScan({
-      domain,
+      domain: clean,
       niche: niche || 'Serviços B2B e Tecnologia',
       brandName,
     });
@@ -1067,7 +1120,7 @@ app.post('/api/whatsapp/test-connection', requirePlatformAdminMiddleware, async 
 });
 
 // 6. Disparar Dossiê Executivo via Template Oficial (Restrito a PLATFORM_ADMIN)
-app.post('/api/whatsapp/send-dossier', async (req: AuthenticatedRequest, res) => {
+app.post('/api/whatsapp/send-dossier', requirePlatformAdminMiddleware, async (req: AuthenticatedRequest, res) => {
   try {
     const { to, clientName, companyName, reportSlug, score, customNotes } = req.body;
     if (!to) {
@@ -1075,14 +1128,6 @@ app.post('/api/whatsapp/send-dossier', async (req: AuthenticatedRequest, res) =>
     }
     if (!reportSlug) {
       return res.status(400).json({ success: false, error: 'O slug do relatório é obrigatório.' });
-    }
-
-    // Apenas PLATFORM_ADMIN pode enviar mensagens pelo WhatsApp oficial da plataforma
-    if (!isPlatformAdmin(req.user)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Envio de mensagens oficiais pelo WhatsApp restrito a administradores da plataforma Creative Always.',
-      });
     }
 
     console.log(`📲 [WhatsApp Send Dossier] Disparo oficial autorizado por userId=${req.user!.userId} (email=${req.user!.email}) para ${to} (slug=${reportSlug})`);
