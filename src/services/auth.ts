@@ -83,13 +83,8 @@ export async function registerUser(input: {
   const org = await db.createOrganization(input.companyName, slug);
 
   // Cria usuário: ignora qualquer planTier enviado pelo cliente; conta nasce sempre no plano gratuito (FREE_TRIAL)
-  // O papel PLATFORM_ADMIN só é atribuído via variável PLATFORM_ADMIN_EMAILS, nunca pelo cadastro comum
-  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS || '')
-    .split(',')
-    .map(e => e.trim().toLowerCase())
-    .filter(Boolean);
-  const isEnvAdmin = adminEmails.includes(input.email.toLowerCase().trim());
-  const initialRole: UserRole = isEnvAdmin ? 'PLATFORM_ADMIN' : 'OWNER';
+  // O papel PLATFORM_ADMIN NUNCA é atribuído pelo cadastro público (mesmo se o e-mail constar em listas externas)
+  const initialRole: UserRole = 'OWNER';
 
   const user = await db.createUser({
     organizationId: org.id,
@@ -175,26 +170,20 @@ export function optionalAuthMiddleware(req: AuthenticatedRequest, _res: Response
   next();
 }
 
-export function isPlatformAdmin(user?: TokenPayload | StoredUser | null): boolean {
+export function isPlatformAdmin(user?: TokenPayload | StoredUser | { role?: string } | null): boolean {
   if (!user) return false;
-  if (user.role === 'PLATFORM_ADMIN') return true;
-  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS || '')
-    .split(',')
-    .map(e => e.trim().toLowerCase())
-    .filter(Boolean);
-  if (user.email && adminEmails.includes(user.email.toLowerCase())) {
-    return true;
-  }
-  return false;
+  return user.role === 'PLATFORM_ADMIN';
 }
 
-export function requirePlatformAdminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function requirePlatformAdminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   if (!req.user) {
     res.status(401).json({ success: false, error: 'Acesso não autorizado. Faça login para continuar.' });
     return;
   }
 
-  if (!isPlatformAdmin(req.user)) {
+  // Consulta o usuário em tempo real no banco de dados para checar o papel real persistido
+  const dbUser = await db.getUserById(req.user.userId);
+  if (!dbUser || dbUser.role !== 'PLATFORM_ADMIN') {
     res.status(403).json({
       success: false,
       error: 'Acesso restrito a administradores da plataforma Creative Always (PLATFORM_ADMIN).',
@@ -203,6 +192,40 @@ export function requirePlatformAdminMiddleware(req: AuthenticatedRequest, res: R
   }
 
   next();
+}
+
+/**
+ * Consulta o plano e status de assinatura em tempo real no banco de dados,
+ * evitando confiar apenas nas claims estáticas do token JWT.
+ */
+export async function getRealtimeUserPlan(userId: string): Promise<{
+  user: StoredUser | null;
+  isActivePlan: boolean;
+  isPlatformAdmin: boolean;
+  planTier: PlanTier;
+  subscriptionStatus: string;
+}> {
+  const user = await db.getUserById(userId);
+  if (!user) {
+    return {
+      user: null,
+      isActivePlan: false,
+      isPlatformAdmin: false,
+      planTier: 'FREE_TRIAL',
+      subscriptionStatus: 'TRIAL',
+    };
+  }
+
+  const isAdmin = user.role === 'PLATFORM_ADMIN';
+  const isActive = isAdmin || (user.planTier !== 'FREE_TRIAL' && user.subscriptionStatus === 'ACTIVE');
+
+  return {
+    user,
+    isActivePlan: isActive,
+    isPlatformAdmin: isAdmin,
+    planTier: user.planTier || 'FREE_TRIAL',
+    subscriptionStatus: user.subscriptionStatus || 'TRIAL',
+  };
 }
 
 export function requireOwnerMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {

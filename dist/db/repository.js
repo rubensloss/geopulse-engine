@@ -449,15 +449,20 @@ export class EnterpriseRepository {
     }
     async updateUser(id, updates) {
         try {
+            const dataToUpdate = {
+                name: updates.name,
+                companyName: updates.companyName,
+                phone: updates.phone,
+                planTier: updates.planTier,
+                subscriptionStatus: updates.subscriptionStatus,
+            };
+            if (updates.role !== undefined)
+                dataToUpdate.role = updates.role;
+            if (updates.passwordHash !== undefined)
+                dataToUpdate.passwordHash = updates.passwordHash;
             const record = await prisma.user.update({
                 where: { id },
-                data: {
-                    name: updates.name,
-                    companyName: updates.companyName,
-                    phone: updates.phone,
-                    planTier: updates.planTier,
-                    subscriptionStatus: updates.subscriptionStatus,
-                },
+                data: dataToUpdate,
             });
             const user = {
                 id: record.id,
@@ -1157,6 +1162,32 @@ export class EnterpriseRepository {
             this.persist();
             return mon;
         }
+    }
+    async getLatestBrandMonitor(brandId) {
+        try {
+            const record = await prisma.gEOMonitorRun.findFirst({
+                where: { brandId },
+                orderBy: { createdAt: 'desc' },
+            });
+            if (record) {
+                return {
+                    id: record.id,
+                    brandId: record.brandId,
+                    queryPrompt: record.queryPrompt,
+                    targetEngine: record.targetEngine,
+                    isBrandMentioned: record.isBrandMentioned,
+                    mentionRank: record.mentionRank ?? undefined,
+                    sentiment: record.sentiment,
+                    citedUrls: record.citedUrls,
+                    rawAnswerText: record.rawAnswerText || '',
+                    createdAt: record.createdAt,
+                };
+            }
+        }
+        catch {
+            // Fallback em memória para ambientes de teste
+        }
+        return this.geoMonitors.find((m) => m.brandId === brandId);
     }
     async getBrandShareOfVoice(brandId) {
         try {

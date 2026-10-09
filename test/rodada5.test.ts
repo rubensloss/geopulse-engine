@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { app } from '../src/server.js';
+import { db } from '../src/db/index.js';
 import { isSsrfTargetAsync, safeFetch } from '../src/security/ssrfProtection.js';
 
 process.env.NODE_ENV = 'test';
@@ -254,8 +255,108 @@ async function runTestSuite() {
     console.log('   ✓ GET /api/brands sem token ➔ 401 Unauthorized');
     console.log('✅ TESTE 7 PASSOU: Autenticação obrigatória ativa em todas as rotas privadas.\n');
 
+    // -------------------------------------------------------------------------
+    // TESTE 8: Cadastro com e-mail em PLATFORM_ADMIN_EMAILS NUNCA vira admin
+    // -------------------------------------------------------------------------
+    console.log('TESTE 8: Validando que cadastro com e-mail de admin nasce OWNER e é recusado em rotas admin...');
+    const adminEmailTimestamp = Date.now();
+    const adminEmail = `admin.supremo.${adminEmailTimestamp}@creativealways.com.br`;
+    process.env.PLATFORM_ADMIN_EMAILS = `${adminEmail},outro.admin@empresa.com`;
+    const adminRegRes = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Tentativa de Admin via Cadastro',
+        email: adminEmail,
+        password: 'SenhaAdmin123!',
+        companyName: `Admin Spoof Test ${adminEmailTimestamp}`,
+      }),
+    });
+
+    assert.equal(adminRegRes.status, 200);
+    const adminRegJson = await adminRegRes.json();
+    assert.equal(
+      adminRegJson.data.user.role,
+      'OWNER',
+      `Cadastro público deveria ter papel OWNER, mas recebeu ${adminRegJson.data.user.role}`
+    );
+    console.log('   ✓ Usuário cadastrado com e-mail de PLATFORM_ADMIN_EMAILS nasceu estritamente como OWNER');
+
+    // Tenta acessar rota de admin (/api/whatsapp/config) com o token gerado no cadastro
+    const spoofAdminToken = adminRegJson.data.token;
+    const testAdminAccess = await fetch(`${baseUrl}/api/whatsapp/config`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${spoofAdminToken}` },
+    });
+    assert.equal(
+      testAdminAccess.status,
+      403,
+      `Tentativa de acessar rota de admin deveria retornar 403 Forbidden, retornou ${testAdminAccess.status}`
+    );
+    console.log('   ✓ Token de cadastro recebeu 403 Forbidden em rota administrativa (sem privilégios indevidos)');
+    console.log('✅ TESTE 8 PASSOU: Impossível obter PLATFORM_ADMIN pelo cadastro público.\n');
+
+    // -------------------------------------------------------------------------
+    // TESTE 9: Monitoramento semanal bloqueado com 403 para planos gratuitos
+    // -------------------------------------------------------------------------
+    console.log('TESTE 9: Validando bloqueio 403 Forbidden em /api/brands/:id/monitor-weekly para contas FREE_TRIAL...');
+    // Busca a marca do usuário comum criado no Teste 1
+    const brandsRes = await fetch(`${baseUrl}/api/brands`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${commonUserToken}` },
+    });
+    const brandsJson = await brandsRes.json();
+    assert.equal(brandsJson.success, true);
+    assert.ok(brandsJson.data.length > 0, 'Usuário comum deveria ter ao menos uma marca cadastrada');
+    const commonBrandId = brandsJson.data[0].id;
+
+    const monitorRes = await fetch(`${baseUrl}/api/brands/${commonBrandId}/monitor-weekly`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${commonUserToken}` },
+    });
+    assert.equal(
+      monitorRes.status,
+      403,
+      `Monitoramento semanal deveria retornar 403 Forbidden para FREE_TRIAL, retornou ${monitorRes.status}`
+    );
+    const monitorJson = await monitorRes.json();
+    assert.equal(monitorJson.success, false);
+    assert.match(
+      monitorJson.error,
+      /plano ativo/i,
+      'Mensagem de erro deveria indicar necessidade de plano ativo'
+    );
+    console.log('   ✓ POST /api/brands/:id/monitor-weekly ➔ 403 Forbidden para conta FREE_TRIAL');
+    console.log('✅ TESTE 9 PASSOU: Monitoramento semanal por IA protegido contra consumo indevido no trial.\n');
+
+    // -------------------------------------------------------------------------
+    // TESTE 10: Consulta de papel e plano em tempo real no banco de dados
+    // -------------------------------------------------------------------------
+    console.log('TESTE 10: Validando reflexo imediato de promoção e plano no banco de dados...');
+    const targetUserId = adminRegJson.data.user.id;
+
+    // Promove o usuário direto no banco de dados (simulando script create-admin)
+    await db.updateUser(targetUserId, {
+      role: 'PLATFORM_ADMIN',
+      planTier: 'EXCELLENCE_CYCLE',
+      subscriptionStatus: 'ACTIVE',
+    });
+
+    // Mesmo usando o token emitido antes (que tinha role: OWNER gravado nele), a verificação no banco em tempo real deve reconhecer PLATFORM_ADMIN
+    const adminCheckRes = await fetch(`${baseUrl}/api/whatsapp/config`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${spoofAdminToken}` },
+    });
+    assert.equal(
+      adminCheckRes.status,
+      200,
+      `Usuário promovido no banco deveria ter acesso 200 OK a /whatsapp/config, retornou ${adminCheckRes.status}`
+    );
+    console.log('   ✓ Usuário promovido no banco para PLATFORM_ADMIN ganhou acesso imediato (200 OK) sem reemissão de token');
+    console.log('✅ TESTE 10 PASSOU: Validação em tempo real no banco garante consistência e revogação imediata.\n');
+
     console.log('================================================================');
-    console.log('🎉 TODOS OS 7 TESTES DA RODADA 5 PASSARAM COM 100% DE SUCESSO!');
+    console.log('🎉 TODOS OS 10 TESTES DA RODADA 5 PASSARAM COM 100% DE SUCESSO!');
     console.log('================================================================\n');
   } finally {
     server.close();

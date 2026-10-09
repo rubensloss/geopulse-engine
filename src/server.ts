@@ -17,6 +17,7 @@ import {
   requireOwnerMiddleware,
   requirePlatformAdminMiddleware,
   isPlatformAdmin,
+  getRealtimeUserPlan,
   type AuthenticatedRequest,
 } from './services/auth.js';
 import { AVAILABLE_PLANS, processCheckout } from './services/billing.js';
@@ -379,8 +380,9 @@ app.post('/api/topics', async (req: AuthenticatedRequest, res) => {
 
 app.post('/api/topics/:id/generate', async (req: AuthenticatedRequest, res) => {
   try {
-    // Contas em FREE_TRIAL não podem gerar artigos por IA (apenas auditorias e visualizações)
-    if (req.user?.planTier === 'FREE_TRIAL' && !isPlatformAdmin(req.user)) {
+    // Consulta o plano em tempo real no banco de dados (não confia apenas no token estático)
+    const planInfo = await getRealtimeUserPlan(req.user!.userId);
+    if (!planInfo.isActivePlan) {
       return res.status(403).json({
         success: false,
         error: 'A geração autônoma de conteúdo por IA exige um plano ativo. Solicite a ativação comercial via WhatsApp oficial.',
@@ -439,7 +441,9 @@ app.get('/api/articles', async (req: AuthenticatedRequest, res) => {
 
 app.post('/api/articles/generate-cover', async (req: AuthenticatedRequest, res) => {
   try {
-    if (req.user?.planTier === 'FREE_TRIAL' && !isPlatformAdmin(req.user)) {
+    // Consulta o plano em tempo real no banco de dados
+    const planInfo = await getRealtimeUserPlan(req.user!.userId);
+    if (!planInfo.isActivePlan) {
       return res.status(403).json({
         success: false,
         error: 'A geração autônoma de mídia por IA exige um plano ativo. Solicite a ativação comercial via WhatsApp oficial.',
@@ -683,6 +687,31 @@ app.post('/api/brands/:id/monitor-weekly', async (req: AuthenticatedRequest, res
     const brand = await db.getBrand(brandId);
     if (!brand || brand.organizationId !== req.user!.organizationId) {
       return res.status(404).json({ success: false, error: 'Marca não encontrada.' });
+    }
+
+    // Trava de plano ativo consultando banco em tempo real: FREE_TRIAL não executa monitoramento com IA
+    const planInfo = await getRealtimeUserPlan(req.user!.userId);
+    if (!planInfo.isActivePlan) {
+      return res.status(403).json({
+        success: false,
+        error: 'O monitoramento recorrente por IA exige um plano ativo. Solicite a ativação comercial via WhatsApp oficial.',
+      });
+    }
+
+    // Limite por organização: 1 monitoramento por marca a cada 7 dias (exceto para PLATFORM_ADMIN)
+    if (!planInfo.isPlatformAdmin) {
+      const latest = await db.getLatestBrandMonitor(brand.id);
+      if (latest) {
+        const elapsedMs = Date.now() - new Date(latest.createdAt).getTime();
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        if (elapsedMs < sevenDaysMs) {
+          const remainingDays = Math.ceil((sevenDaysMs - elapsedMs) / (24 * 60 * 60 * 1000));
+          return res.status(429).json({
+            success: false,
+            error: `O monitoramento semanal é limitado a 1 execução por marca a cada 7 dias. Próxima execução disponível em ${remainingDays} dia(s).`,
+          });
+        }
+      }
     }
 
     const { runHonestMultiLlmAudit } = await import('./services/multiLlmAuditor.js');

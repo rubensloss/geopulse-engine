@@ -1,5 +1,6 @@
 import dns from 'dns';
 import net from 'net';
+import { Agent as UndiciAgent, fetch as undiciFetch } from 'undici';
 /**
  * Normaliza o host de entrada removendo esquema, porta, usuário e caminhos.
  */
@@ -254,8 +255,51 @@ export function isSsrfTarget(target) {
     return false;
 }
 /**
- * Fetch seguro com proteção anti-SSRF de ponta a ponta:
+ * Agente HTTP Undici com proteção contra DNS Rebinding:
+ * O hook `connect.lookup` intercepta a resolução de DNS imediatamente antes da conexão do socket TCP.
+ * Mesmo que um resolvedor malicioso devolva um IP público na primeira checagem e um IP interno na conexão,
+ * o socket connect valida todos os endereços resolvidos e recusa a conexão se qualquer IP for interno/privado.
+ */
+export const ssrfDispatcher = new UndiciAgent({
+    connect: {
+        lookup: (hostname, options, callback) => {
+            const cleanHost = extractCleanHostname(hostname);
+            if (cleanHost === 'localhost' ||
+                cleanHost.endsWith('.localhost') ||
+                cleanHost.endsWith('.local') ||
+                cleanHost.endsWith('.internal') ||
+                cleanHost.endsWith('.railway.internal') ||
+                cleanHost.endsWith('.arpa') ||
+                cleanHost.endsWith('.onion')) {
+                return callback(new Error(`Bloqueado por segurança contra SSRF/DNS Rebinding: host ${cleanHost} é restrito.`), null, 4);
+            }
+            if (isLiteralIp(cleanHost) && isRestrictedIp(cleanHost)) {
+                return callback(new Error(`Bloqueado por segurança contra SSRF/DNS Rebinding: IP ${cleanHost} é restrito.`), null, 4);
+            }
+            dns.lookup(hostname, { ...options, all: true }, (err, addresses) => {
+                if (err)
+                    return callback(err, null, 4);
+                const records = Array.isArray(addresses) ? addresses : [addresses];
+                for (const record of records) {
+                    const addr = typeof record === 'string' ? record : record.address;
+                    if (isRestrictedIp(addr)) {
+                        return callback(new Error(`Bloqueado por segurança contra SSRF/DNS Rebinding: IP ${addr} é restrito ou interno.`), null, 4);
+                    }
+                }
+                if (Array.isArray(addresses)) {
+                    callback(null, addresses, 4);
+                }
+                else {
+                    callback(null, addresses.address, addresses.family);
+                }
+            });
+        },
+    },
+});
+/**
+ * Fetch seguro com proteção anti-SSRF e anti-DNS Rebinding de ponta a ponta:
  * - Valida a URL de partida contra SSRF (sintaxe + DNS lookup).
+ * - Utiliza `ssrfDispatcher` com connect.lookup fixo que valida o IP diretamente no socket TCP.
  * - Usa redirect manual (`redirect: 'manual'`) com até 3 hops.
  * - Valida rigorosamente cada cabeçalho `Location` antes de seguir o redirecionamento.
  */
@@ -270,11 +314,12 @@ export async function safeFetch(targetUrl, options = {}, maxRedirects = 3) {
             err.statusCode = 400;
             throw err;
         }
-        // 2. Executa requisição com redirect manual
-        const response = await fetch(currentUrl, {
+        // 2. Executa requisição com redirect manual e agente anti-DNS Rebinding
+        const response = (await undiciFetch(currentUrl, {
             ...options,
+            dispatcher: ssrfDispatcher,
             redirect: 'manual',
-        });
+        }));
         // 3. Se for redirecionamento (301, 302, 303, 307, 308), valida o próximo destino
         if ([301, 302, 303, 307, 308].includes(response.status)) {
             if (remainingRedirects <= 0) {
